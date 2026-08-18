@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,17 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  AppState,
+  RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 
 /**
  * HomeScreen Dashboard Component
- * Focuses on functional logic, state management, storage info calculations,
- * and react-native-document-picker async card triggers.
+ * Real-Time Device Storage Info Calculations, AppState/Focus lifecycle tracking,
+ * and react-native-document-picker card triggers.
  */
 const HomeScreen = ({ navigation }) => {
   // Storage State
@@ -23,29 +26,29 @@ const HomeScreen = ({ navigation }) => {
     totalBytes: 0,
     freeBytes: 0,
     usedBytes: 0,
+    usedPercentage: 0,
     formattedTotal: 'Loading...',
     formattedFree: 'Loading...',
     formattedUsed: 'Loading...',
     loading: true,
   });
+  const [refreshing, setRefreshing] = useState(false);
 
-  // 1. Storage Info Header Logic using react-native-fs
-  useEffect(() => {
-    fetchStorageInfo();
-  }, []);
-
-  const fetchStorageInfo = async () => {
+  // Real-time storage calculation function
+  const fetchStorageInfo = useCallback(async () => {
     try {
       if (RNFS.getFSInfo) {
         const info = await RNFS.getFSInfo();
         const total = info.totalSpace || 0;
         const free = info.freeSpace || 0;
         const used = Math.max(0, total - free);
+        const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
 
         setStorageInfo({
           totalBytes: total,
           freeBytes: free,
           usedBytes: used,
+          usedPercentage: percentage,
           formattedTotal: formatBytesToGB(total),
           formattedFree: formatBytesToGB(free),
           formattedUsed: formatBytesToGB(used),
@@ -55,9 +58,38 @@ const HomeScreen = ({ navigation }) => {
         setStorageInfo((prev) => ({ ...prev, loading: false, formattedTotal: 'N/A' }));
       }
     } catch (error) {
-      console.warn('Error fetching storage info from RNFS:', error);
+      console.warn('Error fetching real-time storage info from RNFS:', error);
       setStorageInfo((prev) => ({ ...prev, loading: false, formattedTotal: 'N/A' }));
     }
+  }, []);
+
+  // 1. Recalculate Storage whenever screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchStorageInfo();
+    }, [fetchStorageInfo])
+  );
+
+  // 2. Recalculate Storage when app comes to foreground (AppState active)
+  useEffect(() => {
+    fetchStorageInfo();
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        fetchStorageInfo();
+      }
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, [fetchStorageInfo]);
+
+  // Pull-to-refresh handler
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchStorageInfo();
+    setRefreshing(false);
   };
 
   const formatBytesToGB = (bytes) => {
@@ -66,19 +98,17 @@ const HomeScreen = ({ navigation }) => {
     return `${gb.toFixed(1)} GB`;
   };
 
-  // 2. Card 1: Auto-Scan All TIFFs Logic
+  // Card 1: Auto-Scan All TIFFs Logic
   const handleAutoScanPress = () => {
     navigation.navigate('AllFilesScreen');
   };
 
-  // 3. Card 2: Pick & Convert Single File Logic (react-native-document-picker)
+  // Card 2: Pick & Convert Single File Logic
   const handlePickSingleFilePress = async () => {
     try {
       const result = await DocumentPicker.pickSingle({
         type: [DocumentPicker.types.images, 'image/tiff', 'image/x-tiff'],
       });
-
-      console.log('Single Document Picked:', result);
 
       if (result) {
         navigation.navigate('PickFilesScreen', {
@@ -100,15 +130,13 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // 4. Card 3: Batch Conversion Logic (react-native-document-picker multi-select)
+  // Card 3: Batch Conversion Logic
   const handleBatchConversionPress = async () => {
     try {
       const results = await DocumentPicker.pick({
         allowMultiSelection: true,
         type: [DocumentPicker.types.images, 'image/tiff', 'image/x-tiff'],
       });
-
-      console.log('Batch Documents Picked:', results);
 
       if (results && results.length > 0) {
         const formattedFiles = results.map((item) => ({
@@ -132,12 +160,12 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // 5. Card 4: Converted Outputs Logic
+  // Card 4: Converted Outputs Logic
   const handleConvertedOutputsPress = () => {
     navigation.navigate('ConvertedFilesScreen');
   };
 
-  // 6. Card 5: Favorites Logic
+  // Card 5: Favorites Logic
   const handleFavoritesPress = () => {
     navigation.navigate('FavoritesScreen');
   };
@@ -150,17 +178,30 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TIFF Viewer Dashboard</Text>
         
-        {/* Storage Info Header Section */}
-        <View style={styles.storageCard}>
-          <Text style={styles.storageTitle}>Device Storage Status</Text>
+        {/* Real-Time Storage Info Header Section */}
+        <TouchableOpacity
+          style={styles.storageCard}
+          onPress={fetchStorageInfo}
+          activeOpacity={0.8}
+        >
+          <View style={styles.storageHeaderRow}>
+            <Text style={styles.storageTitle}>Device Storage Status (Real-Time)</Text>
+            <Text style={styles.storagePercent}>{storageInfo.usedPercentage}% Used</Text>
+          </View>
           <Text style={styles.storageData}>
             Storage: {storageInfo.formattedUsed} Used / {storageInfo.formattedFree} Free (Total: {storageInfo.formattedTotal})
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Action Cards List */}
-      <ScrollView contentContainerStyle={styles.cardsList} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.cardsList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         
         {/* Card 1: Auto-Scan All TIFFs */}
         <TouchableOpacity style={styles.card} onPress={handleAutoScanPress} activeOpacity={0.7}>
@@ -213,17 +254,31 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   storageCard: {
-    padding: 12,
+    padding: 14,
     backgroundColor: '#EAEAEA',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#CCCCCC',
   },
+  storageHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   storageTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 4,
     color: '#333333',
+  },
+  storagePercent: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000000',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   storageData: {
     fontSize: 13,
