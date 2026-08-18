@@ -1,12 +1,40 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 
 const PickFilesScreen = () => {
   return (
-    <View>
-      <Text>Pick Files Tab</Text>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <View style={styles.container}>
+        <Text style={styles.title}>Pick Files</Text>
+        <Text style={styles.subtitle}>Select TIFF files to convert</Text>
+      </View>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888888',
+  },
+});
 
 export default PickFilesScreen;
