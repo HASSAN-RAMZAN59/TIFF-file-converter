@@ -1,8 +1,9 @@
 pluginManagement {
     includeBuild("../node_modules/@react-native/gradle-plugin")
 }
+
 plugins {
-    id("com.facebook.react.settings")
+    id("com.facebook.react")
 }
 
 rootProject.name = 'TIFFViewerConverter'
