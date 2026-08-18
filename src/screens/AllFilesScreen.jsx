@@ -17,7 +17,6 @@ import { scanDeviceForTiffs } from '../services/tiffScannerService';
 const AllFilesScreen = ({ navigation }) => {
   const [tiffFiles, setTiffFiles] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
-  const [scannedCount, setScannedCount] = useState(0);
 
   useEffect(() => {
     startTiffScan();
@@ -26,13 +25,9 @@ const AllFilesScreen = ({ navigation }) => {
   const startTiffScan = async () => {
     setIsScanning(true);
     setTiffFiles([]);
-    setScannedCount(0);
 
-    const discovered = await scanDeviceForTiffs((newFile) => {
-      setTiffFiles((prev) => [...prev, newFile]);
-      setScannedCount((prev) => prev + 1);
-    });
-
+    const discovered = await scanDeviceForTiffs();
+    console.log('UI Discovered Files Count:', discovered.length);
     setTiffFiles(discovered);
     setIsScanning(false);
   };
@@ -85,7 +80,7 @@ const AllFilesScreen = ({ navigation }) => {
       <View style={styles.statusBox}>
         <View style={styles.statusRow}>
           <Text style={styles.statusText}>
-            {isScanning ? `Scanning storage for .tif & .tiff files... (${scannedCount} found)` : `Scan Complete. Found ${tiffFiles.length} TIFF files.`}
+            {isScanning ? 'Scanning device storage for .tif & .tiff files...' : `Scan Complete. Found ${tiffFiles.length} TIFF files.`}
           </Text>
           {isScanning && <ActivityIndicator size="small" color="#000000" />}
         </View>
@@ -103,7 +98,8 @@ const AllFilesScreen = ({ navigation }) => {
       <View style={styles.listContainer}>
         <FlatList
           data={tiffFiles}
-          keyExtractor={(item) => item.id}
+          extraData={tiffFiles}
+          keyExtractor={(item, index) => item.path || item.id || index.toString()}
           renderItem={renderFileItem}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={

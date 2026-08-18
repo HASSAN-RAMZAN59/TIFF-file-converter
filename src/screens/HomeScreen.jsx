@@ -14,11 +14,11 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
+import { isTiffFile } from '../services/tiffScannerService';
 
 /**
  * HomeScreen Dashboard Component
- * Real-Time Device Storage Info Calculations, AppState/Focus lifecycle tracking,
- * and react-native-document-picker card triggers.
+ * Forces Native Internal Storage File Manager (No PhotoPicker) & Enforces Strict TIFF-only Filtering
  */
 const HomeScreen = ({ navigation }) => {
   // Storage State
@@ -34,7 +34,18 @@ const HomeScreen = ({ navigation }) => {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  // Real-time storage calculation function
+  // Dynamic Bytes Formatter (Decimal GB/MB)
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes <= 0) return '0 GB';
+    const gb = bytes / 1000000000;
+    if (gb < 1) {
+      const mb = bytes / 1000000;
+      return `${mb.toFixed(1)} MB`;
+    }
+    return `${gb.toFixed(1)} GB`;
+  };
+
+  // 100% Pure Dynamic real-time storage calculation from OS kernel
   const fetchStorageInfo = useCallback(async () => {
     try {
       if (RNFS.getFSInfo) {
@@ -49,28 +60,28 @@ const HomeScreen = ({ navigation }) => {
           freeBytes: free,
           usedBytes: used,
           usedPercentage: percentage,
-          formattedTotal: formatBytesToGB(total),
-          formattedFree: formatBytesToGB(free),
-          formattedUsed: formatBytesToGB(used),
+          formattedTotal: formatBytes(total),
+          formattedFree: formatBytes(free),
+          formattedUsed: formatBytes(used),
           loading: false,
         });
       } else {
         setStorageInfo((prev) => ({ ...prev, loading: false, formattedTotal: 'N/A' }));
       }
     } catch (error) {
-      console.warn('Error fetching real-time storage info from RNFS:', error);
+      console.warn('Error fetching dynamic storage info from RNFS:', error);
       setStorageInfo((prev) => ({ ...prev, loading: false, formattedTotal: 'N/A' }));
     }
   }, []);
 
-  // 1. Recalculate Storage whenever screen comes into focus
+  // Recalculate Storage whenever screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchStorageInfo();
     }, [fetchStorageInfo])
   );
 
-  // 2. Recalculate Storage when app comes to foreground (AppState active)
+  // Recalculate Storage when app comes to foreground (AppState active)
   useEffect(() => {
     fetchStorageInfo();
 
@@ -92,29 +103,32 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const formatBytesToGB = (bytes) => {
-    if (!bytes || bytes <= 0) return '0 GB';
-    const gb = bytes / (1024 * 1024 * 1024);
-    return `${gb.toFixed(1)} GB`;
-  };
-
   // Card 1: Auto-Scan All TIFFs Logic
   const handleAutoScanPress = () => {
     navigation.navigate('AllFilesScreen');
   };
 
-  // Card 2: Pick & Convert Single File Logic
+  // Card 2: Pick & Convert Single File Logic (Internal Storage & Strict TIFF Check)
   const handlePickSingleFilePress = async () => {
     try {
+      // DocumentPicker.types.allFiles forces Android Native Internal File Manager instead of Media PhotoPicker
       const result = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.images, 'image/tiff', 'image/x-tiff'],
+        type: [DocumentPicker.types.allFiles],
       });
 
       if (result) {
+        const fileName = result.name || result.fileName || '';
+        
+        // Strict TIFF File extension check
+        if (!isTiffFile(fileName)) {
+          Alert.alert('Invalid File', 'Please select a valid TIFF file (.tif or .tiff).');
+          return;
+        }
+
         navigation.navigate('PickFilesScreen', {
           file: {
             uri: result.uri,
-            name: result.name || result.fileName,
+            name: fileName,
             size: result.size,
             type: result.type,
           },
@@ -130,16 +144,35 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // Card 3: Batch Conversion Logic
+  // Card 3: Batch Conversion Logic (Internal Storage Multi-Select & Strict TIFF Check)
   const handleBatchConversionPress = async () => {
     try {
+      // DocumentPicker.types.allFiles forces Android Native Internal File Manager
       const results = await DocumentPicker.pick({
         allowMultiSelection: true,
-        type: [DocumentPicker.types.images, 'image/tiff', 'image/x-tiff'],
+        type: [DocumentPicker.types.allFiles],
       });
 
       if (results && results.length > 0) {
-        const formattedFiles = results.map((item) => ({
+        // Strict TIFF extension filter
+        const tiffResults = results.filter((item) => {
+          const fileName = item.name || item.fileName || '';
+          return isTiffFile(fileName);
+        });
+
+        if (tiffResults.length === 0) {
+          Alert.alert('Invalid Selection', 'None of the selected files are TIFF images (.tif or .tiff).');
+          return;
+        }
+
+        if (tiffResults.length < results.length) {
+          Alert.alert(
+            'TIFF Files Filtered',
+            `Selected ${tiffResults.length} TIFF files. Non-TIFF files were excluded.`
+          );
+        }
+
+        const formattedFiles = tiffResults.map((item) => ({
           uri: item.uri,
           name: item.name || item.fileName,
           size: item.size,
@@ -178,14 +211,14 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TIFF Viewer Dashboard</Text>
         
-        {/* Real-Time Storage Info Header Section */}
+        {/* Dynamic Storage Info Header Section */}
         <TouchableOpacity
           style={styles.storageCard}
           onPress={fetchStorageInfo}
           activeOpacity={0.8}
         >
           <View style={styles.storageHeaderRow}>
-            <Text style={styles.storageTitle}>Device Storage Status (Real-Time)</Text>
+            <Text style={styles.storageTitle}>Device Storage Status</Text>
             <Text style={styles.storagePercent}>{storageInfo.usedPercentage}% Used</Text>
           </View>
           <Text style={styles.storageData}>
@@ -212,13 +245,13 @@ const HomeScreen = ({ navigation }) => {
         {/* Card 2: Pick & Convert Single File */}
         <TouchableOpacity style={styles.card} onPress={handlePickSingleFilePress} activeOpacity={0.7}>
           <Text style={styles.cardTitle}>2. Pick & Convert Single File</Text>
-          <Text style={styles.cardDescription}>Open DocumentPicker to pick one TIFF file and navigate to viewer.</Text>
+          <Text style={styles.cardDescription}>Open Internal Storage file picker to select one TIFF file.</Text>
         </TouchableOpacity>
 
         {/* Card 3: Batch Conversion */}
         <TouchableOpacity style={styles.card} onPress={handleBatchConversionPress} activeOpacity={0.7}>
           <Text style={styles.cardTitle}>3. Batch Conversion</Text>
-          <Text style={styles.cardDescription}>Select multiple TIFF files for batch PDF/JPG conversion.</Text>
+          <Text style={styles.cardDescription}>Select multiple TIFF files from Internal Storage for batch conversion.</Text>
         </TouchableOpacity>
 
         {/* Card 4: Converted Outputs */}
