@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 import { convertTiffFile } from '../services/tiffConverterService';
+import { isFavoriteFile, toggleFavorite } from '../services/favoritesService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ const FORMAT_OPTIONS = [
 
 /**
  * PickFilesScreen Component
- * Decodes and previews real TIFF images with page navigation & active real-time conversion.
+ * Decodes and previews real TIFF images with page navigation, conversion, and Favorite bookmarking.
  */
 const PickFilesScreen = ({ route, navigation }) => {
   const file = route.params?.file || null;
@@ -36,14 +37,29 @@ const PickFilesScreen = ({ route, navigation }) => {
   const [selectedFormat, setSelectedFormat] = useState('jpg');
   const [isConverting, setIsConverting] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
+  const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
     if (file) {
       loadTiffImage(0);
+      checkFavoriteStatus();
     } else {
       setIsLoading(false);
     }
   }, [file]);
+
+  const checkFavoriteStatus = async () => {
+    if (!file) return;
+    const path = file.path || file.uri;
+    const favStatus = await isFavoriteFile(path);
+    setIsFav(favStatus);
+  };
+
+  const handleToggleFav = async () => {
+    if (!file) return;
+    const newStatus = await toggleFavorite(file);
+    setIsFav(newStatus);
+  };
 
   const loadTiffImage = async (pageIdx = 0) => {
     if (!file) return;
@@ -135,6 +151,9 @@ const PickFilesScreen = ({ route, navigation }) => {
           <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>TIFF File Viewer & Converter</Text>
+        <TouchableOpacity style={styles.headerFavBtn} onPress={handleToggleFav}>
+          <Text style={styles.headerFavIcon}>{isFav ? '❤️' : '🤍'}</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -288,9 +307,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     color: '#000000',
+    flex: 1,
+  },
+  headerFavBtn: {
+    padding: 4,
+  },
+  headerFavIcon: {
+    fontSize: 22,
   },
   scrollContent: {
     padding: 16,

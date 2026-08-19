@@ -13,13 +13,15 @@ import {
   checkOsStoragePermission,
   requestOsStoragePermissionDialog,
 } from '../services/permissionService';
+import { getFavorites, toggleFavorite } from '../services/favoritesService';
 
 /**
  * AllFilesScreen Component
- * Fast single-pass scanner for .tif and .tiff files (> 0 KB).
+ * Fast single-pass scanner for .tif and .tiff files (> 0 KB) with Favorite bookmarks.
  */
 const AllFilesScreen = ({ navigation }) => {
   const [tiffFiles, setTiffFiles] = useState([]);
+  const [favoritePaths, setFavoritePaths] = useState(new Set());
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState(true);
 
@@ -28,6 +30,7 @@ const AllFilesScreen = ({ navigation }) => {
   }, []);
 
   const initAndScan = async () => {
+    await loadFavoritesSet();
     const permitted = await checkOsStoragePermission();
     setHasPermission(permitted);
     if (permitted) {
@@ -41,15 +44,18 @@ const AllFilesScreen = ({ navigation }) => {
     }
   };
 
+  const loadFavoritesSet = async () => {
+    const favs = await getFavorites();
+    const pathSet = new Set(favs.map((f) => f.path || f.id));
+    setFavoritePaths(pathSet);
+  };
+
   const startTiffScan = async () => {
     setIsScanning(true);
     setTiffFiles([]);
 
-    // Execute fast single-pass scan
     const discovered = await scanDeviceForTiffs();
-    // Filter out 0-byte or empty files (< 100 bytes)
     const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
-    console.log('Single-pass Scan Discovered Valid Files Count:', validFiles.length);
     
     setTiffFiles(validFiles);
     setIsScanning(false);
@@ -61,6 +67,19 @@ const AllFilesScreen = ({ navigation }) => {
     if (granted) {
       startTiffScan();
     }
+  };
+
+  const handleToggleFav = async (fileItem) => {
+    const isNowFav = await toggleFavorite(fileItem);
+    setFavoritePaths((prev) => {
+      const updated = new Set(prev);
+      if (isNowFav) {
+        updated.add(fileItem.path);
+      } else {
+        updated.delete(fileItem.path);
+      }
+      return updated;
+    });
   };
 
   const formatFileSize = (bytes) => {
@@ -77,26 +96,34 @@ const AllFilesScreen = ({ navigation }) => {
     navigation.navigate('PickFilesScreen', { file });
   };
 
-  const renderFileItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.fileCard}
-      onPress={() => handleFileSelect(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.iconContainer}>
-        <Text style={styles.iconText}>🖼️</Text>
-      </View>
-      <View style={styles.fileInfo}>
-        <Text style={styles.fileName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.filePath} numberOfLines={1}>
-          {item.path}
-        </Text>
-        <Text style={styles.fileMeta}>Size: {formatFileSize(item.size)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderFileItem = ({ item }) => {
+    const isFav = favoritePaths.has(item.path);
+    return (
+      <TouchableOpacity
+        style={styles.fileCard}
+        onPress={() => handleFileSelect(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.iconContainer}>
+          <Text style={styles.iconText}>🖼️</Text>
+        </View>
+
+        <View style={styles.fileInfo}>
+          <Text style={styles.fileName} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={styles.filePath} numberOfLines={1}>
+            {item.path}
+          </Text>
+          <Text style={styles.fileMeta}>Size: {formatFileSize(item.size)}</Text>
+        </View>
+
+        <TouchableOpacity style={styles.favBtn} onPress={() => handleToggleFav(item)}>
+          <Text style={styles.favBtnText}>{isFav ? '❤️' : '🤍'}</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -150,7 +177,7 @@ const AllFilesScreen = ({ navigation }) => {
       <View style={styles.listContainer}>
         <FlatList
           data={tiffFiles}
-          extraData={tiffFiles}
+          extraData={favoritePaths}
           keyExtractor={(item, index) => item.path || item.id || index.toString()}
           renderItem={renderFileItem}
           contentContainerStyle={styles.listContent}
@@ -289,6 +316,12 @@ const styles = StyleSheet.create({
   fileMeta: {
     fontSize: 11,
     color: '#888888',
+  },
+  favBtn: {
+    padding: 8,
+  },
+  favBtnText: {
+    fontSize: 20,
   },
   emptyContainer: {
     padding: 32,
