@@ -18,7 +18,7 @@ import { isTiffFile } from '../services/tiffScannerService';
 
 /**
  * HomeScreen Dashboard Component
- * Forces Native Internal Storage File Manager (No PhotoPicker) & Enforces Strict TIFF-only Filtering
+ * Forces Native Internal Storage File Manager (No PhotoPicker) & Enforces Strict TIFF-only Filtering (> 0 Bytes)
  */
 const HomeScreen = ({ navigation }) => {
   // Storage State
@@ -108,16 +108,16 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('AllFilesScreen');
   };
 
-  // Card 2: Pick & Convert Single File Logic (Internal Storage & Strict TIFF Check)
+  // Card 2: Pick & Convert Single File Logic (Internal Storage, Strict TIFF Check & Size > 0)
   const handlePickSingleFilePress = async () => {
     try {
-      // DocumentPicker.types.allFiles forces Android Native Internal File Manager instead of Media PhotoPicker
       const result = await DocumentPicker.pickSingle({
         type: [DocumentPicker.types.allFiles],
       });
 
       if (result) {
         const fileName = result.name || result.fileName || '';
+        const fileSize = result.size || 0;
         
         // Strict TIFF File extension check
         if (!isTiffFile(fileName)) {
@@ -125,11 +125,17 @@ const HomeScreen = ({ navigation }) => {
           return;
         }
 
+        // Strict 0-byte empty file check
+        if (fileSize <= 0) {
+          Alert.alert('Empty File', 'The selected TIFF file is empty (0 bytes) and cannot be processed.');
+          return;
+        }
+
         navigation.navigate('PickFilesScreen', {
           file: {
             uri: result.uri,
             name: fileName,
-            size: result.size,
+            size: fileSize,
             type: result.type,
           },
         });
@@ -144,31 +150,34 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // Card 3: Batch Conversion Logic (Internal Storage Multi-Select & Strict TIFF Check)
+  // Card 3: Batch Conversion Logic (Internal Storage Multi-Select, Strict TIFF Check & Size > 0)
   const handleBatchConversionPress = async () => {
     try {
-      // DocumentPicker.types.allFiles forces Android Native Internal File Manager
       const results = await DocumentPicker.pick({
         allowMultiSelection: true,
         type: [DocumentPicker.types.allFiles],
       });
 
       if (results && results.length > 0) {
-        // Strict TIFF extension filter
+        // Strict TIFF extension & non-zero size filter
         const tiffResults = results.filter((item) => {
           const fileName = item.name || item.fileName || '';
-          return isTiffFile(fileName);
+          const fileSize = item.size || 0;
+          return isTiffFile(fileName) && fileSize > 0;
         });
 
         if (tiffResults.length === 0) {
-          Alert.alert('Invalid Selection', 'None of the selected files are TIFF images (.tif or .tiff).');
+          Alert.alert(
+            'Invalid Selection',
+            'None of the selected files are valid TIFF images (> 0 bytes).'
+          );
           return;
         }
 
         if (tiffResults.length < results.length) {
           Alert.alert(
-            'TIFF Files Filtered',
-            `Selected ${tiffResults.length} TIFF files. Non-TIFF files were excluded.`
+            'Files Filtered',
+            `Selected ${tiffResults.length} valid TIFF files. Non-TIFF or empty (0 byte) files were excluded.`
           );
         }
 

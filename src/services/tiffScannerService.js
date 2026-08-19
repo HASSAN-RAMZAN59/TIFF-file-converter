@@ -2,7 +2,7 @@ import RNFS from 'react-native-fs';
 
 /**
  * TIFF Scanner Service
- * High-performance, multi-target storage scanner for .tif and .tiff files.
+ * Fast, single-pass storage scanner for .tif and .tiff files (> 0 KB valid files).
  */
 
 const IGNORED_FOLDERS = [
@@ -10,6 +10,13 @@ const IGNORED_FOLDERS = [
   '.cache',
   '.thumbnails',
   'node_modules',
+  'data',
+  'obb',
+  'Android/data',
+  'Android/obb',
+  '.apps',
+  '.system',
+  '.temp',
 ];
 
 /**
@@ -18,22 +25,21 @@ const IGNORED_FOLDERS = [
 export const isTiffFile = (filename) => {
   if (!filename) return false;
   const lower = filename.toLowerCase().trim();
-  return (
-    lower.endsWith('.tif') ||
-    lower.endsWith('.tiff') ||
-    lower.includes('.tif') ||
-    lower.includes('.tiff')
-  );
+  return lower.endsWith('.tif') || lower.endsWith('.tiff');
 };
 
 /**
- * Recursively scans a directory for TIFF files.
+ * Recursively scans a directory for valid TIFF files (size > 100 bytes).
  */
 export const scanDirectoryForTiffs = async (
   dirPath,
   foundFilesMap = new Map(),
-  onFileFound = null
+  onFileFound = null,
+  depth = 0,
+  maxDepth = 4
 ) => {
+  if (depth > maxDepth) return foundFilesMap;
+
   try {
     const exists = await RNFS.exists(dirPath);
     if (!exists) return foundFilesMap;
@@ -44,70 +50,93 @@ export const scanDirectoryForTiffs = async (
       if (item.isDirectory()) {
         const folderName = item.name;
         if (!IGNORED_FOLDERS.includes(folderName) && !folderName.startsWith('.')) {
-          await scanDirectoryForTiffs(item.path, foundFilesMap, onFileFound);
+          if (folderName === 'Android' && !item.path.endsWith('Android/media')) {
+            const mediaPath = `${item.path}/media`;
+            const mediaExists = await RNFS.exists(mediaPath);
+            if (mediaExists) {
+              await scanDirectoryForTiffs(mediaPath, foundFilesMap, onFileFound, depth + 1, maxDepth);
+            }
+            continue;
+          }
+
+          await scanDirectoryForTiffs(item.path, foundFilesMap, onFileFound, depth + 1, maxDepth);
         }
       } else if (item.isFile()) {
-        // FLEXIBLE TIFF EXTENSION CHECK
         if (isTiffFile(item.name)) {
-          if (!foundFilesMap.has(item.path)) {
-            const tiffItem = {
-              id: item.path,
-              name: item.name,
-              path: item.path,
-              uri: `file://${item.path}`,
-              size: item.size || 0,
-              mtime: item.mtime || new Date(),
-            };
+          let fileSize = Number(item.size) || 0;
 
-            foundFilesMap.set(item.path, tiffItem);
-            console.log('--> DISCOVERED TIFF FILE:', item.path);
+          // If size is reported as 0 by readDir, perform exact stat check
+          if (fileSize <= 0) {
+            try {
+              const fileStat = await RNFS.stat(item.path);
+              fileSize = Number(fileStat.size) || 0;
+            } catch (statErr) {
+              fileSize = 0;
+            }
+          }
 
-            if (onFileFound) {
-              onFileFound(tiffItem);
+          // STRICT NON-ZERO FILTER: Only accept valid files (> 100 bytes)
+          if (fileSize > 100) {
+            if (!foundFilesMap.has(item.path)) {
+              const tiffItem = {
+                id: item.path,
+                name: item.name,
+                path: item.path,
+                uri: `file://${item.path}`,
+                size: fileSize,
+                mtime: item.mtime || new Date(),
+              };
+
+              foundFilesMap.set(item.path, tiffItem);
+              console.log(`--> DISCOVERED VALID TIFF FILE (${fileSize} bytes):`, item.path);
+
+              if (onFileFound) {
+                onFileFound(tiffItem);
+              }
             }
           }
         }
       }
     }
   } catch (error) {
-    // Ignore protected folder errors
+    // Catch folder permission errors silently
   }
 
   return foundFilesMap;
 };
 
 /**
- * Multi-target dynamic scanner for TIFF files.
+ * Fast single-pass scanner for valid TIFF files (> 0 KB).
  */
 export const scanDeviceForTiffs = async (onProgress = null) => {
   const foundFilesMap = new Map();
   const rootPath = RNFS.ExternalStorageDirectoryPath || '/storage/emulated/0';
 
   const targetPaths = [
-    rootPath,
-    '/storage/emulated/0',
-    '/sdcard',
-    '/storage',
-    RNFS.DownloadDirectoryPath,
-    RNFS.PicturesDirectoryPath,
-    RNFS.DocumentDirectoryPath,
     `${rootPath}/Download`,
     `${rootPath}/Downloads`,
     `${rootPath}/Pictures`,
     `${rootPath}/DCIM`,
     `${rootPath}/Documents`,
-    `${rootPath}/WhatsApp/Media`,
+    `${rootPath}/TIFF`,
+    `${rootPath}/Tiff`,
+    `${rootPath}/tiff`,
+    `${rootPath}/Bluetooth`,
     `${rootPath}/Telegram`,
-  ].filter(Boolean);
+    `${rootPath}/Android/media`,
+    rootPath,
+  ];
 
-  for (const path of targetPaths) {
+  const uniquePaths = Array.from(new Set(targetPaths)).filter(Boolean);
+
+  for (const path of uniquePaths) {
     try {
-      await scanDirectoryForTiffs(path, foundFilesMap, onProgress);
+      await scanDirectoryForTiffs(path, foundFilesMap, onProgress, 0, 4);
     } catch (err) {
       // Continue next path
     }
   }
 
-  console.log(`Scan Complete. Total TIFFs found: ${foundFilesMap.size}`);
+  console.log(`Scan Complete in single-pass. Total valid TIFFs found: ${foundFilesMap.size}`);
   return Array.from(foundFilesMap.values());
 };
