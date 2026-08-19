@@ -1,10 +1,27 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { hasCompletedOnboarding } from '../services/onboardingService';
+import { checkOsStoragePermission } from '../services/permissionService';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Permission');
+    const timer = setTimeout(async () => {
+      const onboardingDone = await hasCompletedOnboarding();
+      const permissionGranted = await checkOsStoragePermission();
+
+      if (onboardingDone) {
+        if (permissionGranted) {
+          navigation.replace('MainApp');
+        } else {
+          navigation.replace('Permission');
+        }
+      } else {
+        if (permissionGranted) {
+          navigation.replace('Onboarding');
+        } else {
+          navigation.replace('Permission');
+        }
+      }
     }, 2000);
 
     return () => clearTimeout(timer);

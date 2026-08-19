@@ -10,6 +10,8 @@ import {
   Dimensions,
 } from 'react-native';
 
+import { setOnboardingCompleted } from '../services/onboardingService';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ONBOARDING_DATA = [
@@ -54,7 +56,8 @@ const OnboardingScreen = ({ navigation }) => {
     }
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    await setOnboardingCompleted();
     navigation.replace('MainApp');
   };
 

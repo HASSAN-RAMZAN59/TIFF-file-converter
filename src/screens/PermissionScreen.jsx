@@ -13,6 +13,7 @@ import {
   checkOsStoragePermission,
   requestOsStoragePermissionDialog,
 } from '../services/permissionService';
+import { hasCompletedOnboarding } from '../services/onboardingService';
 
 /**
  * PermissionScreen Component
@@ -50,14 +51,23 @@ const PermissionScreen = ({ navigation }) => {
     setIsGranted(granted);
   };
 
-  const handleBypassPermission = () => {
-    setIsBypassed(true);
-    navigation.replace('Onboarding');
+  const navigateNext = async () => {
+    const onboardingDone = await hasCompletedOnboarding();
+    if (onboardingDone) {
+      navigation.replace('MainApp');
+    } else {
+      navigation.replace('Onboarding');
+    }
   };
 
-  const handleContinue = () => {
+  const handleBypassPermission = async () => {
+    setIsBypassed(true);
+    await navigateNext();
+  };
+
+  const handleContinue = async () => {
     if (isGranted || isBypassed) {
-      navigation.replace('Onboarding');
+      await navigateNext();
     }
   };
 
