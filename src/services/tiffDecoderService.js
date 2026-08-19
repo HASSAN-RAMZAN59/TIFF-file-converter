@@ -3,19 +3,60 @@ import UTIF from 'utif';
 import { Buffer } from 'buffer';
 
 /**
+ * Resolves any content:// URI or file:// URI into a readable absolute filesystem path.
+ */
+export const resolveToAbsolutePath = async (inputUri) => {
+  if (!inputUri) return '';
+
+  if (inputUri.startsWith('/storage/') || inputUri.startsWith('/sdcard/')) {
+    return inputUri;
+  }
+
+  if (inputUri.startsWith('file://')) {
+    return inputUri.replace('file://', '');
+  }
+
+  // Handle content:// URIs from DocumentPicker
+  if (inputUri.startsWith('content://')) {
+    try {
+      const tempFileName = `temp_${Date.now()}_${Math.floor(Math.random() * 10000)}.tiff`;
+      const tempPath = `${RNFS.CachesDirectoryPath}/${tempFileName}`;
+
+      await RNFS.copyFile(inputUri, tempPath);
+      console.log('Resolved content:// URI to cache path:', tempPath);
+      return tempPath;
+    } catch (copyErr) {
+      console.warn('copyFile content URI error, attempting stat fallback:', copyErr);
+      try {
+        const statResult = await RNFS.stat(inputUri);
+        if (statResult && statResult.path) {
+          return statResult.path;
+        }
+      } catch (statErr) {
+        console.warn('Stat fallback error:', statErr);
+      }
+      return inputUri;
+    }
+  }
+
+  return inputUri;
+};
+
+/**
  * Decodes a TIFF file at filePath into a base64 data URI (data:image/bmp;base64,...)
- * Supports single-page and multi-page TIFF files of any compression.
+ * Handles both file:// paths and content:// DocumentPicker URIs.
  */
 export const decodeTiffToBase64Uri = async (filePath, pageIndex = 0) => {
   try {
-    const cleanPath = filePath.replace('file://', '');
-    const exists = await RNFS.exists(cleanPath);
+    const realPath = await resolveToAbsolutePath(filePath);
+
+    const exists = await RNFS.exists(realPath);
     if (!exists) {
-      throw new Error(`File does not exist at ${cleanPath}`);
+      throw new Error(`File does not exist at ${realPath}`);
     }
 
     // Read TIFF file as base64 string from filesystem
-    const base64Data = await RNFS.readFile(cleanPath, 'base64');
+    const base64Data = await RNFS.readFile(realPath, 'base64');
     const fileBuffer = Buffer.from(base64Data, 'base64');
     const arrayBuffer = fileBuffer.buffer.slice(
       fileBuffer.byteOffset,
@@ -68,24 +109,24 @@ function createBmpBuffer(rgba, width, height) {
   const buf = Buffer.alloc(fileSize);
 
   // --- BMP File Header (14 bytes) ---
-  buf.write('BM', 0); // Signature
-  buf.writeUInt32LE(fileSize, 2); // File size
-  buf.writeUInt16LE(0, 6); // Reserved 1
-  buf.writeUInt16LE(0, 8); // Reserved 2
-  buf.writeUInt32LE(pixelDataOffset, 10); // Offset to image pixel data
+  buf.write('BM', 0);
+  buf.writeUInt32LE(fileSize, 2);
+  buf.writeUInt16LE(0, 6);
+  buf.writeUInt16LE(0, 8);
+  buf.writeUInt32LE(pixelDataOffset, 10);
 
   // --- DIB Header (BITMAPINFOHEADER - 40 bytes) ---
-  buf.writeUInt32LE(dibHeaderSize, 14); // Header size
-  buf.writeInt32LE(width, 18); // Image width
-  buf.writeInt32LE(-height, 22); // Negative height for top-down row order
-  buf.writeUInt16LE(1, 26); // Planes
-  buf.writeUInt16LE(32, 28); // Bits per pixel (32-bit RGBA)
-  buf.writeUInt32LE(0, 30); // Compression (0 = BI_RGB uncompressed)
-  buf.writeUInt32LE(imageSize, 34); // Image size
-  buf.writeInt32LE(2835, 38); // Horizontal resolution (72 DPI)
-  buf.writeInt32LE(2835, 42); // Vertical resolution (72 DPI)
-  buf.writeUInt32LE(0, 46); // Colors in color table
-  buf.writeUInt32LE(0, 50); // Important colors
+  buf.writeUInt32LE(dibHeaderSize, 14);
+  buf.writeInt32LE(width, 18);
+  buf.writeInt32LE(-height, 22); // Top-down
+  buf.writeUInt16LE(1, 26);
+  buf.writeUInt16LE(32, 28);
+  buf.writeUInt32LE(0, 30);
+  buf.writeUInt32LE(imageSize, 34);
+  buf.writeInt32LE(2835, 38);
+  buf.writeInt32LE(2835, 42);
+  buf.writeUInt32LE(0, 46);
+  buf.writeUInt32LE(0, 50);
 
   // --- Copy RGBA to BGRA pixel array ---
   let srcOffset = 0;
@@ -93,17 +134,10 @@ function createBmpBuffer(rgba, width, height) {
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const r = rgba[srcOffset];
-      const g = rgba[srcOffset + 1];
-      const b = rgba[srcOffset + 2];
-      const a = rgba[srcOffset + 3];
-
-      // BMP 32-bit format is BGRA
-      buf[dstOffset] = b;
-      buf[dstOffset + 1] = g;
-      buf[dstOffset + 2] = r;
-      buf[dstOffset + 3] = a;
-
+      buf[dstOffset] = rgba[srcOffset + 2];     // B
+      buf[dstOffset + 1] = rgba[srcOffset + 1]; // G
+      buf[dstOffset + 2] = rgba[srcOffset];     // R
+      buf[dstOffset + 3] = rgba[srcOffset + 3]; // A
       srcOffset += 4;
       dstOffset += 4;
     }

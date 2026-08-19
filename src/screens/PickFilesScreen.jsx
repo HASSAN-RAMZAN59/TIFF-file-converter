@@ -8,15 +8,24 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  Alert,
   Dimensions,
 } from 'react-native';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
+import { convertTiffFile } from '../services/tiffConverterService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const FORMAT_OPTIONS = [
+  { label: 'JPG', value: 'jpg', color: '#1976D2' },
+  { label: 'PNG', value: 'png', color: '#388E3C' },
+  { label: 'WEBP', value: 'webp', color: '#7B1FA2' },
+  { label: 'PDF', value: 'pdf', color: '#D32F2F' },
+];
+
 /**
  * PickFilesScreen Component
- * Decodes and previews real TIFF images with page navigation.
+ * Decodes and previews real TIFF images with page navigation & active real-time conversion.
  */
 const PickFilesScreen = ({ route, navigation }) => {
   const file = route.params?.file || null;
@@ -24,7 +33,9 @@ const PickFilesScreen = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [decodeError, setDecodeError] = useState(null);
+  const [selectedFormat, setSelectedFormat] = useState('jpg');
+  const [isConverting, setIsConverting] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState(0);
 
   useEffect(() => {
     if (file) {
@@ -37,7 +48,6 @@ const PickFilesScreen = ({ route, navigation }) => {
   const loadTiffImage = async (pageIdx = 0) => {
     if (!file) return;
     setIsLoading(true);
-    setDecodeError(null);
 
     const filePath = file.path || file.uri;
 
@@ -47,17 +57,14 @@ const PickFilesScreen = ({ route, navigation }) => {
         setDecodedUri(result.uri);
         setTotalPages(result.totalPages || 1);
         setCurrentPage(result.pageIndex || 0);
-      } else {
-        throw new Error('Could not decode image data.');
       }
     } catch (err) {
-      console.warn('TIFF Decode Error, attempting native fileUri fallback:', err);
+      console.warn('TIFF Decode Error, fallback to raw uri:', err);
       let rawUri = filePath;
       if (!rawUri.startsWith('content://') && !rawUri.startsWith('file://')) {
         rawUri = `file://${rawUri}`;
       }
       setDecodedUri(rawUri);
-      setDecodeError(err?.message || 'Standard preview');
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +92,41 @@ const PickFilesScreen = ({ route, navigation }) => {
     return `${kb.toFixed(1)} KB`;
   };
 
+  // REAL-TIME CONVERSION TRIGGER
+  const handleStartConversion = async () => {
+    if (!file) return;
+    setIsConverting(true);
+    setConversionProgress(10);
+
+    const sourcePath = file.path || file.uri;
+
+    try {
+      const result = await convertTiffFile(sourcePath, selectedFormat, (progress) => {
+        setConversionProgress(progress);
+      });
+
+      if (result && result.success) {
+        Alert.alert(
+          'Conversion Complete! 🎉',
+          `File successfully saved to Device Storage:\n\n📁 ${result.outputFileName}\n\nLocation:\n${result.outputPath}`,
+          [
+            {
+              text: 'View Converted Files',
+              onPress: () => navigation.navigate('ConvertedFilesScreen'),
+            },
+            { text: 'OK', style: 'cancel' },
+          ]
+        );
+      }
+    } catch (error) {
+      console.warn('Real conversion error:', error);
+      Alert.alert('Conversion Failed', error?.message || 'Failed to convert TIFF file.');
+    } finally {
+      setIsConverting(false);
+      setConversionProgress(0);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -92,7 +134,7 @@ const PickFilesScreen = ({ route, navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>TIFF Image Preview</Text>
+        <Text style={styles.title}>TIFF File Viewer & Converter</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -103,7 +145,7 @@ const PickFilesScreen = ({ route, navigation }) => {
               {isLoading ? (
                 <View style={styles.loadingBox}>
                   <ActivityIndicator size="large" color="#000000" />
-                  <Text style={styles.loadingText}>Decoding TIFF Image...</Text>
+                  <Text style={styles.loadingText}>Loading TIFF Preview...</Text>
                 </View>
               ) : decodedUri ? (
                 <Image
@@ -119,7 +161,7 @@ const PickFilesScreen = ({ route, navigation }) => {
                 </View>
               )}
 
-              {/* Multi-Page Navigation Overlay Controls */}
+              {/* Multi-Page Controls */}
               {totalPages > 1 && !isLoading && (
                 <View style={styles.pageBar}>
                   <TouchableOpacity
@@ -145,9 +187,56 @@ const PickFilesScreen = ({ route, navigation }) => {
               )}
             </View>
 
-            {/* File Info Card */}
+            {/* Target Conversion Format Selector */}
+            <View style={styles.conversionBox}>
+              <Text style={styles.boxTitle}>Select Output Format:</Text>
+              <View style={styles.formatsRow}>
+                {FORMAT_OPTIONS.map((fmt) => {
+                  const isSelected = selectedFormat === fmt.value;
+                  return (
+                    <TouchableOpacity
+                      key={fmt.value}
+                      style={[
+                        styles.formatChip,
+                        isSelected && { backgroundColor: fmt.color, borderColor: fmt.color },
+                      ]}
+                      onPress={() => setSelectedFormat(fmt.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.formatChipText,
+                          isSelected && styles.formatChipTextSelected,
+                        ]}
+                      >
+                        {fmt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Convert Trigger Button */}
+              <TouchableOpacity
+                style={[styles.convertButton, isConverting && styles.convertButtonDisabled]}
+                onPress={handleStartConversion}
+                disabled={isConverting}
+              >
+                {isConverting ? (
+                  <View style={styles.progressRow}>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={styles.convertBtnText}>Converting... ({conversionProgress}%)</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.convertBtnText}>
+                    Convert to {selectedFormat.toUpperCase()}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* File Info Details */}
             <View style={styles.infoBox}>
-              <Text style={styles.infoTitle}>File Details</Text>
+              <Text style={styles.infoTitle}>File Information</Text>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>File Name:</Text>
@@ -210,7 +299,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   previewContainer: {
-    minHeight: 320,
+    minHeight: 300,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
@@ -222,7 +311,7 @@ const styles = StyleSheet.create({
   },
   imagePreview: {
     width: SCREEN_WIDTH - 64,
-    height: 300,
+    height: 280,
   },
   loadingBox: {
     alignItems: 'center',
@@ -282,6 +371,60 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  conversionBox: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    gap: 12,
+  },
+  boxTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  formatsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  formatChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#CCCCCC',
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+  },
+  formatChipText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#444444',
+  },
+  formatChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  convertButton: {
+    backgroundColor: '#000000',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  convertButtonDisabled: {
+    backgroundColor: '#888888',
+  },
+  convertBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   infoBox: {
     backgroundColor: '#FFFFFF',
