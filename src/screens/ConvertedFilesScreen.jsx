@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,63 +7,50 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Alert,
   RefreshControl,
-  Image,
+  StatusBar,
   Modal,
+  Share,
+  Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
-import { getOutputDir } from '../services/tiffConverterService';
+import { getConvertedFilesList } from '../services/tiffConverterService';
+import { getFavorites, toggleFavorite } from '../services/favoritesService';
 
-/**
- * ConvertedFilesScreen Component
- * Scans and manages exported converted files saved in device storage (Download/TIFF_Converted).
- * Uses useFocusEffect for real-time automatic list reloads when entering screen.
- */
 const ConvertedFilesScreen = ({ navigation }) => {
   const [convertedFiles, setConvertedFiles] = useState([]);
+  const [favoritesSet, setFavoritesSet] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [previewFile, setPreviewFile] = useState(null);
 
-  // Reload converted files every time screen comes into focus
+  // Menu State
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // Rename State
+  const [renameVisible, setRenameVisible] = useState(false);
+  const [renameText, setRenameText] = useState('');
+
   useFocusEffect(
     useCallback(() => {
-      loadConvertedFiles();
+      loadData();
     }, [])
   );
 
-  const loadConvertedFiles = async () => {
+  const loadData = async () => {
     setIsLoading(true);
     try {
-      const outputDir = await getOutputDir();
-      const exists = await RNFS.exists(outputDir);
-
-      if (exists) {
-        const items = await RNFS.readDir(outputDir);
-        const files = items
-          .filter((item) => item.isFile() && (item.size || 0) > 0)
-          .map((item) => {
-            const ext = item.name.split('.').pop().toLowerCase();
-            return {
-              id: item.path,
-              name: item.name,
-              path: item.path,
-              uri: `file://${item.path}`,
-              size: item.size || 0,
-              format: ext.toUpperCase(),
-              mtime: item.mtime || new Date(),
-            };
-          })
-          .sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
-
-        setConvertedFiles(files);
-      } else {
-        setConvertedFiles([]);
-      }
+      const [files, favs] = await Promise.all([
+        getConvertedFilesList(),
+        getFavorites(),
+      ]);
+      setConvertedFiles(files);
+      setFavoritesSet(new Set(favs.map((f) => f.path)));
     } catch (error) {
-      console.warn('Error reading converted files:', error);
       setConvertedFiles([]);
     } finally {
       setIsLoading(false);
@@ -72,159 +59,271 @@ const ConvertedFilesScreen = ({ navigation }) => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadConvertedFiles();
+    await loadData();
     setRefreshing(false);
   };
 
-  const handleDeleteFile = (fileItem) => {
-    Alert.alert(
-      'Delete File',
-      `Are you sure you want to delete ${fileItem.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await RNFS.unlink(fileItem.path);
-              setConvertedFiles((prev) => prev.filter((f) => f.path !== fileItem.path));
-            } catch (err) {
-              Alert.alert('Delete Error', 'Could not delete file.');
-            }
-          },
-        },
-      ]
-    );
+  const handleToggleFavorite = async (item) => {
+    await toggleFavorite(item);
+    const newSet = new Set(favoritesSet);
+    if (newSet.has(item.path)) {
+      newSet.delete(item.path);
+    } else {
+      newSet.add(item.path);
+    }
+    setFavoritesSet(newSet);
   };
 
-  const handleFilePress = (item) => {
-    if (['JPG', 'JPEG', 'PNG', 'WEBP', 'BMP'].includes(item.format)) {
-      setPreviewFile(item);
-    } else {
-      Alert.alert(
-        'Converted PDF Saved',
-        `PDF File saved at:\n${item.path}\n\nYou can open this file using any PDF reader app on your phone.`
-      );
+  const openMenu = (item) => {
+    setSelectedFile(item);
+    setMenuVisible(true);
+  };
+
+  const closeMenu = () => {
+    setMenuVisible(false);
+    setSelectedFile(null);
+  };
+
+  const handleDelete = () => {
+    const file = selectedFile;
+    closeMenu();
+    Alert.alert('Delete File', `Are you sure you want to delete ${file.name}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await RNFS.unlink(file.path);
+            setConvertedFiles((prev) => prev.filter((f) => f.path !== file.path));
+            // Option: Also remove from favorites if it was there
+            if (favoritesSet.has(file.path)) {
+               await toggleFavorite(file);
+               const newSet = new Set(favoritesSet);
+               newSet.delete(file.path);
+               setFavoritesSet(newSet);
+            }
+          } catch (err) {
+            Alert.alert('Error', 'Could not delete file.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleShare = async () => {
+    const file = selectedFile;
+    closeMenu();
+    try {
+      await Share.share({
+        title: file.name,
+        url: file.uri,
+        message: `Check out this file: ${file.name}`,
+      });
+    } catch (error) {
+      console.warn('Share error:', error);
     }
+  };
+
+  const handleRenamePress = () => {
+    const file = selectedFile;
+    closeMenu();
+    // Remove extension for the input
+    const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+    setRenameText(nameWithoutExt);
+    setSelectedFile(file);
+    setRenameVisible(true);
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!renameText.trim()) {
+      Alert.alert('Error', 'File name cannot be empty.');
+      return;
+    }
+    const file = selectedFile;
+    setRenameVisible(false);
+    
+    try {
+      const ext = file.name.substring(file.name.lastIndexOf('.'));
+      const newName = `${renameText.trim()}${ext}`;
+      const newPath = file.path.replace(file.name, newName);
+
+      if (await RNFS.exists(newPath)) {
+        Alert.alert('Error', 'A file with this name already exists.');
+        return;
+      }
+
+      await RNFS.moveFile(file.path, newPath);
+      
+      // Update state
+      setConvertedFiles((prev) =>
+        prev.map((f) => (f.path === file.path ? { ...f, name: newName, path: newPath, uri: `file://${newPath}` } : f))
+      );
+      
+      // If it was a favorite, update favorite path (this requires removing old and adding new, handled simply by refreshing or adjusting list)
+      if (favoritesSet.has(file.path)) {
+        await toggleFavorite(file); // remove old
+        await toggleFavorite({ ...file, name: newName, path: newPath, uri: `file://${newPath}` }); // add new
+      }
+      
+      loadData(); // Re-fetch to make sure everything is in sync
+    } catch (err) {
+      Alert.alert('Error', 'Could not rename file.');
+    }
+  };
+
+  const handleAbout = () => {
+    const file = selectedFile;
+    closeMenu();
+    Alert.alert(
+      'File Info',
+      `Name: ${file.name}\n\nFormat: ${file.format}\n\nSize: ${formatFileSize(file.size)}\n\nPath: ${file.path}`
+    );
   };
 
   const formatFileSize = (bytes) => {
     const b = Number(bytes) || 0;
     if (b <= 0) return '0 KB';
-    const kb = b / 1024;
-    if (kb >= 1024) {
-      return `${(kb / 1024).toFixed(2)} MB`;
-    }
-    return `${kb.toFixed(1)} KB`;
+    const mb = b / 1024 / 1024;
+    return `${mb.toFixed(1)} MB`;
   };
 
-  const getFormatBadgeStyle = (format) => {
-    switch (format) {
-      case 'PDF':
-        return { backgroundColor: '#FFEBEE', color: '#D32F2F' };
-      case 'PNG':
-        return { backgroundColor: '#E8F5E9', color: '#388E3C' };
-      case 'WEBP':
-        return { backgroundColor: '#F3E5F5', color: '#7B1FA2' };
-      case 'JPG':
-      case 'JPEG':
-      default:
-        return { backgroundColor: '#E3F2FD', color: '#1976D2' };
-    }
+  const formatTime = (dateObj) => {
+    const d = new Date(dateObj);
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isToday = new Date().toDateString() === d.toDateString();
+    return `${isToday ? 'Today' : d.toLocaleDateString()}, ${time}`;
   };
 
-  const renderFileItem = ({ item }) => {
-    const badgeStyle = getFormatBadgeStyle(item.format);
+  const renderFileItem = ({ item, index }) => {
+    const isLast = index === convertedFiles.length - 1;
+    const formatColor = item.format === 'PDF' ? '#EF4444' : item.format === 'PNG' ? '#3B82F6' : '#10B981';
+    const isFav = favoritesSet.has(item.path);
+
     return (
-      <TouchableOpacity
-        style={styles.fileCard}
-        onPress={() => handleFilePress(item)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.badgeContainer, { backgroundColor: badgeStyle.backgroundColor }]}>
-          <Text style={[styles.badgeText, { color: badgeStyle.color }]}>{item.format}</Text>
+      <View style={[styles.fileItem, !isLast && styles.fileItemBorder]}>
+        
+        <View style={styles.thumbnailWrapper}>
+           <View style={styles.thumbnailPlaceholder}>
+              <Text style={styles.docIconPlaceholder}>📄</Text>
+           </View>
+           <View style={[styles.formatBadge, { backgroundColor: formatColor }]}>
+             <Text style={styles.formatBadgeText}>{item.format}</Text>
+           </View>
         </View>
 
-        <View style={styles.fileDetails}>
-          <Text style={styles.fileName} numberOfLines={1}>
-            {item.name}
+        <View style={styles.fileInfo}>
+          <Text style={styles.fileName} numberOfLines={1}>{item.name}</Text>
+          <Text style={styles.fileSubtext} numberOfLines={1}>
+            {item.format} . {formatFileSize(item.size)} . {formatTime(item.mtime)}
           </Text>
-          <Text style={styles.filePath} numberOfLines={1}>
-            {item.path}
-          </Text>
-          <Text style={styles.fileMeta}>Size: {formatFileSize(item.size)}</Text>
         </View>
 
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteFile(item)}>
-          <Text style={styles.deleteText}>🗑️</Text>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        <View style={styles.actionsWrapper}>
+           <TouchableOpacity style={styles.actionBtn} onPress={() => handleToggleFavorite(item)}>
+             <Text style={[styles.actionIconStar, isFav && { color: '#F59E0B' }]}>
+               {isFav ? '★' : '☆'}
+             </Text>
+           </TouchableOpacity>
+           <TouchableOpacity style={styles.actionBtn} onPress={() => openMenu(item)}>
+             <Text style={styles.actionIconDots}>⋮</Text>
+           </TouchableOpacity>
+        </View>
+
+      </View>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
+      
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Back</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{marginRight: 12}}>
+            <Text style={styles.backBtnText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Recent Converted</Text>
+        </View>
+        <TouchableOpacity style={styles.searchBtn}>
+          <Text style={styles.searchIcon}>🔍</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Converted Outputs ({convertedFiles.length})</Text>
       </View>
 
       <View style={styles.listContainer}>
         {isLoading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#000000" />
-            <Text style={styles.loadingText}>Loading Converted Files...</Text>
           </View>
         ) : (
-          <FlatList
-            data={convertedFiles}
-            keyExtractor={(item) => item.id}
-            renderItem={renderFileItem}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyTitle}>No Converted Files Found</Text>
-                <Text style={styles.emptyText}>
-                  Your exported JPG, PNG, WEBP, and PDF files will appear here once converted.
-                </Text>
-              </View>
-            }
-          />
+          <View style={styles.cardContainer}>
+            <FlatList
+              data={convertedFiles}
+              keyExtractor={(item) => item.id}
+              renderItem={renderFileItem}
+              contentContainerStyle={styles.listContent}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No converted files yet.</Text>
+                </View>
+              }
+            />
+          </View>
         )}
       </View>
 
-      {/* Image Preview Modal */}
-      {previewFile && (
-        <Modal visible={true} transparent={true} animationType="fade">
-          <View style={styles.modalBg}>
-            <View style={styles.modalCard}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle} numberOfLines={1}>
-                  {previewFile.name}
-                </Text>
-                <TouchableOpacity onPress={() => setPreviewFile(null)}>
-                  <Text style={styles.closeBtn}>✕</Text>
-                </TouchableOpacity>
-              </View>
+      {/* Options Menu Modal */}
+      <Modal visible={menuVisible} transparent={true} animationType="fade" onRequestClose={closeMenu}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMenu}>
+          <View style={styles.menuCard}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>🗑️</Text>
+              <Text style={styles.menuText}>Delete</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.menuItem} onPress={handleShare}>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>🔗</Text>
+              <Text style={styles.menuText}>Share</Text>
+            </TouchableOpacity>
 
-              <View style={styles.modalBody}>
-                <Image
-                  source={{ uri: previewFile.uri }}
-                  style={styles.modalImage}
-                  resizeMode="contain"
-                />
-              </View>
+            <TouchableOpacity style={styles.menuItem} onPress={handleRenamePress}>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>✏️</Text>
+              <Text style={styles.menuText}>Rename</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem} onPress={handleAbout}>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>ℹ️</Text>
+              <Text style={styles.menuText}>About</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Rename Modal */}
+      <Modal visible={renameVisible} transparent={true} animationType="fade" onRequestClose={() => setRenameVisible(false)}>
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={styles.renameCard}>
+            <Text style={styles.renameTitle}>Rename File</Text>
+            <TextInput
+              style={styles.renameInput}
+              value={renameText}
+              onChangeText={setRenameText}
+              autoFocus={true}
+              selectionColor="#3B82F6"
+            />
+            <View style={styles.renameActions}>
+              <TouchableOpacity style={styles.renameBtn} onPress={() => setRenameVisible(false)}>
+                <Text style={styles.renameBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.renameBtn, { backgroundColor: '#3B82F6', borderWidth: 0 }]} onPress={handleRenameSubmit}>
+                <Text style={[styles.renameBtnText, { color: '#FFFFFF' }]}>Rename</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      )}
+        </KeyboardAvoidingView>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -232,149 +331,229 @@ const ConvertedFilesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F7F9FC',
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
-  backButton: {
-    fontSize: 16,
-    marginRight: 16,
-    color: '#000000',
-    fontWeight: '600',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  title: {
-    fontSize: 18,
+  backBtnText: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#111827',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  searchBtn: {
+    padding: 4,
+  },
+  searchIcon: {
+    fontSize: 20,
+    color: '#111827',
   },
   listContainer: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  cardContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   listContent: {
-    gap: 10,
-    paddingBottom: 24,
+    paddingVertical: 8,
   },
-  fileCard: {
+  fileItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  fileItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  thumbnailWrapper: {
+    position: 'relative',
+    marginRight: 14,
+  },
+  thumbnailPlaceholder: {
+    width: 46,
+    height: 46,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-  },
-  badgeContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    borderColor: '#E5E7EB',
     borderRadius: 6,
-    marginRight: 12,
-    alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 46,
+    alignItems: 'center',
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+  docIconPlaceholder: {
+    fontSize: 20,
   },
-  fileDetails: {
+  formatBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  formatBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  fileInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   fileName: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 2,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
   },
-  filePath: {
+  fileSubtext: {
     fontSize: 11,
-    color: '#777777',
-    marginBottom: 2,
-  },
-  fileMeta: {
-    fontSize: 11,
-    color: '#555555',
+    color: '#6B7280',
     fontWeight: '500',
   },
-  deleteButton: {
-    padding: 8,
+  actionsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  deleteText: {
+  actionBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginLeft: 4,
+  },
+  actionIconStar: {
     fontSize: 18,
+    color: '#9CA3AF',
+  },
+  actionIconDots: {
+    fontSize: 20,
+    color: '#111827',
+    fontWeight: 'bold',
   },
   loadingBox: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666666',
+    alignItems: 'center',
   },
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
   },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 6,
-  },
   emptyText: {
-    fontSize: 13,
-    color: '#777777',
-    textAlign: 'center',
-    lineHeight: 18,
+    fontSize: 14,
+    color: '#6B7280',
   },
-  modalBg: {
+  
+  // Modal Styles
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
   },
-  modalCard: {
-    width: '100%',
-    maxHeight: '80%',
+  menuCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    overflow: 'hidden',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    width: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  modalHeader: {
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    paddingVertical: 12,
   },
-  modalTitle: {
+  menuIcon: {
+    fontSize: 18,
+    marginRight: 12,
+    width: 24,
+    textAlign: 'center',
+  },
+  menuText: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
+    color: '#1F2937',
+    fontWeight: '500',
   },
-  closeBtn: {
+  
+  // Rename Modal Styles
+  renameCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  renameTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#666666',
-    paddingHorizontal: 8,
+    color: '#1F2937',
+    marginBottom: 16,
   },
-  modalBody: {
-    padding: 16,
-    alignItems: 'center',
+  renameInput: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#1F2937',
+    backgroundColor: '#F9FAFB',
+    marginBottom: 20,
   },
-  modalImage: {
-    width: '100%',
-    height: 320,
+  renameActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  renameBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  renameBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
   },
 });
 

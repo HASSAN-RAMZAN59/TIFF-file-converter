@@ -340,3 +340,26 @@ function createBmpBuffer(rgba, width, height) {
 
   return buf;
 }
+
+export const getConvertedFilesList = async () => {
+  const outputDir = await getOutputDir();
+  const exists = await RNFS.exists(outputDir);
+  if (!exists) return [];
+  const items = await RNFS.readDir(outputDir);
+  return items
+    .filter((item) => item.isFile() && (item.size || 0) > 0)
+    .map((item) => {
+      const ext = item.name.split('.').pop().toLowerCase();
+      return {
+        id: item.path,
+        name: item.name,
+        path: item.path,
+        uri: 'file://' + item.path,
+        size: item.size || 0,
+        format: ext.toUpperCase(),
+        mtime: item.mtime || new Date(),
+      };
+    })
+    .sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
+};
+

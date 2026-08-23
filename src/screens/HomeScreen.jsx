@@ -16,6 +16,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 import { isTiffFile } from '../services/tiffScannerService';
+import { getConvertedFilesList } from '../services/tiffConverterService';
+import { getFavorites, toggleFavorite } from '../services/favoritesService';
 
 const { width } = Dimensions.get('window');
 
@@ -32,6 +34,8 @@ const HomeScreen = ({ navigation }) => {
     loading: true,
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [recentFiles, setRecentFiles] = useState([]);
+  const [favoritesSet, setFavoritesSet] = useState(new Set());
 
   const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 GB';
@@ -71,17 +75,46 @@ const HomeScreen = ({ navigation }) => {
     }
   }, []);
 
+  const fetchRecentFiles = async () => {
+    try {
+      const files = await getConvertedFilesList();
+      setRecentFiles(files.slice(0, 3)); // Only take top 3 for home screen
+    } catch (error) {
+      console.warn(error);
+    }
+  };
+
+  const loadAllData = useCallback(async () => {
+    await fetchStorageInfo();
+    await fetchRecentFiles();
+    try {
+      const favs = await getFavorites();
+      setFavoritesSet(new Set(favs.map((f) => f.path)));
+    } catch (e) {}
+  }, [fetchStorageInfo]);
+
+  const handleToggleFavorite = async (item) => {
+    await toggleFavorite(item);
+    const newSet = new Set(favoritesSet);
+    if (newSet.has(item.path)) {
+      newSet.delete(item.path);
+    } else {
+      newSet.add(item.path);
+    }
+    setFavoritesSet(newSet);
+  };
+
   useFocusEffect(
     useCallback(() => {
-      fetchStorageInfo();
-    }, [fetchStorageInfo])
+      loadAllData();
+    }, [loadAllData])
   );
 
   useEffect(() => {
-    fetchStorageInfo();
+    loadAllData();
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        fetchStorageInfo();
+        loadAllData();
       }
     });
     return () => subscription?.remove();
@@ -89,7 +122,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchStorageInfo();
+    await loadAllData();
     setRefreshing(false);
   };
 
@@ -230,23 +263,57 @@ const HomeScreen = ({ navigation }) => {
         {/* Recent Converted Files */}
         <View style={styles.recentSection}>
           <View style={styles.recentHeader}>
-            <Text style={styles.recentTitle}>Recent Converted Files</Text>
-            <TouchableOpacity>
+            <Text style={styles.recentTitle}>Recent Converted</Text>
+            <TouchableOpacity onPress={handleConvertedOutputsPress}>
               <Text style={styles.viewAll}>View All {'>'}</Text>
             </TouchableOpacity>
           </View>
           
-          {[1, 2, 3].map((item, index) => (
-            <View key={item} style={[styles.recentItem, index !== 2 && styles.recentItemBorder]}>
-              <View style={[styles.iconPlaceholder, { width: 44, height: 44, borderRadius: 6, marginRight: 12 }]} />
-              <View style={styles.recentItemBody}>
-                <Text style={styles.recentItemTitle}>Invoice_01.jpg</Text>
-                <Text style={styles.recentItemSub}>JPG . 2.4 MB . Today, 2:34 PM</Text>
-              </View>
-              <View style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12, marginRight: 12 }]} />
-              <View style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12 }]} />
-            </View>
-          ))}
+          {recentFiles.length === 0 ? (
+            <Text style={styles.emptyRecentText}>No recent converted files.</Text>
+          ) : (
+            recentFiles.map((item, index) => {
+              const formatColor = item.format === 'PDF' ? '#EF4444' : item.format === 'PNG' ? '#3B82F6' : '#10B981';
+              const isLast = index === recentFiles.length - 1;
+              const timeString = new Date(item.mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const sizeMB = (item.size / 1024 / 1024).toFixed(1) + ' MB';
+
+              return (
+                <View key={item.id} style={[styles.recentItem, !isLast && styles.recentItemBorder]}>
+                  {/* Thumbnail */}
+                  <View style={styles.thumbnailWrapper}>
+                    <View style={styles.thumbnailPlaceholder}>
+                      <Text style={styles.docIconPlaceholder}>📄</Text>
+                    </View>
+                    <View style={[styles.formatBadge, { backgroundColor: formatColor }]}>
+                      <Text style={styles.formatBadgeText}>{item.format}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.recentItemBody}>
+                    <Text style={styles.recentItemTitle} numberOfLines={1}>{item.name}</Text>
+                    <Text style={styles.recentItemSub} numberOfLines={1}>
+                      {item.format} . {sizeMB} . {timeString}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12, marginRight: 12, borderWidth: 0, justifyContent: 'center', alignItems: 'center' }]}
+                    onPress={() => handleToggleFavorite(item)}
+                  >
+                    <Text style={{color: favoritesSet.has(item.path) ? '#F59E0B' : '#6B7280', fontSize: 16}}>
+                      {favoritesSet.has(item.path) ? '★' : '☆'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12, borderWidth: 0, justifyContent: 'center', alignItems: 'center' }]}
+                    onPress={handleConvertedOutputsPress}
+                  >
+                    <Text style={{color: '#111827', fontSize: 16, fontWeight: 'bold'}}>⋮</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -466,6 +533,45 @@ const styles = StyleSheet.create({
   recentItemSub: {
     fontSize: 11,
     color: '#6B7280',
+  },
+  emptyRecentText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+  thumbnailWrapper: {
+    position: 'relative',
+    marginRight: 14,
+  },
+  thumbnailPlaceholder: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  docIconPlaceholder: {
+    fontSize: 18,
+  },
+  formatBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  formatBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });
 
