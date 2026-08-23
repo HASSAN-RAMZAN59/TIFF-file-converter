@@ -278,22 +278,22 @@ const ConvertedFilesScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMenu}>
           <View style={styles.menuCard}>
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>🗑️</Text>
+              <Text style={[styles.menuIcon, { color: '#EF4444' }]}>✕</Text>
               <Text style={styles.menuText}>Delete</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.menuItem} onPress={handleShare}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>🔗</Text>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>➔</Text>
               <Text style={styles.menuText}>Share</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleRenamePress}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>✏️</Text>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>✎</Text>
               <Text style={styles.menuText}>Rename</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleAbout}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>ℹ️</Text>
+              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>ℹ</Text>
               <Text style={styles.menuText}>About</Text>
             </TouchableOpacity>
           </View>
