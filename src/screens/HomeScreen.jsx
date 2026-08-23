@@ -10,16 +10,15 @@ import {
   Alert,
   AppState,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 import { isTiffFile } from '../services/tiffScannerService';
 
-/**
- * HomeScreen Dashboard Component
- * Forces Native Internal Storage File Manager (No PhotoPicker) & Enforces Strict TIFF-only Filtering (> 0 Bytes)
- */
+const { width } = Dimensions.get('window');
+
 const HomeScreen = ({ navigation }) => {
   // Storage State
   const [storageInfo, setStorageInfo] = useState({
@@ -34,7 +33,6 @@ const HomeScreen = ({ navigation }) => {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  // Dynamic Bytes Formatter (Decimal GB/MB)
   const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 GB';
     const gb = bytes / 1000000000;
@@ -45,7 +43,6 @@ const HomeScreen = ({ navigation }) => {
     return `${gb.toFixed(1)} GB`;
   };
 
-  // 100% Pure Dynamic real-time storage calculation from OS kernel
   const fetchStorageInfo = useCallback(async () => {
     try {
       if (RNFS.getFSInfo) {
@@ -69,283 +66,406 @@ const HomeScreen = ({ navigation }) => {
         setStorageInfo((prev) => ({ ...prev, loading: false, formattedTotal: 'N/A' }));
       }
     } catch (error) {
-      console.warn('Error fetching dynamic storage info from RNFS:', error);
+      console.warn('Error fetching storage info:', error);
       setStorageInfo((prev) => ({ ...prev, loading: false, formattedTotal: 'N/A' }));
     }
   }, []);
 
-  // Recalculate Storage whenever screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchStorageInfo();
     }, [fetchStorageInfo])
   );
 
-  // Recalculate Storage when app comes to foreground (AppState active)
   useEffect(() => {
     fetchStorageInfo();
-
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         fetchStorageInfo();
       }
     });
-
-    return () => {
-      subscription?.remove();
-    };
+    return () => subscription?.remove();
   }, [fetchStorageInfo]);
 
-  // Pull-to-refresh handler
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchStorageInfo();
     setRefreshing(false);
   };
 
-  // Card 1: Auto-Scan All TIFFs Logic
-  const handleAutoScanPress = () => {
-    navigation.navigate('AllFilesScreen');
-  };
+  const handleAutoScanPress = () => navigation.navigate('AllFilesScreen');
 
-  // Card 2: Pick & Convert Single File Logic (Internal Storage, Strict TIFF Check & Size > 0)
   const handlePickSingleFilePress = async () => {
     try {
       const result = await DocumentPicker.pickSingle({
         type: [DocumentPicker.types.allFiles],
       });
-
       if (result) {
         const fileName = result.name || result.fileName || '';
         const fileSize = result.size || 0;
-        
-        // Strict TIFF File extension check
         if (!isTiffFile(fileName)) {
           Alert.alert('Invalid File', 'Please select a valid TIFF file (.tif or .tiff).');
           return;
         }
-
-        // Strict 0-byte empty file check
         if (fileSize <= 0) {
-          Alert.alert('Empty File', 'The selected TIFF file is empty (0 bytes) and cannot be processed.');
+          Alert.alert('Empty File', 'The selected TIFF file is empty.');
           return;
         }
-
-        navigation.navigate('PickFilesScreen', {
-          file: {
-            uri: result.uri,
-            name: fileName,
-            size: fileSize,
-            type: result.type,
-          },
-        });
+        navigation.navigate('PickFilesScreen', { file: { uri: result.uri, name: fileName, size: fileSize, type: result.type } });
       }
     } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        console.log('User cancelled single file picker');
-      } else {
-        console.warn('DocumentPicker Error (Single):', err);
-        Alert.alert('File Pick Error', 'Unable to pick the selected file.');
+      if (!DocumentPicker.isCancel(err)) {
+        Alert.alert('Error', 'Unable to pick the file.');
       }
     }
   };
 
-  // Card 3: Batch Conversion Logic (Internal Storage Multi-Select, Strict TIFF Check & Size > 0)
   const handleBatchConversionPress = async () => {
     try {
       const results = await DocumentPicker.pick({
         allowMultiSelection: true,
         type: [DocumentPicker.types.allFiles],
       });
-
       if (results && results.length > 0) {
-        // Strict TIFF extension & non-zero size filter
         const tiffResults = results.filter((item) => {
           const fileName = item.name || item.fileName || '';
           const fileSize = item.size || 0;
           return isTiffFile(fileName) && fileSize > 0;
         });
-
         if (tiffResults.length === 0) {
-          Alert.alert(
-            'Invalid Selection',
-            'None of the selected files are valid TIFF images (> 0 bytes).'
-          );
+          Alert.alert('Invalid', 'No valid TIFF files selected.');
           return;
         }
-
-        if (tiffResults.length < results.length) {
-          Alert.alert(
-            'Files Filtered',
-            `Selected ${tiffResults.length} valid TIFF files. Non-TIFF or empty (0 byte) files were excluded.`
-          );
-        }
-
         const formattedFiles = tiffResults.map((item) => ({
-          uri: item.uri,
-          name: item.name || item.fileName,
-          size: item.size,
-          type: item.type,
+          uri: item.uri, name: item.name || item.fileName, size: item.size, type: item.type
         }));
-
-        navigation.navigate('BatchConvertScreen', {
-          files: formattedFiles,
-        });
+        navigation.navigate('BatchConvertScreen', { files: formattedFiles });
       }
     } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        console.log('User cancelled batch file picker');
-      } else {
-        console.warn('DocumentPicker Error (Batch):', err);
-        Alert.alert('Batch Pick Error', 'Unable to pick multiple files.');
+      if (!DocumentPicker.isCancel(err)) {
+        Alert.alert('Error', 'Unable to pick multiple files.');
       }
     }
   };
 
-  // Card 4: Converted Outputs Logic
-  const handleConvertedOutputsPress = () => {
-    navigation.navigate('ConvertedFilesScreen');
-  };
-
-  // Card 5: Favorites Logic
-  const handleFavoritesPress = () => {
-    navigation.navigate('FavoritesScreen');
-  };
+  const handleConvertedOutputsPress = () => navigation.navigate('ConvertedFilesScreen');
+  const handleFavoritesPress = () => navigation.navigate('FavoritesScreen');
+  const handleSettingsPress = () => Alert.alert('Settings', 'Settings screen coming soon.');
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
+      
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>TIFF Viewer Dashboard</Text>
-        
-        {/* Dynamic Storage Info Header Section */}
-        <TouchableOpacity
-          style={styles.storageCard}
-          onPress={fetchStorageInfo}
-          activeOpacity={0.8}
-        >
-          <View style={styles.storageHeaderRow}>
-            <Text style={styles.storageTitle}>Device Storage Status</Text>
-            <Text style={styles.storagePercent}>{storageInfo.usedPercentage}% Used</Text>
-          </View>
-          <Text style={styles.storageData}>
-            Storage: {storageInfo.formattedUsed} Used / {storageInfo.formattedFree} Free (Total: {storageInfo.formattedTotal})
-          </Text>
-        </TouchableOpacity>
+        <View>
+          <Text style={styles.headerTitle}>TIFF Converter</Text>
+          <Text style={styles.headerSubtitle}>Convert TIFF to JPG, PNG, PDF, WEBP</Text>
+        </View>
+        <View style={[styles.iconPlaceholder, { width: 32, height: 32, borderRadius: 16 }]} />
       </View>
 
-      {/* Action Cards List */}
-      <ScrollView
-        contentContainerStyle={styles.cardsList}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        
-        {/* Card 1: Auto-Scan All TIFFs */}
-        <TouchableOpacity style={styles.card} onPress={handleAutoScanPress} activeOpacity={0.7}>
-          <Text style={styles.cardTitle}>1. Auto-Scan All TIFFs</Text>
-          <Text style={styles.cardDescription}>Automatically search and list all TIFF files across device storage.</Text>
-        </TouchableOpacity>
+        {/* Storage Banner */}
+        <View style={styles.storageBanner}>
+          <View style={styles.storageCircleWrapper}>
+            <View style={styles.storageCircle}>
+              <Text style={styles.storageCirclePercent}>{storageInfo.usedPercentage}%</Text>
+              <Text style={styles.storageCircleLabel}>Used</Text>
+            </View>
+          </View>
+          
+          <View style={styles.storageInfo}>
+            <Text style={styles.storageInfoTitle}>Device Storage</Text>
+            <Text style={styles.storageInfoData}>{storageInfo.formattedUsed} / {storageInfo.formattedTotal}</Text>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${storageInfo.usedPercentage}%` }]} />
+            </View>
+            <View style={styles.availableRow}>
+              <View style={[styles.iconPlaceholder, { width: 14, height: 14, borderRadius: 7, marginRight: 6, borderWidth: 0 }]} />
+              <Text style={styles.availableText}>{storageInfo.formattedFree} Available</Text>
+            </View>
+          </View>
+          
+          <View style={[styles.iconPlaceholder, { width: 56, height: 56, borderRadius: 8, alignSelf: 'center', borderWidth: 0 }]} />
+        </View>
 
-        {/* Card 2: Pick & Convert Single File */}
-        <TouchableOpacity style={styles.card} onPress={handlePickSingleFilePress} activeOpacity={0.7}>
-          <Text style={styles.cardTitle}>2. Pick & Convert Single File</Text>
-          <Text style={styles.cardDescription}>Open Internal Storage file picker to select one TIFF file.</Text>
-        </TouchableOpacity>
+        {/* Action Grid */}
+        <View style={styles.grid}>
+          <ActionCard 
+            title="Auto Scan All TIFF" 
+            desc="Find all TIFF files on your device" 
+            onPress={handleAutoScanPress} 
+          />
+          <ActionCard 
+            title="Pick & Convert" 
+            desc="Choose one TIFF file to convert" 
+            onPress={handlePickSingleFilePress} 
+          />
+          <ActionCard 
+            title="Batch Conversion" 
+            desc="Convert Multiple TIFF files together" 
+            onPress={handleBatchConversionPress} 
+          />
+          <ActionCard 
+            title="Converted Outputs" 
+            desc="View all your converted files" 
+            onPress={handleConvertedOutputsPress} 
+          />
+          <ActionCard 
+            title="Favorites" 
+            desc="Quick access to saved files" 
+            onPress={handleFavoritesPress} 
+          />
+          <ActionCard 
+            title="Settings" 
+            desc="Manage app preferences" 
+            onPress={handleSettingsPress} 
+          />
+        </View>
 
-        {/* Card 3: Batch Conversion */}
-        <TouchableOpacity style={styles.card} onPress={handleBatchConversionPress} activeOpacity={0.7}>
-          <Text style={styles.cardTitle}>3. Batch Conversion</Text>
-          <Text style={styles.cardDescription}>Select multiple TIFF files from Internal Storage for batch conversion.</Text>
-        </TouchableOpacity>
-
-        {/* Card 4: Converted Outputs */}
-        <TouchableOpacity style={styles.card} onPress={handleConvertedOutputsPress} activeOpacity={0.7}>
-          <Text style={styles.cardTitle}>4. Converted Outputs</Text>
-          <Text style={styles.cardDescription}>View exported PDF and JPG files in app sandbox.</Text>
-        </TouchableOpacity>
-
-        {/* Card 5: Favorites */}
-        <TouchableOpacity style={styles.card} onPress={handleFavoritesPress} activeOpacity={0.7}>
-          <Text style={styles.cardTitle}>5. Favorites</Text>
-          <Text style={styles.cardDescription}>Access bookmarked TIFF files quickly.</Text>
-        </TouchableOpacity>
-
+        {/* Recent Converted Files */}
+        <View style={styles.recentSection}>
+          <View style={styles.recentHeader}>
+            <Text style={styles.recentTitle}>Recent Converted Files</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>View All {'>'}</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {[1, 2, 3].map((item, index) => (
+            <View key={item} style={[styles.recentItem, index !== 2 && styles.recentItemBorder]}>
+              <View style={[styles.iconPlaceholder, { width: 44, height: 44, borderRadius: 6, marginRight: 12 }]} />
+              <View style={styles.recentItemBody}>
+                <Text style={styles.recentItemTitle}>Invoice_01.jpg</Text>
+                <Text style={styles.recentItemSub}>JPG . 2.4 MB . Today, 2:34 PM</Text>
+              </View>
+              <View style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12, marginRight: 12 }]} />
+              <View style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12 }]} />
+            </View>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+const ActionCard = ({ title, desc, onPress }) => (
+  <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
+    <View style={[styles.iconPlaceholder, { width: 48, height: 48, borderRadius: 24, marginBottom: 12 }]} />
+    <Text style={styles.actionCardTitle} numberOfLines={2}>{title}</Text>
+    <Text style={styles.actionCardDesc} numberOfLines={3}>{desc}</Text>
+    <View style={styles.actionCardBtn}>
+      <View style={[styles.iconPlaceholder, { width: 16, height: 16, borderRadius: 8, borderWidth: 0 }]} />
+    </View>
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F7F9FC',
+  },
+  scrollContent: {
     padding: 16,
+    paddingBottom: 40,
   },
   header: {
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 12,
-  },
-  storageCard: {
-    padding: 14,
-    backgroundColor: '#EAEAEA',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-  },
-  storageHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
-  storageTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333333',
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#111827',
   },
-  storagePercent: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#000000',
+  headerSubtitle: {
+    fontSize: 11,
+    color: '#6B7280',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  iconPlaceholder: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  storageData: {
-    fontSize: 13,
-    color: '#555555',
-  },
-  cardsList: {
-    gap: 12,
-    paddingBottom: 24,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: '#E5E7EB',
   },
-  cardTitle: {
-    fontSize: 16,
+  storageBanner: {
+    backgroundColor: '#2563EB',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  storageCircleWrapper: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 6,
+    borderColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderLeftColor: '#FFFFFF',
+    transform: [{ rotate: '-45deg' }],
+  },
+  storageCircle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    transform: [{ rotate: '45deg' }],
+  },
+  storageCirclePercent: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 4,
   },
-  cardDescription: {
-    fontSize: 13,
-    color: '#666666',
+  storageCircleLabel: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 11,
+  },
+  storageInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  storageInfoTitle: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  storageInfoData: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 11,
+    marginBottom: 10,
+    fontWeight: '500',
+  },
+  progressBarBg: {
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 1.5,
+    marginBottom: 10,
+  },
+  progressBarFill: {
+    height: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 1.5,
+  },
+  availableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  availableText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 24,
+  },
+  actionCard: {
+    width: (width - 32 - 16) / 3, // 3 cols, 2 gaps of 8 => 16px
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 10,
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  actionCardTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 4,
+    minHeight: 30,
+  },
+  actionCardDesc: {
+    fontSize: 9,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 12,
+    minHeight: 28,
+  },
+  actionCardBtn: {
+    width: '100%',
+    height: 24,
+    backgroundColor: '#3B82F6',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recentSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  recentTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  viewAll: {
+    fontSize: 12,
+    color: '#3B82F6',
+    fontWeight: '600',
+  },
+  recentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  recentItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  recentItemBody: {
+    flex: 1,
+  },
+  recentItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  recentItemSub: {
+    fontSize: 11,
+    color: '#6B7280',
   },
 });
 

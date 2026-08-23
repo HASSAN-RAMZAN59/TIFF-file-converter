@@ -22,7 +22,7 @@ import { getFavorites, toggleFavorite } from '../services/favoritesService';
 const AllFilesScreen = ({ navigation }) => {
   const [tiffFiles, setTiffFiles] = useState([]);
   const [favoritePaths, setFavoritePaths] = useState(new Set());
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(true);
   const [hasPermission, setHasPermission] = useState(true);
 
   useEffect(() => {
@@ -40,6 +40,8 @@ const AllFilesScreen = ({ navigation }) => {
       setHasPermission(granted);
       if (granted) {
         startTiffScan();
+      } else {
+        setIsScanning(false);
       }
     }
   };
@@ -124,6 +126,58 @@ const AllFilesScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   };
+
+  if (isScanning) {
+    return (
+      <SafeAreaView style={styles.scanContainer}>
+        <View style={styles.scanHeaderTop}>
+          <Text style={styles.scanTitle}>Scaning Files</Text>
+        </View>
+        
+        <View style={styles.scanCenterContent}>
+          {/* Lottie Placeholder */}
+          <View style={styles.lottiePlaceholder} />
+          
+          <Text style={styles.scanMainText}>Scanning Storage for TIFF Files...</Text>
+          <Text style={styles.scanSubText}>Please wait for complete scanning</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isScanning && tiffFiles.length === 0) {
+    return (
+      <SafeAreaView style={styles.scanContainer}>
+        <View style={styles.scanHeaderTop}>
+          <Text style={styles.scanTitle}>Scaning Files</Text>
+        </View>
+        
+        <View style={styles.scanCenterContent}>
+          {/* Lottie Placeholder */}
+          <View style={styles.lottiePlaceholder} />
+          
+          <Text style={styles.scanMainText}>No valid .TIF or .TIFF files found on device storage</Text>
+          <Text style={styles.scanSubText}>Make sure your TIFF files have a .TIF or .TIFF extension and are saved in your internal storage or download folder</Text>
+        </View>
+
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity 
+            style={styles.rescanBlueButton}
+            onPress={() => {
+              if (!hasPermission) {
+                handleGrantPermission();
+              } else {
+                startTiffScan();
+              }
+            }}
+          >
+            <View style={styles.buttonIconPlaceholder} />
+            <Text style={styles.rescanBlueButtonText}>Rescan Storage Files</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -339,6 +393,81 @@ const styles = StyleSheet.create({
     color: '#999999',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  scanContainer: {
+    flex: 1,
+    backgroundColor: '#F7F9FC',
+  },
+  scanHeaderTop: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    alignItems: 'center',
+  },
+  scanTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  scanCenterContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    marginTop: -50,
+  },
+  lottiePlaceholder: {
+    width: 140,
+    height: 140,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    marginBottom: 40,
+  },
+  scanMainText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  scanSubText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  bottomButtonContainer: {
+    padding: 24,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  rescanBlueButton: {
+    flexDirection: 'row',
+    backgroundColor: '#3B82F6',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 220,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  buttonIconPlaceholder: {
+    width: 16,
+    height: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 4,
+    marginRight: 10,
+  },
+  rescanBlueButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
 
