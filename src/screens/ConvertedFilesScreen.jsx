@@ -181,6 +181,14 @@ const ConvertedFilesScreen = ({ navigation }) => {
     );
   };
 
+  const handleFilePress = (item) => {
+    if (['JPG', 'PNG', 'WEBP', 'JPEG'].includes(item.format.toUpperCase())) {
+      navigation.navigate('PreviewScreen', { file: item });
+    } else {
+      Alert.alert('PDF Saved', `File is saved at:\n${item.path}`);
+    }
+  };
+
   const formatFileSize = (bytes) => {
     const b = Number(bytes) || 0;
     if (b <= 0) return '0 KB';
@@ -201,7 +209,11 @@ const ConvertedFilesScreen = ({ navigation }) => {
     const isFav = favoritesSet.has(item.path);
 
     return (
-      <View style={[styles.fileItem, !isLast && styles.fileItemBorder]}>
+      <TouchableOpacity 
+        style={[styles.fileItem, !isLast && styles.fileItemBorder]} 
+        activeOpacity={0.7}
+        onPress={() => handleFilePress(item)}
+      >
         
         <View style={styles.thumbnailWrapper}>
            <View style={styles.thumbnailPlaceholder}>
@@ -230,7 +242,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
            </TouchableOpacity>
         </View>
 
-      </View>
+      </TouchableOpacity>
     );
   };
 

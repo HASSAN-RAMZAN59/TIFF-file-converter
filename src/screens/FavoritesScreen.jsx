@@ -67,7 +67,7 @@ const FavoritesScreen = ({ navigation }) => {
   };
 
   const handleFileSelect = (fileItem) => {
-    navigation.navigate('PickFilesScreen', { file: fileItem });
+    navigation.navigate('PreviewScreen', { file: fileItem });
   };
 
   const formatFileSize = (bytes) => {

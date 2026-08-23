@@ -357,7 +357,7 @@ export const getConvertedFilesList = async () => {
         uri: 'file://' + item.path,
         size: item.size || 0,
         format: ext.toUpperCase(),
-        mtime: item.mtime || new Date(),
+        mtime: item.mtime ? new Date(item.mtime).toISOString() : new Date().toISOString(),
       };
     })
     .sort((a, b) => new Date(b.mtime) - new Date(a.mtime));

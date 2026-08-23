@@ -84,7 +84,7 @@ export const scanDirectoryForTiffs = async (
                 path: item.path,
                 uri: `file://${item.path}`,
                 size: fileSize,
-                mtime: item.mtime || new Date(),
+                mtime: item.mtime ? new Date(item.mtime).toISOString() : new Date().toISOString(),
               };
 
               foundFilesMap.set(item.path, tiffItem);

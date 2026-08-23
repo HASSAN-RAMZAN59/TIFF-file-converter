@@ -126,6 +126,14 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
+  const handleFilePress = (item) => {
+    if (['JPG', 'PNG', 'WEBP', 'JPEG'].includes(item.format.toUpperCase())) {
+      navigation.navigate('PreviewScreen', { file: item });
+    } else {
+      Alert.alert('PDF Saved', `File is saved at:\n${item.path}`);
+    }
+  };
+
   const handleAutoScanPress = () => navigation.navigate('AllFilesScreen');
 
   const handlePickSingleFilePress = async () => {
@@ -279,7 +287,12 @@ const HomeScreen = ({ navigation }) => {
               const sizeMB = (item.size / 1024 / 1024).toFixed(1) + ' MB';
 
               return (
-                <View key={item.id} style={[styles.recentItem, !isLast && styles.recentItemBorder]}>
+                <TouchableOpacity 
+                  key={item.id} 
+                  style={[styles.recentItem, !isLast && styles.recentItemBorder]}
+                  activeOpacity={0.7}
+                  onPress={() => handleFilePress(item)}
+                >
                   {/* Thumbnail */}
                   <View style={styles.thumbnailWrapper}>
                     <View style={styles.thumbnailPlaceholder}>
@@ -310,7 +323,7 @@ const HomeScreen = ({ navigation }) => {
                   >
                     <Text style={{color: '#111827', fontSize: 16, fontWeight: 'bold'}}>⋮</Text>
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               );
             })
           )}

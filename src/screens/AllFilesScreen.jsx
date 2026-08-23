@@ -127,7 +127,7 @@ const AllFilesScreen = ({ navigation }) => {
   };
 
   const handleFileSelect = (file) => {
-    navigation.navigate('PickFilesScreen', { file });
+    navigation.navigate('PreviewScreen', { file });
   };
 
   const renderFileItem = ({ item, index, total }) => {
