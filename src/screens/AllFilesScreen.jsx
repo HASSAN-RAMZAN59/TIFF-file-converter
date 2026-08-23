@@ -7,8 +7,11 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  StatusBar,
+  Image,
 } from 'react-native';
 import { scanDeviceForTiffs } from '../services/tiffScannerService';
+import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 import {
   checkOsStoragePermission,
   requestOsStoragePermissionDialog,
@@ -19,6 +22,35 @@ import { getFavorites, toggleFavorite } from '../services/favoritesService';
  * AllFilesScreen Component
  * Fast single-pass scanner for .tif and .tiff files (> 0 KB) with Favorite bookmarks.
  */
+
+const TiffThumbnail = ({ path, style }) => {
+  const [imageUri, setImageUri] = useState(null);
+
+  useEffect(() => {
+    let isActive = true;
+    decodeTiffToBase64Uri(path, 0)
+      .then((result) => {
+        if (isActive) setImageUri(result.uri);
+      })
+      .catch((err) => {
+        // Silently fail for thumb
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [path]);
+
+  if (imageUri) {
+    return <Image source={{ uri: imageUri }} style={[style, { borderWidth: 0 }]} resizeMode="cover" />;
+  }
+
+  return (
+    <View style={[style, { justifyContent: 'center', alignItems: 'center' }]}>
+      <ActivityIndicator size="small" color="#D1D5DB" />
+    </View>
+  );
+};
+
 const AllFilesScreen = ({ navigation }) => {
   const [tiffFiles, setTiffFiles] = useState([]);
   const [favoritePaths, setFavoritePaths] = useState(new Set());
@@ -98,30 +130,29 @@ const AllFilesScreen = ({ navigation }) => {
     navigation.navigate('PickFilesScreen', { file });
   };
 
-  const renderFileItem = ({ item }) => {
+  const renderFileItem = ({ item, index, total }) => {
     const isFav = favoritePaths.has(item.path);
+    const isLast = index === total - 1;
     return (
       <TouchableOpacity
-        style={styles.fileCard}
+        style={[styles.fileCardItem, !isLast && styles.fileCardBorder]}
         onPress={() => handleFileSelect(item)}
         activeOpacity={0.7}
       >
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>🖼️</Text>
-        </View>
+        <TiffThumbnail path={item.path} style={styles.thumbnailPlaceholder} />
 
-        <View style={styles.fileInfo}>
-          <Text style={styles.fileName} numberOfLines={1}>
+        <View style={styles.fileInfoColumn}>
+          <Text style={styles.fileNameText} numberOfLines={1}>
             {item.name}
           </Text>
-          <Text style={styles.filePath} numberOfLines={1}>
+          <Text style={styles.filePathText} numberOfLines={1}>
             {item.path}
           </Text>
-          <Text style={styles.fileMeta}>Size: {formatFileSize(item.size)}</Text>
+          <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
         </View>
 
-        <TouchableOpacity style={styles.favBtn} onPress={() => handleToggleFav(item)}>
-          <Text style={styles.favBtnText}>{isFav ? '❤️' : '🤍'}</Text>
+        <TouchableOpacity style={styles.starBtn} onPress={() => handleToggleFav(item)}>
+          <View style={[styles.starIconPlaceholder, isFav && styles.starIconActive]} />
         </TouchableOpacity>
       </TouchableOpacity>
     );
@@ -180,13 +211,18 @@ const AllFilesScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.listScreenContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
+      
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>TIFF Files ({tiffFiles.length})</Text>
+      <View style={styles.listHeaderTop}>
+        <View>
+          <Text style={styles.listHeaderTitle}>Scan Complete</Text>
+          <Text style={styles.listHeaderSubtitle}>
+            {String(tiffFiles.length).padStart(2, '0')} valid TIFF files Found
+          </Text>
+        </View>
+        <View style={styles.headerSearchIconPlaceholder} />
       </View>
 
       {/* Permission Warning Banner */}
@@ -201,50 +237,14 @@ const AllFilesScreen = ({ navigation }) => {
         </View>
       )}
 
-      {/* Scan Control / Status Header */}
-      <View style={styles.statusBox}>
-        <View style={styles.statusRow}>
-          <Text style={styles.statusText}>
-            {isScanning
-              ? 'Scanning storage for TIFF files...'
-              : `Scan Complete. Found ${tiffFiles.length} valid TIFF files.`}
-          </Text>
-          {isScanning && <ActivityIndicator size="small" color="#000000" />}
-        </View>
-
-        <TouchableOpacity
-          style={[styles.rescanButton, isScanning && styles.disabledButton]}
-          disabled={isScanning}
-          onPress={() => {
-            if (!hasPermission) {
-              handleGrantPermission();
-            } else {
-              startTiffScan();
-            }
-          }}
-        >
-          <Text style={styles.rescanText}>{isScanning ? 'Scanning...' : 'Re-Scan Storage'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* TIFF Files List */}
-      <View style={styles.listContainer}>
+      {/* Main List Container */}
+      <View style={styles.mainListCard}>
         <FlatList
           data={tiffFiles}
           extraData={favoritePaths}
           keyExtractor={(item, index) => item.path || item.id || index.toString()}
-          renderItem={renderFileItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            !isScanning ? (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No valid .tif or .tiff files found on device storage.</Text>
-                <Text style={styles.emptySubtext}>
-                  Make sure your TIFF files have a .tif or .tiff extension and are saved in your internal storage or Download folder.
-                </Text>
-              </View>
-            ) : null
-          }
+          renderItem={({ item, index }) => renderFileItem({ item, index, total: tiffFiles.length })}
+          contentContainerStyle={styles.flatListContent}
         />
       </View>
     </SafeAreaView>
@@ -252,148 +252,6 @@ const AllFilesScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  backButton: {
-    fontSize: 16,
-    marginRight: 16,
-    color: '#000000',
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  permissionBanner: {
-    padding: 12,
-    backgroundColor: '#FFF3CD',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FFEEBA',
-    marginBottom: 12,
-  },
-  permissionText: {
-    fontSize: 13,
-    color: '#856404',
-    marginBottom: 8,
-  },
-  grantButton: {
-    backgroundColor: '#856404',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  grantButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  statusBox: {
-    padding: 14,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginBottom: 16,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  statusText: {
-    fontSize: 13,
-    color: '#333333',
-    flex: 1,
-  },
-  rescanButton: {
-    backgroundColor: '#000000',
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: '#888888',
-  },
-  rescanText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  listContainer: {
-    flex: 1,
-  },
-  listContent: {
-    gap: 10,
-    paddingBottom: 16,
-  },
-  fileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    backgroundColor: '#FAFAFA',
-  },
-  iconContainer: {
-    marginRight: 12,
-  },
-  iconText: {
-    fontSize: 24,
-  },
-  fileInfo: {
-    flex: 1,
-  },
-  fileName: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 2,
-  },
-  filePath: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 2,
-  },
-  fileMeta: {
-    fontSize: 11,
-    color: '#888888',
-  },
-  favBtn: {
-    padding: 8,
-  },
-  favBtnText: {
-    fontSize: 20,
-  },
-  emptyContainer: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#888888',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 12,
-    color: '#999999',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
   scanContainer: {
     flex: 1,
     backgroundColor: '#F7F9FC',
@@ -468,6 +326,131 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
+  },
+  // New Styles for List View
+  listScreenContainer: {
+    flex: 1,
+    backgroundColor: '#F7F9FC',
+    padding: 16,
+  },
+  listHeaderTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  listHeaderTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  listHeaderSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  headerSearchIconPlaceholder: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+  },
+  permissionBanner: {
+    padding: 12,
+    backgroundColor: '#FFF3CD',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFEEBA',
+    marginBottom: 16,
+  },
+  permissionText: {
+    fontSize: 13,
+    color: '#856404',
+    marginBottom: 8,
+  },
+  grantButton: {
+    backgroundColor: '#856404',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  grantButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  mainListCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  flatListContent: {
+    paddingVertical: 8,
+  },
+  fileCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  fileCardBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  thumbnailPlaceholder: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 6,
+    marginRight: 16,
+  },
+  fileInfoColumn: {
+    flex: 1,
+    marginRight: 12,
+  },
+  fileNameText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  filePathText: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginBottom: 4,
+  },
+  fileSizeText: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  starBtn: {
+    padding: 8,
+  },
+  starIconPlaceholder: {
+    width: 18,
+    height: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    borderRadius: 4,
+    transform: [{ rotate: '45deg' }],
+  },
+  starIconActive: {
+    backgroundColor: '#FBBF24',
+    borderColor: '#FBBF24',
   },
 });
 
