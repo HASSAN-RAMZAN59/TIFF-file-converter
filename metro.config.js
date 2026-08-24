@@ -18,12 +18,10 @@ module.exports = (async () => {
     resolver: {
       assetExts: assetExts.filter(ext => ext !== 'svg'),
       sourceExts: [...sourceExts, 'svg'],
-      extraNodeModules: {
-        'react-native/asset-registry': require.resolve('react-native/Libraries/Image/AssetRegistry'),
-      },
     },
   };
 })();
+
 
 
 

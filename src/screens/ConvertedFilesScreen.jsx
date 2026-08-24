@@ -20,6 +20,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import SearchIcon from '../assets/search.svg';
 
 const ConvertedFilesScreen = ({ navigation }) => {
   const [convertedFiles, setConvertedFiles] = useState([]);
@@ -257,8 +258,8 @@ const ConvertedFilesScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Recent Converted</Text>
         </View>
-        <TouchableOpacity style={styles.searchBtn}>
-          <Text style={styles.searchIcon}>🔍</Text>
+        <TouchableOpacity style={styles.searchBtn} activeOpacity={0.7}>
+          <SearchIcon width={20} height={20} fill="#111827" />
         </TouchableOpacity>
       </View>
 

@@ -15,7 +15,19 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
+import Svg, { Circle } from 'react-native-svg';
 import ArrowForwardIcon from '../assets/arrow_forward.svg';
+import StorageBannerIllustration from '../assets/storage_banner.svg';
+import PieChartIcon from '../assets/pie_chart_icon.svg';
+import AutoScanIcon from '../assets/auto_scan_icon.svg';
+import PickConvertIcon from '../assets/pick_convert_icon.svg';
+import BatchConvertIcon from '../assets/batch_convert_icon.svg';
+import ConvertedOutputsIcon from '../assets/converted_outputs_icon.svg';
+import FavoritesIcon from '../assets/favorites_icon.svg';
+import SettingsIcon from '../assets/settings_icon.svg';
+import StarIcon from '../assets/star.svg';
+import MoreVertIcon from '../assets/more_vert.svg';
+import SearchIcon from '../assets/search.svg';
 import { isTiffFile } from '../services/tiffScannerService';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
@@ -203,7 +215,13 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.headerTitle}>TIFF Converter</Text>
           <Text style={styles.headerSubtitle}>Convert TIFF to JPG, PNG, PDF, WEBP</Text>
         </View>
-        <View style={[styles.iconPlaceholder, { width: 32, height: 32, borderRadius: 16 }]} />
+        <TouchableOpacity 
+          style={styles.headerSearchBtn} 
+          activeOpacity={0.7}
+          onPress={handleAutoScanPress}
+        >
+          <SearchIcon width={20} height={20} fill="#111827" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
@@ -214,7 +232,31 @@ const HomeScreen = ({ navigation }) => {
         {/* Storage Banner */}
         <View style={styles.storageBanner}>
           <View style={styles.storageCircleWrapper}>
-            <View style={styles.storageCircle}>
+            <Svg width={88} height={88} viewBox="0 0 88 88">
+              {/* Background Track */}
+              <Circle
+                cx="44"
+                cy="44"
+                r="38"
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth="6"
+                fill="none"
+              />
+              {/* Animated / Dynamic Progress Fill */}
+              <Circle
+                cx="44"
+                cy="44"
+                r="38"
+                stroke="#FFFFFF"
+                strokeWidth="6"
+                strokeDasharray={`${2 * Math.PI * 38}`}
+                strokeDashoffset={`${2 * Math.PI * 38 * (1 - (storageInfo.usedPercentage || 0) / 100)}`}
+                strokeLinecap="round"
+                fill="none"
+                transform="rotate(-90 44 44)"
+              />
+            </Svg>
+            <View style={styles.storageCircleTextOverlay}>
               <Text style={styles.storageCirclePercent}>{storageInfo.usedPercentage}%</Text>
               <Text style={styles.storageCircleLabel}>Used</Text>
             </View>
@@ -227,12 +269,16 @@ const HomeScreen = ({ navigation }) => {
               <View style={[styles.progressBarFill, { width: `${storageInfo.usedPercentage}%` }]} />
             </View>
             <View style={styles.availableRow}>
-              <View style={[styles.iconPlaceholder, { width: 14, height: 14, borderRadius: 7, marginRight: 6, borderWidth: 0 }]} />
+              <View style={styles.availableIconWrapper}>
+                <PieChartIcon width={12} height={12} />
+              </View>
               <Text style={styles.availableText}>{storageInfo.formattedFree} Available</Text>
             </View>
           </View>
           
-          <View style={[styles.iconPlaceholder, { width: 56, height: 56, borderRadius: 8, alignSelf: 'center', borderWidth: 0 }]} />
+          <View style={styles.storageIllustrationWrapper}>
+            <StorageBannerIllustration width={64} height={74} />
+          </View>
         </View>
 
         {/* Action Grid */}
@@ -240,31 +286,37 @@ const HomeScreen = ({ navigation }) => {
           <ActionCard 
             title="Auto Scan All TIFF" 
             desc="Find all TIFF files on your device" 
+            Icon={AutoScanIcon}
             onPress={handleAutoScanPress} 
           />
           <ActionCard 
             title="Pick & Convert" 
             desc="Choose one TIFF file to convert" 
+            Icon={PickConvertIcon}
             onPress={handlePickSingleFilePress} 
           />
           <ActionCard 
             title="Batch Conversion" 
             desc="Convert Multiple TIFF files together" 
+            Icon={BatchConvertIcon}
             onPress={handleBatchConversionPress} 
           />
           <ActionCard 
             title="Converted Outputs" 
             desc="View all your converted files" 
+            Icon={ConvertedOutputsIcon}
             onPress={handleConvertedOutputsPress} 
           />
           <ActionCard 
             title="Favorites" 
             desc="Quick access to saved files" 
+            Icon={FavoritesIcon}
             onPress={handleFavoritesPress} 
           />
           <ActionCard 
             title="Settings" 
             desc="Manage app preferences" 
+            Icon={SettingsIcon}
             onPress={handleSettingsPress} 
           />
         </View>
@@ -311,18 +363,20 @@ const HomeScreen = ({ navigation }) => {
                     </Text>
                   </View>
                   <TouchableOpacity 
-                    style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12, marginRight: 12, borderWidth: 0, justifyContent: 'center', alignItems: 'center' }]}
+                    style={styles.recentActionBtn}
                     onPress={() => handleToggleFavorite(item)}
                   >
-                    <Text style={{color: favoritesSet.has(item.path) ? '#F59E0B' : '#6B7280', fontSize: 16}}>
-                      {favoritesSet.has(item.path) ? '★' : '☆'}
-                    </Text>
+                    <StarIcon 
+                      width={20} 
+                      height={20} 
+                      fill={favoritesSet.has(item.path) ? '#F59E0B' : '#9CA3AF'} 
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    style={[styles.iconPlaceholder, { width: 24, height: 24, borderRadius: 12, borderWidth: 0, justifyContent: 'center', alignItems: 'center' }]}
+                    style={styles.recentActionBtn}
                     onPress={handleConvertedOutputsPress}
                   >
-                    <Text style={{color: '#111827', fontSize: 16, fontWeight: 'bold'}}>⋮</Text>
+                    <MoreVertIcon width={20} height={20} fill="#111827" />
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -334,9 +388,15 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-const ActionCard = ({ title, desc, onPress }) => (
+const ActionCard = ({ title, desc, onPress, Icon }) => (
   <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
-    <View style={[styles.iconPlaceholder, { width: 48, height: 48, borderRadius: 24, marginBottom: 12 }]} />
+    <View style={styles.actionCardIconWrapper}>
+      {Icon ? (
+        <Icon width={48} height={48} />
+      ) : (
+        <View style={[styles.iconPlaceholder, { width: 48, height: 48, borderRadius: 24 }]} />
+      )}
+    </View>
     <Text style={styles.actionCardTitle} numberOfLines={2}>{title}</Text>
     <Text style={styles.actionCardDesc} numberOfLines={3}>{desc}</Text>
     <View style={styles.actionCardBtn}>
@@ -373,6 +433,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '500',
   },
+  headerSearchBtn: {
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   iconPlaceholder: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -392,30 +457,26 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   storageCircleWrapper: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 6,
-    borderColor: 'rgba(255,255,255,0.2)',
+    width: 88,
+    height: 88,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    borderLeftColor: '#FFFFFF',
-    transform: [{ rotate: '-45deg' }],
+    position: 'relative',
   },
-  storageCircle: {
+  storageCircleTextOverlay: {
+    position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
-    transform: [{ rotate: '45deg' }],
   },
   storageCirclePercent: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
   },
   storageCircleLabel: {
     color: 'rgba(255,255,255,0.9)',
-    fontSize: 11,
+    fontSize: 10,
   },
   storageInfo: {
     flex: 1,
@@ -448,10 +509,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  availableIconWrapper: {
+    marginRight: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   availableText: {
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '600',
+  },
+  storageIllustrationWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
   grid: {
     flexDirection: 'row',
@@ -474,6 +545,13 @@ const styles = StyleSheet.create({
     elevation: 1,
     borderWidth: 1,
     borderColor: '#F3F4F6',
+  },
+  actionCardIconWrapper: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   actionCardTitle: {
     fontSize: 11,
@@ -586,6 +664,13 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  recentActionBtn: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
 });
 

@@ -17,6 +17,7 @@ import {
   requestOsStoragePermissionDialog,
 } from '../services/permissionService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import SearchIcon from '../assets/search.svg';
 
 /**
  * AllFilesScreen Component
@@ -222,7 +223,9 @@ const AllFilesScreen = ({ navigation }) => {
             {String(tiffFiles.length).padStart(2, '0')} valid TIFF files Found
           </Text>
         </View>
-        <View style={styles.headerSearchIconPlaceholder} />
+        <View style={styles.headerSearchIconWrapper}>
+          <SearchIcon width={20} height={20} fill="#111827" />
+        </View>
       </View>
 
       {/* Permission Warning Banner */}
@@ -350,13 +353,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '500',
   },
-  headerSearchIconPlaceholder: {
-    width: 24,
-    height: 24,
+  headerSearchIconWrapper: {
+    width: 36,
+    height: 36,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   permissionBanner: {
     padding: 12,
