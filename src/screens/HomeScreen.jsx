@@ -18,7 +18,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import ArrowForwardIcon from '../assets/arrow_forward.svg';
 import StorageBannerIllustration from '../assets/storage_banner.svg';
 import PieChartIcon from '../assets/pie_chart_icon.svg';
