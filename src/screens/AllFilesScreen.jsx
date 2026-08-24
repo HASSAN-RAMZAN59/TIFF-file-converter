@@ -67,10 +67,12 @@ const TiffThumbnail = ({ path, style }) => {
   );
 };
 
-const AllFilesScreen = ({ navigation }) => {
+const AllFilesScreen = ({ route, navigation }) => {
+  const isBatchPickerMode = route.params?.isBatchPicker || false;
   const [tiffFiles, setTiffFiles] = useState([]);
   const [isScanning, setIsScanning] = useState(true);
   const [hasPermission, setHasPermission] = useState(true);
+  const [selectedFilePaths, setSelectedFilePaths] = useState(new Set());
 
   const startTiffScan = async (isCancelledCheck = null) => {
     const isCancelled = typeof isCancelledCheck === 'function' ? isCancelledCheck : null;
@@ -139,8 +141,37 @@ const AllFilesScreen = ({ navigation }) => {
     return `${kb.toFixed(1)} KB`;
   };
 
+  const toggleFileSelection = (file) => {
+    const key = file.path || file.id || file.uri;
+    setSelectedFilePaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
   const handleFileSelect = (file) => {
-    navigation.navigate('PreviewScreen', { file });
+    if (isBatchPickerMode || selectedFilePaths.size > 0) {
+      toggleFileSelection(file);
+    } else {
+      navigation.navigate('PreviewScreen', { file });
+    }
+  };
+
+  const handleProceedToBatchConvert = () => {
+    const chosenFiles = tiffFiles.filter((f) => selectedFilePaths.has(f.path || f.id || f.uri));
+    if (chosenFiles.length === 0) return;
+    const formatted = chosenFiles.map((f) => ({
+      uri: f.uri || `file://${f.path}`,
+      name: f.name,
+      path: f.path,
+      size: f.size,
+    }));
+    navigation.navigate('BatchConvertScreen', { files: formatted });
   };
 
   const formatDisplayPath = (fullPath) => {
@@ -156,10 +187,17 @@ const AllFilesScreen = ({ navigation }) => {
 
   const renderFileItem = ({ item, index, total }) => {
     const isLast = index === total - 1;
+    const isSelected = selectedFilePaths.has(item.path || item.id || item.uri);
+
     return (
       <TouchableOpacity
-        style={[styles.fileCardItem, !isLast && styles.fileCardBorder]}
+        style={[
+          styles.fileCardItem,
+          !isLast && styles.fileCardBorder,
+          isSelected && styles.fileCardSelected,
+        ]}
         onPress={() => handleFileSelect(item)}
+        onLongPress={() => toggleFileSelection(item)}
         activeOpacity={0.7}
       >
         <TiffThumbnail path={item.path} style={styles.thumbnailPlaceholder} />
@@ -173,6 +211,13 @@ const AllFilesScreen = ({ navigation }) => {
           </Text>
           <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
         </View>
+
+        {/* Selection Checkbox */}
+        {(isBatchPickerMode || selectedFilePaths.size > 0) && (
+          <View style={[styles.checkboxCircle, isSelected && styles.checkboxCircleSelected]}>
+            {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -279,16 +324,30 @@ const AllFilesScreen = ({ navigation }) => {
           contentContainerStyle={styles.flatListContent}
         />
 
-        {/* Floating Rescan Button */}
-        <View style={styles.floatingRescanWrapper}>
-          <TouchableOpacity 
-            style={styles.floatingRescanBtn} 
-            activeOpacity={0.8}
-            onPress={() => startTiffScan()}
-          >
-            <RescanBadgeIcon width={110} height={20} />
-          </TouchableOpacity>
-        </View>
+        {/* Floating Rescan or Batch Convert Button */}
+        {selectedFilePaths.size > 0 ? (
+          <View style={styles.floatingBatchWrapper}>
+            <TouchableOpacity
+              style={styles.floatingBatchBtn}
+              activeOpacity={0.8}
+              onPress={handleProceedToBatchConvert}
+            >
+              <Text style={styles.floatingBatchBtnText}>
+                Batch Convert ({selectedFilePaths.size})
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.floatingRescanWrapper}>
+            <TouchableOpacity 
+              style={styles.floatingRescanBtn} 
+              activeOpacity={0.8}
+              onPress={() => startTiffScan()}
+            >
+              <RescanBadgeIcon width={110} height={20} />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -450,6 +509,53 @@ const styles = StyleSheet.create({
   fileCardBorder: {
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+  },
+  fileCardSelected: {
+    backgroundColor: '#EFF6FF',
+  },
+  checkboxCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  checkboxCircleSelected: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
+  },
+  checkboxCheck: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontFamily: 'Poppins-Bold',
+  },
+  floatingBatchWrapper: {
+    position: 'absolute',
+    bottom: 24,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+  },
+  floatingBatchBtn: {
+    width: '100%',
+    backgroundColor: '#3B82F6',
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  floatingBatchBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Poppins-Bold',
   },
   thumbnailPlaceholder: {
     width: 44,

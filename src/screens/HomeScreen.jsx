@@ -181,32 +181,8 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleBatchConversionPress = async () => {
-    try {
-      const results = await DocumentPicker.pick({
-        allowMultiSelection: true,
-        type: [DocumentPicker.types.allFiles],
-      });
-      if (results && results.length > 0) {
-        const tiffResults = results.filter((item) => {
-          const fileName = item.name || item.fileName || '';
-          const fileSize = item.size || 0;
-          return isTiffFile(fileName) && fileSize > 0;
-        });
-        if (tiffResults.length === 0) {
-          Alert.alert('Invalid', 'No valid TIFF files selected.');
-          return;
-        }
-        const formattedFiles = tiffResults.map((item) => ({
-          uri: item.uri, name: item.name || item.fileName, size: item.size, type: item.type
-        }));
-        navigation.navigate('BatchConvertScreen', { files: formattedFiles });
-      }
-    } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        Alert.alert('Error', 'Unable to pick multiple files.');
-      }
-    }
+  const handleBatchConversionPress = () => {
+    navigation.navigate('AllFilesScreen', { isBatchPicker: true });
   };
 
   const handleConvertedOutputsPress = () => navigation.navigate('ConvertedFilesScreen');
