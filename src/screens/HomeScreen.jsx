@@ -181,8 +181,37 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleBatchConversionPress = () => {
-    navigation.navigate('AllFilesScreen', { isBatchPicker: true });
+  const handleBatchConversionPress = async () => {
+    try {
+      const results = await DocumentPicker.pickMultiple({
+        type: [DocumentPicker.types.allFiles],
+      });
+      if (results && results.length > 0) {
+        const validFiles = results
+          .filter((res) => {
+            const name = res.name || res.fileName || '';
+            const size = res.size || 0;
+            return isTiffFile(name) && size > 0;
+          })
+          .map((res) => ({
+            uri: res.uri,
+            name: res.name || res.fileName || 'TIFF File',
+            size: res.size || 0,
+            type: res.type,
+          }));
+
+        if (validFiles.length === 0) {
+          Alert.alert('Invalid Files', 'None of the selected files are valid TIFF files.');
+          return;
+        }
+
+        navigation.navigate('BatchConvertScreen', { files: validFiles });
+      }
+    } catch (err) {
+      if (!DocumentPicker.isCancel(err)) {
+        Alert.alert('Error', 'Unable to pick files.');
+      }
+    }
   };
 
   const handleConvertedOutputsPress = () => navigation.navigate('ConvertedFilesScreen');
