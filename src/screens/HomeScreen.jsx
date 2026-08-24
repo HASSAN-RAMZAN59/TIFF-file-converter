@@ -11,6 +11,7 @@ import {
   AppState,
   RefreshControl,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
@@ -26,6 +27,7 @@ import ConvertedOutputsIcon from '../assets/converted_outputs_icon.svg';
 import FavoritesIcon from '../assets/favorites_icon.svg';
 import SettingsIcon from '../assets/settings_icon.svg';
 import StarIcon from '../assets/star.svg';
+import StarOutlineIcon from '../assets/star_outline.svg';
 import MoreVertIcon from '../assets/more_vert.svg';
 import SearchIcon from '../assets/search.svg';
 import { isTiffFile } from '../services/tiffScannerService';
@@ -49,6 +51,8 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [recentFiles, setRecentFiles] = useState([]);
   const [favoritesSet, setFavoritesSet] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 GB';
@@ -102,19 +106,23 @@ const HomeScreen = ({ navigation }) => {
     await fetchRecentFiles();
     try {
       const favs = await getFavorites();
-      setFavoritesSet(new Set(favs.map((f) => f.path)));
+      const paths = favs.map((f) => f.path || f.id || f.uri).filter(Boolean);
+      setFavoritesSet(new Set(paths));
     } catch (e) {}
   }, [fetchStorageInfo]);
 
   const handleToggleFavorite = async (item) => {
-    await toggleFavorite(item);
-    const newSet = new Set(favoritesSet);
-    if (newSet.has(item.path)) {
-      newSet.delete(item.path);
-    } else {
-      newSet.add(item.path);
-    }
-    setFavoritesSet(newSet);
+    const fileKey = item.path || item.id || item.uri;
+    const isNowFav = await toggleFavorite(item);
+    setFavoritesSet((prev) => {
+      const next = new Set(prev);
+      if (isNowFav) {
+        next.add(fileKey);
+      } else {
+        next.delete(fileKey);
+      }
+      return next;
+    });
   };
 
   useFocusEffect(
@@ -206,22 +214,53 @@ const HomeScreen = ({ navigation }) => {
   const handleFavoritesPress = () => navigation.navigate('FavoritesScreen');
   const handleSettingsPress = () => Alert.alert('Settings', 'Settings screen coming soon.');
 
+  const filteredRecentFiles = searchQuery.trim()
+    ? recentFiles.filter((item) =>
+        (item.name || '').toLowerCase().includes(searchQuery.toLowerCase().trim())
+      )
+    : recentFiles;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
       
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>TIFF Converter</Text>
-          <Text style={styles.headerSubtitle}>Convert TIFF to JPG, PNG, PDF, WEBP</Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.headerSearchBtn} 
-          activeOpacity={0.7}
-          onPress={handleAutoScanPress}
-        >
-          <SearchIcon width={20} height={20} fill="#111827" />
-        </TouchableOpacity>
+        {isSearchOpen ? (
+          <View style={styles.searchBarRow}>
+            <SearchIcon width={18} height={18} fill="#6B7280" />
+            <TextInput
+              style={styles.headerSearchInput}
+              placeholder="Search converted files..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            <TouchableOpacity 
+              style={styles.closeSearchBtn} 
+              onPress={() => {
+                setIsSearchOpen(false);
+                setSearchQuery('');
+              }}
+            >
+              <Text style={styles.closeSearchText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <View>
+              <Text style={styles.headerTitle}>TIFF Converter</Text>
+              <Text style={styles.headerSubtitle}>Convert TIFF to JPG, PNG, PDF, WEBP</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.headerSearchBtn} 
+              activeOpacity={0.7}
+              onPress={() => setIsSearchOpen(true)}
+            >
+              <SearchIcon width={20} height={20} fill="#111827" />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <ScrollView 
@@ -324,18 +363,22 @@ const HomeScreen = ({ navigation }) => {
         {/* Recent Converted Files */}
         <View style={styles.recentSection}>
           <View style={styles.recentHeader}>
-            <Text style={styles.recentTitle}>Recent Converted</Text>
+            <Text style={styles.recentTitle}>
+              {searchQuery.trim() ? `Search Results (${filteredRecentFiles.length})` : 'Recent Converted'}
+            </Text>
             <TouchableOpacity onPress={handleConvertedOutputsPress}>
               <Text style={styles.viewAll}>View All {'>'}</Text>
             </TouchableOpacity>
           </View>
           
-          {recentFiles.length === 0 ? (
-            <Text style={styles.emptyRecentText}>No recent converted files.</Text>
+          {filteredRecentFiles.length === 0 ? (
+            <Text style={styles.emptyRecentText}>
+              {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No recent converted files.'}
+            </Text>
           ) : (
-            recentFiles.map((item, index) => {
+            filteredRecentFiles.map((item, index) => {
               const formatColor = item.format === 'PDF' ? '#EF4444' : item.format === 'PNG' ? '#3B82F6' : '#10B981';
-              const isLast = index === recentFiles.length - 1;
+              const isLast = index === filteredRecentFiles.length - 1;
               const timeString = new Date(item.mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const sizeMB = (item.size / 1024 / 1024).toFixed(1) + ' MB';
 
@@ -365,16 +408,27 @@ const HomeScreen = ({ navigation }) => {
                   <TouchableOpacity 
                     style={styles.recentActionBtn}
                     onPress={() => handleToggleFavorite(item)}
+                    activeOpacity={0.6}
                   >
-                    <StarIcon 
-                      width={20} 
-                      height={20} 
-                      fill={favoritesSet.has(item.path) ? '#F59E0B' : '#9CA3AF'} 
-                    />
+                    {favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri) ? (
+                      <StarIcon 
+                        width={16} 
+                        height={16} 
+                        color="#2563EB"
+                        fill="#2563EB" 
+                      />
+                    ) : (
+                      <StarOutlineIcon 
+                        width={16} 
+                        height={16} 
+                        color="#9CA3AF" 
+                      />
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.recentActionBtn}
                     onPress={handleConvertedOutputsPress}
+                    activeOpacity={0.6}
                   >
                     <MoreVertIcon width={20} height={20} fill="#111827" />
                   </TouchableOpacity>
@@ -437,6 +491,34 @@ const styles = StyleSheet.create({
     padding: 6,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  searchBarRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  headerSearchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#111827',
+    padding: 0,
+  },
+  closeSearchBtn: {
+    padding: 4,
+    marginLeft: 6,
+  },
+  closeSearchText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontFamily: 'Poppins-Bold',
   },
   iconPlaceholder: {
     backgroundColor: '#FFFFFF',
@@ -555,12 +637,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actionCardTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Poppins-Bold',
-    color: '#1F2937',
+    color: '#111827',
     textAlign: 'center',
     marginBottom: 4,
-    minHeight: 30,
+    minHeight: 32,
+    lineHeight: 16,
   },
   actionCardDesc: {
     fontSize: 9,
@@ -670,11 +753,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   recentActionBtn: {
-    width: 32,
-    height: 32,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 4,
   },
 });
 

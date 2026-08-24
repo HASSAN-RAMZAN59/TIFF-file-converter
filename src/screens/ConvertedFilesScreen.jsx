@@ -21,12 +21,17 @@ import RNFS from 'react-native-fs';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import SearchIcon from '../assets/search.svg';
+import StarIcon from '../assets/star.svg';
+import StarOutlineIcon from '../assets/star_outline.svg';
+import MoreVertIcon from '../assets/more_vert.svg';
 
 const ConvertedFilesScreen = ({ navigation }) => {
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [favoritesSet, setFavoritesSet] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Menu State
   const [menuVisible, setMenuVisible] = useState(false);
@@ -50,7 +55,8 @@ const ConvertedFilesScreen = ({ navigation }) => {
         getFavorites(),
       ]);
       setConvertedFiles(files);
-      setFavoritesSet(new Set(favs.map((f) => f.path)));
+      const paths = favs.map((f) => f.path || f.id || f.uri).filter(Boolean);
+      setFavoritesSet(new Set(paths));
     } catch (error) {
       setConvertedFiles([]);
     } finally {
@@ -65,14 +71,17 @@ const ConvertedFilesScreen = ({ navigation }) => {
   };
 
   const handleToggleFavorite = async (item) => {
-    await toggleFavorite(item);
-    const newSet = new Set(favoritesSet);
-    if (newSet.has(item.path)) {
-      newSet.delete(item.path);
-    } else {
-      newSet.add(item.path);
-    }
-    setFavoritesSet(newSet);
+    const fileKey = item.path || item.id || item.uri;
+    const isNowFav = await toggleFavorite(item);
+    setFavoritesSet((prev) => {
+      const next = new Set(prev);
+      if (isNowFav) {
+        next.add(fileKey);
+      } else {
+        next.delete(fileKey);
+      }
+      return next;
+    });
   };
 
   const openMenu = (item) => {
@@ -204,10 +213,16 @@ const ConvertedFilesScreen = ({ navigation }) => {
     return `${isToday ? 'Today' : d.toLocaleDateString()}, ${time}`;
   };
 
+  const filteredFiles = searchQuery.trim()
+    ? convertedFiles.filter((item) =>
+        (item.name || '').toLowerCase().includes(searchQuery.toLowerCase().trim())
+      )
+    : convertedFiles;
+
   const renderFileItem = ({ item, index }) => {
-    const isLast = index === convertedFiles.length - 1;
+    const isLast = index === filteredFiles.length - 1;
     const formatColor = item.format === 'PDF' ? '#EF4444' : item.format === 'PNG' ? '#3B82F6' : '#10B981';
-    const isFav = favoritesSet.has(item.path);
+    const isFav = favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri);
 
     return (
       <TouchableOpacity 
@@ -233,13 +248,32 @@ const ConvertedFilesScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.actionsWrapper}>
-           <TouchableOpacity style={styles.actionBtn} onPress={() => handleToggleFavorite(item)}>
-             <Text style={[styles.actionIconStar, isFav && { color: '#F59E0B' }]}>
-               {isFav ? '★' : '☆'}
-             </Text>
+           <TouchableOpacity 
+             style={styles.actionBtn} 
+             onPress={() => handleToggleFavorite(item)}
+             activeOpacity={0.6}
+           >
+             {isFav ? (
+               <StarIcon 
+                 width={16} 
+                 height={16} 
+                 color="#2563EB"
+                 fill="#2563EB" 
+               />
+             ) : (
+               <StarOutlineIcon 
+                 width={16} 
+                 height={16} 
+                 color="#9CA3AF" 
+               />
+             )}
            </TouchableOpacity>
-           <TouchableOpacity style={styles.actionBtn} onPress={() => openMenu(item)}>
-             <Text style={styles.actionIconDots}>⋮</Text>
+           <TouchableOpacity 
+             style={styles.actionBtn} 
+             onPress={() => openMenu(item)}
+             activeOpacity={0.6}
+           >
+             <MoreVertIcon width={18} height={18} fill="#111827" />
            </TouchableOpacity>
         </View>
 
@@ -252,15 +286,44 @@ const ConvertedFilesScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
       
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{marginRight: 12}}>
-            <Text style={styles.backBtnText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Recent Converted</Text>
-        </View>
-        <TouchableOpacity style={styles.searchBtn} activeOpacity={0.7}>
-          <SearchIcon width={20} height={20} fill="#111827" />
-        </TouchableOpacity>
+        {isSearchOpen ? (
+          <View style={styles.searchBarRow}>
+            <SearchIcon width={18} height={18} fill="#6B7280" />
+            <TextInput
+              style={styles.headerSearchInput}
+              placeholder="Search converted files..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            <TouchableOpacity 
+              style={styles.closeSearchBtn} 
+              onPress={() => {
+                setIsSearchOpen(false);
+                setSearchQuery('');
+              }}
+            >
+              <Text style={styles.closeSearchText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <View style={styles.headerLeft}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{marginRight: 12}}>
+                <Text style={styles.backBtnText}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Recent Converted</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.searchBtn} 
+              activeOpacity={0.7}
+              onPress={() => setIsSearchOpen(true)}
+            >
+              <SearchIcon width={20} height={20} fill="#111827" />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <View style={styles.listContainer}>
@@ -271,14 +334,16 @@ const ConvertedFilesScreen = ({ navigation }) => {
         ) : (
           <View style={styles.cardContainer}>
             <FlatList
-              data={convertedFiles}
+              data={filteredFiles}
               keyExtractor={(item) => item.id}
               renderItem={renderFileItem}
               contentContainerStyle={styles.listContent}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No converted files yet.</Text>
+                  <Text style={styles.emptyText}>
+                    {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No converted files yet.'}
+                  </Text>
                 </View>
               }
             />
@@ -371,6 +436,34 @@ const styles = StyleSheet.create({
   searchBtn: {
     padding: 4,
   },
+  searchBarRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  headerSearchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#111827',
+    padding: 0,
+  },
+  closeSearchBtn: {
+    padding: 4,
+    marginLeft: 6,
+  },
+  closeSearchText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontFamily: 'Poppins-Bold',
+  },
   searchIcon: {
     fontSize: 20,
     color: '#111827',
@@ -457,11 +550,13 @@ const styles = StyleSheet.create({
   actionsWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   actionBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   actionIconStar: {
     fontSize: 18,

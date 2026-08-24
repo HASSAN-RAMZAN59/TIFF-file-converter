@@ -18,6 +18,9 @@ import {
 } from '../services/permissionService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import SearchIcon from '../assets/search.svg';
+import LottieView from 'lottie-react-native';
+import searchingFilesAnimation from '../assets/searching_files.json';
+import noFilesFoundAnimation from '../assets/no_files_found.json';
 
 /**
  * AllFilesScreen Component
@@ -59,25 +62,49 @@ const AllFilesScreen = ({ navigation }) => {
   const [hasPermission, setHasPermission] = useState(true);
 
   useEffect(() => {
-    initAndScan();
-  }, []);
+    let isCancelled = false;
 
-  const initAndScan = async () => {
-    await loadFavoritesSet();
-    const permitted = await checkOsStoragePermission();
-    setHasPermission(permitted);
-    if (permitted) {
-      startTiffScan();
-    } else {
-      const granted = await requestOsStoragePermissionDialog();
-      setHasPermission(granted);
-      if (granted) {
-        startTiffScan();
+    const runScan = async () => {
+      await loadFavoritesSet();
+      const permitted = await checkOsStoragePermission();
+      if (isCancelled) return;
+
+      setHasPermission(permitted);
+      if (permitted) {
+        setIsScanning(true);
+        setTiffFiles([]);
+        const discovered = await scanDeviceForTiffs(null, () => isCancelled);
+        if (!isCancelled) {
+          const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
+          setTiffFiles(validFiles);
+          setIsScanning(false);
+        }
       } else {
-        setIsScanning(false);
+        const granted = await requestOsStoragePermissionDialog();
+        if (isCancelled) return;
+        setHasPermission(granted);
+        if (granted) {
+          setIsScanning(true);
+          setTiffFiles([]);
+          const discovered = await scanDeviceForTiffs(null, () => isCancelled);
+          if (!isCancelled) {
+            const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
+            setTiffFiles(validFiles);
+            setIsScanning(false);
+          }
+        } else {
+          setIsScanning(false);
+        }
       }
-    }
-  };
+    };
+
+    runScan();
+
+    return () => {
+      isCancelled = true;
+      console.log('--> User navigated back: Terminating TIFF scan.');
+    };
+  }, []);
 
   const loadFavoritesSet = async () => {
     const favs = await getFavorites();
@@ -85,22 +112,16 @@ const AllFilesScreen = ({ navigation }) => {
     setFavoritePaths(pathSet);
   };
 
-  const startTiffScan = async () => {
-    setIsScanning(true);
-    setTiffFiles([]);
-
-    const discovered = await scanDeviceForTiffs();
-    const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
-    
-    setTiffFiles(validFiles);
-    setIsScanning(false);
-  };
-
   const handleGrantPermission = async () => {
     const granted = await requestOsStoragePermissionDialog();
     setHasPermission(granted);
     if (granted) {
-      startTiffScan();
+      setIsScanning(true);
+      setTiffFiles([]);
+      const discovered = await scanDeviceForTiffs();
+      const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
+      setTiffFiles(validFiles);
+      setIsScanning(false);
     }
   };
 
@@ -163,15 +184,21 @@ const AllFilesScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
-          <Text style={styles.scanTitle}>Scaning Files</Text>
+          <Text style={styles.scanTitle}>Scanning Files</Text>
         </View>
         
         <View style={styles.scanCenterContent}>
-          {/* Lottie Placeholder */}
-          <View style={styles.lottiePlaceholder} />
+          <View style={styles.lottieContainer}>
+            <LottieView
+              source={searchingFilesAnimation}
+              autoPlay
+              loop
+              style={styles.lottieView}
+            />
+          </View>
           
           <Text style={styles.scanMainText}>Scanning Storage for TIFF Files...</Text>
-          <Text style={styles.scanSubText}>Please wait for complete scanning</Text>
+          <Text style={styles.scanSubText}>Please wait while we search your device storage</Text>
         </View>
       </SafeAreaView>
     );
@@ -181,14 +208,20 @@ const AllFilesScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
-          <Text style={styles.scanTitle}>Scaning Files</Text>
+          <Text style={styles.scanTitle}>Scan Results</Text>
         </View>
         
         <View style={styles.scanCenterContent}>
-          {/* Lottie Placeholder */}
-          <View style={styles.lottiePlaceholder} />
+          <View style={styles.lottieContainer}>
+            <LottieView
+              source={noFilesFoundAnimation}
+              autoPlay
+              loop
+              style={styles.lottieView}
+            />
+          </View>
           
-          <Text style={styles.scanMainText}>No valid .TIF or .TIFF files found on device storage</Text>
+          <Text style={styles.scanMainText}>No valid .TIF or .TIFF files found</Text>
           <Text style={styles.scanSubText}>Make sure your TIFF files have a .TIF or .TIFF extension and are saved in your internal storage or download folder</Text>
         </View>
 
@@ -266,7 +299,7 @@ const styles = StyleSheet.create({
   },
   scanTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
     color: '#111827',
   },
   scanCenterContent: {
@@ -274,26 +307,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    marginTop: -50,
+    marginTop: -30,
   },
-  lottiePlaceholder: {
-    width: 140,
-    height: 140,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 16,
-    marginBottom: 40,
+  lottieContainer: {
+    width: 200,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  lottieView: {
+    width: '100%',
+    height: '100%',
   },
   scanMainText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'Poppins-SemiBold',
     color: '#1F2937',
     marginBottom: 8,
     textAlign: 'center',
   },
   scanSubText: {
     fontSize: 12,
+    fontFamily: 'Poppins-Regular',
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 18,
@@ -354,19 +390,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   headerSearchIconWrapper: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 18,
+    padding: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   permissionBanner: {
     padding: 12,

@@ -30,23 +30,28 @@ export const isTiffFile = (filename) => {
 
 /**
  * Recursively scans a directory for valid TIFF files (size > 100 bytes).
+ * Supports realtime cancellation via isCancelled check.
  */
 export const scanDirectoryForTiffs = async (
   dirPath,
   foundFilesMap = new Map(),
   onFileFound = null,
   depth = 0,
-  maxDepth = 4
+  maxDepth = 4,
+  isCancelled = null
 ) => {
+  if (isCancelled && isCancelled()) return foundFilesMap;
   if (depth > maxDepth) return foundFilesMap;
 
   try {
     const exists = await RNFS.exists(dirPath);
-    if (!exists) return foundFilesMap;
+    if (!exists || (isCancelled && isCancelled())) return foundFilesMap;
 
     const items = await RNFS.readDir(dirPath);
 
     for (const item of items) {
+      if (isCancelled && isCancelled()) return foundFilesMap;
+
       if (item.isDirectory()) {
         const folderName = item.name;
         if (!IGNORED_FOLDERS.includes(folderName) && !folderName.startsWith('.')) {
@@ -54,12 +59,12 @@ export const scanDirectoryForTiffs = async (
             const mediaPath = `${item.path}/media`;
             const mediaExists = await RNFS.exists(mediaPath);
             if (mediaExists) {
-              await scanDirectoryForTiffs(mediaPath, foundFilesMap, onFileFound, depth + 1, maxDepth);
+              await scanDirectoryForTiffs(mediaPath, foundFilesMap, onFileFound, depth + 1, maxDepth, isCancelled);
             }
             continue;
           }
 
-          await scanDirectoryForTiffs(item.path, foundFilesMap, onFileFound, depth + 1, maxDepth);
+          await scanDirectoryForTiffs(item.path, foundFilesMap, onFileFound, depth + 1, maxDepth, isCancelled);
         }
       } else if (item.isFile()) {
         if (isTiffFile(item.name)) {
@@ -107,8 +112,9 @@ export const scanDirectoryForTiffs = async (
 
 /**
  * Fast single-pass scanner for valid TIFF files (> 0 KB).
+ * Supports isCancelled callback to terminate scanning in realtime.
  */
-export const scanDeviceForTiffs = async (onProgress = null) => {
+export const scanDeviceForTiffs = async (onProgress = null, isCancelled = null) => {
   const foundFilesMap = new Map();
   const rootPath = RNFS.ExternalStorageDirectoryPath || '/storage/emulated/0';
 
@@ -130,13 +136,17 @@ export const scanDeviceForTiffs = async (onProgress = null) => {
   const uniquePaths = Array.from(new Set(targetPaths)).filter(Boolean);
 
   for (const path of uniquePaths) {
+    if (isCancelled && isCancelled()) {
+      console.log('--> TIFF scan aborted in realtime.');
+      break;
+    }
     try {
-      await scanDirectoryForTiffs(path, foundFilesMap, onProgress, 0, 4);
+      await scanDirectoryForTiffs(path, foundFilesMap, onProgress, 0, 4, isCancelled);
     } catch (err) {
       // Continue next path
     }
   }
 
-  console.log(`Scan Complete in single-pass. Total valid TIFFs found: ${foundFilesMap.size}`);
+  console.log(`Scan finished. Total valid TIFFs found: ${foundFilesMap.size}`);
   return Array.from(foundFilesMap.values());
 };
