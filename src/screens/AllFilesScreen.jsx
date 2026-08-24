@@ -158,19 +158,7 @@ const AllFilesScreen = ({ route, navigation }) => {
   };
 
   const handleFileSelect = (file) => {
-    toggleFileSelection(file);
-  };
-
-  const handleProceedToBatchConvert = () => {
-    const chosenFiles = tiffFiles.filter((f) => selectedFilePaths.has(f.path || f.id || f.uri));
-    if (chosenFiles.length === 0) return;
-    const formatted = chosenFiles.map((f) => ({
-      uri: f.uri || `file://${f.path}`,
-      name: f.name,
-      path: f.path,
-      size: f.size,
-    }));
-    navigation.navigate('BatchConvertScreen', { files: formatted });
+    navigation.navigate('PreviewScreen', { file });
   };
 
   const formatDisplayPath = (fullPath) => {
@@ -185,14 +173,12 @@ const AllFilesScreen = ({ route, navigation }) => {
 
   const renderFileItem = ({ item, index, total }) => {
     const isLast = index === total - 1;
-    const isSelected = selectedFilePaths.has(item.path || item.id || item.uri);
 
     return (
       <TouchableOpacity
         style={[
           styles.fileCardItem,
           !isLast && styles.fileCardBorder,
-          isSelected && styles.fileCardSelected,
         ]}
         onPress={() => handleFileSelect(item)}
         activeOpacity={0.7}
@@ -207,11 +193,6 @@ const AllFilesScreen = ({ route, navigation }) => {
             {formatDisplayPath(item.path)}
           </Text>
           <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
-        </View>
-
-        {/* Selection Checkbox on single click */}
-        <View style={[styles.checkboxCircle, isSelected && styles.checkboxCircleSelected]}>
-          {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
         </View>
       </TouchableOpacity>
     );
@@ -319,30 +300,16 @@ const AllFilesScreen = ({ route, navigation }) => {
           contentContainerStyle={styles.flatListContent}
         />
 
-        {/* Floating Rescan or Batch Convert Button */}
-        {selectedFilePaths.size > 0 ? (
-          <View style={styles.floatingBatchWrapper}>
-            <TouchableOpacity
-              style={styles.floatingBatchBtn}
-              activeOpacity={0.8}
-              onPress={handleProceedToBatchConvert}
-            >
-              <Text style={styles.floatingBatchBtnText}>
-                Batch Convert ({selectedFilePaths.size})
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.floatingRescanWrapper}>
-            <TouchableOpacity 
-              style={styles.floatingRescanBtn} 
-              activeOpacity={0.8}
-              onPress={() => startTiffScan()}
-            >
-              <RescanBadgeIcon width={110} height={20} />
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Floating Rescan Button */}
+        <View style={styles.floatingRescanWrapper}>
+          <TouchableOpacity 
+            style={styles.floatingRescanBtn} 
+            activeOpacity={0.8}
+            onPress={() => startTiffScan()}
+          >
+            <RescanBadgeIcon width={110} height={20} />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
