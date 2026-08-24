@@ -16,7 +16,6 @@ import {
   checkOsStoragePermission,
   requestOsStoragePermissionDialog,
 } from '../services/permissionService';
-import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import SearchIcon from '../assets/search.svg';
 import LottieView from 'lottie-react-native';
 import searchingFilesAnimation from '../assets/searching_files.json';
@@ -32,20 +31,32 @@ const TiffThumbnail = ({ path, style }) => {
 
   useEffect(() => {
     let isActive = true;
-    decodeTiffToBase64Uri(path, 0)
-      .then((result) => {
-        if (isActive) setImageUri(result.uri);
-      })
-      .catch((err) => {
-        // Silently fail for thumb
-      });
+    
+    // Defer thumbnail decoding after frame renders so UI/Back gestures never lag
+    const frameId = requestAnimationFrame(() => {
+      decodeTiffToBase64Uri(path, 0)
+        .then((result) => {
+          if (isActive && result && result.uri) {
+            setImageUri(result.uri);
+          }
+        })
+        .catch(() => {});
+    });
+
     return () => {
       isActive = false;
+      cancelAnimationFrame(frameId);
     };
   }, [path]);
 
   if (imageUri) {
-    return <Image source={{ uri: imageUri }} style={[style, { borderWidth: 0 }]} resizeMode="cover" />;
+    return (
+      <Image 
+        source={{ uri: imageUri }} 
+        style={[style, { borderWidth: 0 }]} 
+        resizeMode="cover" 
+      />
+    );
   }
 
   return (
@@ -57,7 +68,6 @@ const TiffThumbnail = ({ path, style }) => {
 
 const AllFilesScreen = ({ navigation }) => {
   const [tiffFiles, setTiffFiles] = useState([]);
-  const [favoritePaths, setFavoritePaths] = useState(new Set());
   const [isScanning, setIsScanning] = useState(true);
   const [hasPermission, setHasPermission] = useState(true);
 
@@ -65,7 +75,6 @@ const AllFilesScreen = ({ navigation }) => {
     let isCancelled = false;
 
     const runScan = async () => {
-      await loadFavoritesSet();
       const permitted = await checkOsStoragePermission();
       if (isCancelled) return;
 
@@ -106,12 +115,6 @@ const AllFilesScreen = ({ navigation }) => {
     };
   }, []);
 
-  const loadFavoritesSet = async () => {
-    const favs = await getFavorites();
-    const pathSet = new Set(favs.map((f) => f.path || f.id));
-    setFavoritePaths(pathSet);
-  };
-
   const handleGrantPermission = async () => {
     const granted = await requestOsStoragePermissionDialog();
     setHasPermission(granted);
@@ -123,19 +126,6 @@ const AllFilesScreen = ({ navigation }) => {
       setTiffFiles(validFiles);
       setIsScanning(false);
     }
-  };
-
-  const handleToggleFav = async (fileItem) => {
-    const isNowFav = await toggleFavorite(fileItem);
-    setFavoritePaths((prev) => {
-      const updated = new Set(prev);
-      if (isNowFav) {
-        updated.add(fileItem.path);
-      } else {
-        updated.delete(fileItem.path);
-      }
-      return updated;
-    });
   };
 
   const formatFileSize = (bytes) => {
@@ -153,7 +143,6 @@ const AllFilesScreen = ({ navigation }) => {
   };
 
   const renderFileItem = ({ item, index, total }) => {
-    const isFav = favoritePaths.has(item.path);
     const isLast = index === total - 1;
     return (
       <TouchableOpacity
@@ -172,10 +161,6 @@ const AllFilesScreen = ({ navigation }) => {
           </Text>
           <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
         </View>
-
-        <TouchableOpacity style={styles.starBtn} onPress={() => handleToggleFav(item)}>
-          <View style={[styles.starIconPlaceholder, isFav && styles.starIconActive]} />
-        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
@@ -186,7 +171,7 @@ const AllFilesScreen = ({ navigation }) => {
         <View style={styles.scanHeaderTop}>
           <Text style={styles.scanTitle}>Scanning Files</Text>
         </View>
-        
+
         <View style={styles.scanCenterContent}>
           <View style={styles.lottieContainer}>
             <LottieView
@@ -196,7 +181,7 @@ const AllFilesScreen = ({ navigation }) => {
               style={styles.lottieView}
             />
           </View>
-          
+
           <Text style={styles.scanMainText}>Scanning Storage for TIFF Files...</Text>
           <Text style={styles.scanSubText}>Please wait while we search your device storage</Text>
         </View>
@@ -210,7 +195,7 @@ const AllFilesScreen = ({ navigation }) => {
         <View style={styles.scanHeaderTop}>
           <Text style={styles.scanTitle}>Scan Results</Text>
         </View>
-        
+
         <View style={styles.scanCenterContent}>
           <View style={styles.lottieContainer}>
             <LottieView
@@ -220,13 +205,13 @@ const AllFilesScreen = ({ navigation }) => {
               style={styles.lottieView}
             />
           </View>
-          
+
           <Text style={styles.scanMainText}>No valid .TIF or .TIFF files found</Text>
           <Text style={styles.scanSubText}>Make sure your TIFF files have a .TIF or .TIFF extension and are saved in your internal storage or download folder</Text>
         </View>
 
         <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.rescanBlueButton}
             onPress={() => {
               if (!hasPermission) {
@@ -247,7 +232,7 @@ const AllFilesScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.listScreenContainer}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
-      
+
       {/* Header */}
       <View style={styles.listHeaderTop}>
         <View>
@@ -277,7 +262,6 @@ const AllFilesScreen = ({ navigation }) => {
       <View style={styles.mainListCard}>
         <FlatList
           data={tiffFiles}
-          extraData={favoritePaths}
           keyExtractor={(item, index) => item.path || item.id || index.toString()}
           renderItem={({ item, index }) => renderFileItem({ item, index, total: tiffFiles.length })}
           contentContainerStyle={styles.flatListContent}
@@ -475,20 +459,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   starBtn: {
-    padding: 8,
-  },
-  starIconPlaceholder: {
-    width: 18,
-    height: 18,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    borderRadius: 4,
-    transform: [{ rotate: '45deg' }],
-  },
-  starIconActive: {
-    backgroundColor: '#FBBF24',
-    borderColor: '#FBBF24',
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

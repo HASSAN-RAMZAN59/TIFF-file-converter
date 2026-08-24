@@ -95,9 +95,6 @@ const BatchConvertScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Back</Text>
-        </TouchableOpacity>
         <Text style={styles.title}>Batch Conversion ({files.length} Files)</Text>
       </View>
 

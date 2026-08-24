@@ -21,8 +21,8 @@ import RNFS from 'react-native-fs';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import SearchIcon from '../assets/search.svg';
-import StarIcon from '../assets/star.svg';
-import StarOutlineIcon from '../assets/star_outline.svg';
+import HeartFilledIcon from '../assets/heart_filled.svg';
+import HeartOutlineIcon from '../assets/heart_outline.svg';
 import MoreVertIcon from '../assets/more_vert.svg';
 
 const ConvertedFilesScreen = ({ navigation }) => {
@@ -248,26 +248,26 @@ const ConvertedFilesScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.actionsWrapper}>
-           <TouchableOpacity 
-             style={styles.actionBtn} 
-             onPress={() => handleToggleFavorite(item)}
-             activeOpacity={0.6}
-           >
-             {isFav ? (
-               <StarIcon 
-                 width={16} 
-                 height={16} 
-                 color="#2563EB"
-                 fill="#2563EB" 
-               />
-             ) : (
-               <StarOutlineIcon 
-                 width={16} 
-                 height={16} 
-                 color="#9CA3AF" 
-               />
-             )}
-           </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionBtn} 
+              onPress={() => handleToggleFavorite(item)}
+              activeOpacity={0.6}
+            >
+              {isFav ? (
+                <HeartFilledIcon 
+                  width={18} 
+                  height={18} 
+                  color="#2563EB"
+                  fill="#2563EB" 
+                />
+              ) : (
+                <HeartOutlineIcon 
+                  width={18} 
+                  height={18} 
+                  color="#9CA3AF" 
+                />
+              )}
+            </TouchableOpacity>
            <TouchableOpacity 
              style={styles.actionBtn} 
              onPress={() => openMenu(item)}
@@ -310,9 +310,6 @@ const ConvertedFilesScreen = ({ navigation }) => {
         ) : (
           <>
             <View style={styles.headerLeft}>
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{marginRight: 12}}>
-                <Text style={styles.backBtnText}>←</Text>
-              </TouchableOpacity>
               <Text style={styles.headerTitle}>Recent Converted</Text>
             </View>
             <TouchableOpacity 

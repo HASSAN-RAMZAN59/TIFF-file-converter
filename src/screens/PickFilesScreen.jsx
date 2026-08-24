@@ -136,9 +136,6 @@ const PickFilesScreen = ({ route, navigation }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-           <Text style={styles.backBtnText}>←</Text>
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>TIFF File Viewer & Converter</Text>
       </View>
 

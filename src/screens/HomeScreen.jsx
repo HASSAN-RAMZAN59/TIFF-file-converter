@@ -26,8 +26,8 @@ import BatchConvertIcon from '../assets/batch_convert_icon.svg';
 import ConvertedOutputsIcon from '../assets/converted_outputs_icon.svg';
 import FavoritesIcon from '../assets/favorites_icon.svg';
 import SettingsIcon from '../assets/settings_icon.svg';
-import StarIcon from '../assets/star.svg';
-import StarOutlineIcon from '../assets/star_outline.svg';
+import HeartFilledIcon from '../assets/heart_filled.svg';
+import HeartOutlineIcon from '../assets/heart_outline.svg';
 import MoreVertIcon from '../assets/more_vert.svg';
 import SearchIcon from '../assets/search.svg';
 import { isTiffFile } from '../services/tiffScannerService';
@@ -411,16 +411,16 @@ const HomeScreen = ({ navigation }) => {
                     activeOpacity={0.6}
                   >
                     {favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri) ? (
-                      <StarIcon 
-                        width={16} 
-                        height={16} 
+                      <HeartFilledIcon 
+                        width={18} 
+                        height={18} 
                         color="#2563EB"
                         fill="#2563EB" 
                       />
                     ) : (
-                      <StarOutlineIcon 
-                        width={16} 
-                        height={16} 
+                      <HeartOutlineIcon 
+                        width={18} 
+                        height={18} 
                         color="#9CA3AF" 
                       />
                     )}

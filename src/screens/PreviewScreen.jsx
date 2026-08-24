@@ -10,9 +10,6 @@ const PreviewScreen = ({ route, navigation }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-          <Text style={styles.headerIcon}>{'<'}</Text>
-        </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{file?.name || 'Preview'}</Text>
         <TouchableOpacity style={styles.iconBtn}>
           <View style={styles.downloadPlaceholder}>
