@@ -15,6 +15,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
+import ArrowForwardIcon from '../assets/arrow_forward.svg';
 import { isTiffFile } from '../services/tiffScannerService';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
@@ -339,7 +340,7 @@ const ActionCard = ({ title, desc, onPress }) => (
     <Text style={styles.actionCardTitle} numberOfLines={2}>{title}</Text>
     <Text style={styles.actionCardDesc} numberOfLines={3}>{desc}</Text>
     <View style={styles.actionCardBtn}>
-      <View style={[styles.iconPlaceholder, { width: 16, height: 16, borderRadius: 8, borderWidth: 0 }]} />
+      <ArrowForwardIcon width={14} height={14} />
     </View>
   </TouchableOpacity>
 );
