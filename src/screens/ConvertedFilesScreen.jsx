@@ -209,6 +209,23 @@ const ConvertedFilesScreen = ({ navigation }) => {
     setPreviewFile(item);
   };
 
+  const formatDisplayPath = (pathString) => {
+    if (!pathString) return 'Storage';
+    let p = pathString;
+    if (p.startsWith('content://')) {
+      if (p.includes('downloads') || p.includes('Download')) return 'Storage / Download';
+      if (p.includes('media') || p.includes('image')) return 'Storage / Pictures';
+      return 'Storage / Documents';
+    }
+    p = p.replace('file://', '');
+    p = p.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
+    if (p.startsWith('/')) p = p.substring(1);
+    const lastSlash = p.lastIndexOf('/');
+    let folderPart = lastSlash !== -1 ? p.substring(0, lastSlash) : p;
+    if (!folderPart) return 'Storage';
+    return `Storage / ${folderPart}`;
+  };
+
   const formatFileSize = (bytes) => {
     const b = Number(bytes) || 0;
     if (b <= 0) return '0 KB';
@@ -509,7 +526,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
 
               <View style={styles.aboutItem}>
                 <Text style={styles.aboutLabel}>Location:</Text>
-                <Text style={styles.aboutPathValue}>{selectedFile?.path}</Text>
+                <Text style={styles.aboutPathValue}>{formatDisplayPath(selectedFile?.path || selectedFile?.uri)}</Text>
               </View>
             </View>
 

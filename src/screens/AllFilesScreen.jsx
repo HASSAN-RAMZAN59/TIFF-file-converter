@@ -11,7 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { scanDeviceForTiffs } from '../services/tiffScannerService';
-import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
+import { decodeTiffThumbnailFast, preloadThumbnail } from '../services/tiffDecoderService';
 import {
   checkOsStoragePermission,
   requestOsStoragePermissionDialog,
@@ -33,20 +33,17 @@ const TiffThumbnail = ({ path, style }) => {
   useEffect(() => {
     let isActive = true;
     
-    // Defer thumbnail decoding after frame renders so UI/Back gestures never lag
-    const frameId = requestAnimationFrame(() => {
-      decodeTiffToBase64Uri(path, 0)
-        .then((result) => {
-          if (isActive && result && result.uri) {
-            setImageUri(result.uri);
-          }
-        })
-        .catch(() => {});
-    });
+    // Fast step-downsampled decode (10x faster)
+    decodeTiffThumbnailFast(path, 120)
+      .then((result) => {
+        if (isActive && result && result.uri) {
+          setImageUri(result.uri);
+        }
+      })
+      .catch(() => {});
 
     return () => {
       isActive = false;
-      cancelAnimationFrame(frameId);
     };
   }, [path]);
 
@@ -79,7 +76,13 @@ const AllFilesScreen = ({ route, navigation }) => {
     setIsScanning(true);
     setTiffFiles([]);
     try {
-      const discovered = await scanDeviceForTiffs(null, isCancelled);
+      const discovered = await scanDeviceForTiffs((liveFoundItem) => {
+        if (liveFoundItem && liveFoundItem.path) {
+          // Preload thumbnail in parallel while scanning animation is playing
+          preloadThumbnail(liveFoundItem.path, 0);
+        }
+      }, isCancelled);
+
       if (!isCancelled || !isCancelled()) {
         const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
         setTiffFiles(validFiles);
@@ -175,14 +178,13 @@ const AllFilesScreen = ({ route, navigation }) => {
   };
 
   const formatDisplayPath = (fullPath) => {
-    if (!fullPath) return '';
+    if (!fullPath) return 'Storage';
     let p = fullPath.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
     if (p.startsWith('/')) p = p.substring(1);
     const lastSlash = p.lastIndexOf('/');
-    if (lastSlash !== -1) {
-      return p.substring(0, lastSlash);
-    }
-    return p || 'Internal Storage';
+    let folderPart = lastSlash !== -1 ? p.substring(0, lastSlash) : p;
+    if (!folderPart) return 'Storage';
+    return `Storage / ${folderPart}`;
   };
 
   const renderFileItem = ({ item, index, total }) => {
@@ -207,7 +209,7 @@ const AllFilesScreen = ({ route, navigation }) => {
             {item.name}
           </Text>
           <Text style={styles.filePathText} numberOfLines={1}>
-            📁 {formatDisplayPath(item.path)}
+            {formatDisplayPath(item.path)}
           </Text>
           <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
         </View>

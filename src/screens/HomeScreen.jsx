@@ -505,15 +505,15 @@ const ActionCard = ({ title, desc, onPress, Icon }) => (
   <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
     <View style={styles.actionCardIconWrapper}>
       {Icon ? (
-        <Icon width={48} height={48} />
+        <Icon width={38} height={38} />
       ) : (
-        <View style={[styles.iconPlaceholder, { width: 48, height: 48, borderRadius: 24 }]} />
+        <View style={[styles.iconPlaceholder, { width: 38, height: 38, borderRadius: 19 }]} />
       )}
     </View>
     <Text style={styles.actionCardTitle} numberOfLines={2}>{title}</Text>
-    <Text style={styles.actionCardDesc} numberOfLines={3}>{desc}</Text>
+    <Text style={styles.actionCardDesc} numberOfLines={2}>{desc}</Text>
     <View style={styles.actionCardBtn}>
-      <ArrowForwardIcon width={14} height={14} />
+      <ArrowForwardIcon width={12} height={12} />
     </View>
   </TouchableOpacity>
 );
@@ -524,26 +524,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F9FC',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 14,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 8,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 21,
     fontFamily: 'Poppins-Medium',
     color: '#111827',
   },
   headerSubtitle: {
     fontSize: 11,
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: 1,
     fontFamily: 'Poppins-Regular',
   },
   headerSearchBtn: {
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
@@ -587,15 +587,15 @@ const styles = StyleSheet.create({
   storageBanner: {
     backgroundColor: '#2563EB',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
     shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   storageCircleWrapper: {
     width: 88,
@@ -633,14 +633,14 @@ const styles = StyleSheet.create({
   storageInfoData: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: 11,
-    marginBottom: 10,
+    marginBottom: 8,
     fontFamily: 'Poppins-Regular',
   },
   progressBarBg: {
     height: 3,
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 1.5,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   progressBarFill: {
     height: 3,
@@ -671,15 +671,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 14,
   },
   actionCard: {
-    width: (width - 32 - 16) / 3, // 3 cols, 2 gaps of 8 => 16px
+    width: (width - 28 - 16) / 3, // 3 cols with compact 14px padding
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 10,
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -689,41 +690,42 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
   },
   actionCardIconWrapper: {
-    width: 48,
-    height: 48,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   actionCardTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Poppins-Medium',
     color: '#111827',
     textAlign: 'center',
-    marginBottom: 4,
-    minHeight: 32,
-    lineHeight: 16,
+    marginBottom: 2,
+    minHeight: 28,
+    lineHeight: 14,
   },
   actionCardDesc: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: 'Poppins-Regular',
     color: '#6B7280',
     textAlign: 'center',
-    marginBottom: 12,
-    minHeight: 28,
+    marginBottom: 6,
+    minHeight: 22,
+    lineHeight: 11,
   },
   actionCardBtn: {
-    width: '100%',
-    height: 24,
+    width: '90%',
+    height: 20,
     backgroundColor: '#3B82F6',
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   recentSection: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -736,7 +738,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   recentTitle: {
     fontSize: 15,

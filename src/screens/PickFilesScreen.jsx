@@ -98,18 +98,22 @@ const PickFilesScreen = ({ route, navigation }) => {
   };
 
   const getReadablePath = (pathString) => {
-    if (!pathString) return 'N/A';
+    if (!pathString) return 'Storage';
     let p = pathString;
     
     if (p.startsWith('content://')) {
-      if (p.includes('downloads')) return 'Internal Storage / Downloads';
-      if (p.includes('media')) return 'Internal Storage / Media';
-      return 'Internal Storage / Documents';
+      if (p.includes('downloads') || p.includes('Download')) return 'Storage / Download';
+      if (p.includes('media') || p.includes('image')) return 'Storage / Pictures';
+      return 'Storage / Documents';
     }
     
-    p = p.replace('/storage/emulated/0', 'Internal Storage');
     p = p.replace('file://', '');
-    return p;
+    p = p.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
+    if (p.startsWith('/')) p = p.substring(1);
+    const lastSlash = p.lastIndexOf('/');
+    let folderPart = lastSlash !== -1 ? p.substring(0, lastSlash) : p;
+    if (!folderPart) return 'Storage';
+    return `Storage / ${folderPart}`;
   };
 
   const handleStartConversion = async () => {

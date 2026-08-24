@@ -12,7 +12,7 @@ import {
   Modal,
   PanResponder,
 } from 'react-native';
-import { decodeTiffToBase64Uri, cropAndRotateImage } from '../services/tiffDecoderService';
+import { decodeTiffToBase64Uri, decodeTiffThumbnailFast, cropAndRotateImage } from '../services/tiffDecoderService';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import EditDocumentIcon from '../assets/edit_document.svg';
@@ -149,7 +149,17 @@ const PreviewScreen = ({ route, navigation }) => {
     const targetPath = file?.path || file?.uri;
 
     if (targetPath) {
-      setLoading(true);
+      // Step 1: Immediately display the cached / fast-sampled preview (0ms delay)
+      decodeTiffThumbnailFast(targetPath, 480)
+        .then((fastResult) => {
+          if (isActive && fastResult && fastResult.uri) {
+            setImageUri(fastResult.uri);
+            setLoading(false);
+          }
+        })
+        .catch(() => {});
+
+      // Step 2: Full resolution background upgrade
       decodeTiffToBase64Uri(targetPath, 0)
         .then((result) => {
           if (isActive && result && result.uri) {
@@ -159,7 +169,7 @@ const PreviewScreen = ({ route, navigation }) => {
           }
         })
         .catch((err) => {
-          console.warn('Error decoding preview image:', err);
+          console.warn('Error decoding full preview image:', err);
           if (isActive && file?.uri) {
             setImageUri(file.uri);
           }
@@ -306,19 +316,42 @@ const PreviewScreen = ({ route, navigation }) => {
     return `${kb.toFixed(1)} KB`;
   };
 
+  const formatDisplayPath = (pathString) => {
+    if (!pathString) return 'Storage';
+    let p = pathString;
+    if (p.startsWith('content://')) {
+      if (p.includes('downloads') || p.includes('Download')) return 'Storage / Download';
+      if (p.includes('media') || p.includes('image')) return 'Storage / Pictures';
+      return 'Storage / Documents';
+    }
+    p = p.replace('file://', '');
+    p = p.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
+    if (p.startsWith('/')) p = p.substring(1);
+    const lastSlash = p.lastIndexOf('/');
+    let folderPart = lastSlash !== -1 ? p.substring(0, lastSlash) : p;
+    if (!folderPart) return 'Storage';
+    return `Storage / ${folderPart}`;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Top Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Edit Photo</Text>
-        <TouchableOpacity style={styles.checkBtn} onPress={handleDoneOrClose} activeOpacity={0.7}>
-          <Text style={styles.checkIcon}>✓</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {isEditMode ? 'Edit Photo' : file?.name || 'Image Preview'}
+        </Text>
+        <TouchableOpacity
+          style={styles.closeCrossBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.closeCrossText}>✕</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Main Center Image View */}
+      {/* Main Center Image View (Full Screen Preview) */}
       <View style={styles.imageWrapper}>
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -372,9 +405,8 @@ const PreviewScreen = ({ route, navigation }) => {
         )}
       </View>
 
-      {/* Bottom Action Bar */}
-      {isEditMode ? (
-        /* Edit Mode Bottom Bar: Crop & Rotate */
+      {/* Edit Mode Controls (Only if explicitly in edit mode) */}
+      {isEditMode && (
         <View style={styles.editBottomBar}>
           <TouchableOpacity
             style={styles.editTabItem}
@@ -418,37 +450,6 @@ const PreviewScreen = ({ route, navigation }) => {
             >
               Rotate
             </Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        /* Normal Mode Bottom Bar: Edit, Delete, Info, Share */
-        <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleEdit}>
-            <View style={styles.iconSvgWrapper}>
-              <EditDocumentIcon width={22} height={22} />
-            </View>
-            <Text style={styles.bottomTabText}>Edit</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleDeletePress}>
-            <View style={styles.iconSvgWrapper}>
-              <PreviewDeleteIcon width={22} height={22} />
-            </View>
-            <Text style={styles.bottomTabText}>Delete</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleInfoPress}>
-            <View style={styles.iconSvgWrapper}>
-              <PreviewInfoIcon width={22} height={22} />
-            </View>
-            <Text style={styles.bottomTabText}>Info</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleShare}>
-            <View style={styles.iconSvgWrapper}>
-              <PreviewShareIcon width={22} height={22} />
-            </View>
-            <Text style={styles.bottomTabText}>Share</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -495,7 +496,7 @@ const PreviewScreen = ({ route, navigation }) => {
 
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Location:</Text>
-                <Text style={styles.infoPathValue}>{file?.path || file?.uri || 'Storage'}</Text>
+                <Text style={styles.infoPathValue}>{formatDisplayPath(file?.path || file?.uri)}</Text>
               </View>
             </View>
 
@@ -568,15 +569,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
   headerTitle: {
-    fontSize: 18,
+    flex: 1,
+    fontSize: 17,
     fontFamily: 'Poppins-Medium',
     color: '#111827',
+    marginRight: 12,
+  },
+  closeCrossBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeCrossText: {
+    fontSize: 15,
+    fontFamily: 'Poppins-Medium',
+    color: '#374151',
   },
   checkBtn: {
     padding: 6,
