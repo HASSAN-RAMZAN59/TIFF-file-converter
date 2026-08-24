@@ -111,7 +111,7 @@ const HomeScreen = ({ navigation }) => {
       const favs = await getFavorites();
       const paths = favs.map((f) => f.path || f.id || f.uri).filter(Boolean);
       setFavoritesSet(new Set(paths));
-    } catch (e) {}
+    } catch (e) { }
   }, [fetchStorageInfo]);
 
   const handleToggleFavorite = async (item) => {
@@ -225,14 +225,14 @@ const HomeScreen = ({ navigation }) => {
 
   const filteredRecentFiles = searchQuery.trim()
     ? recentFiles.filter((item) =>
-        (item.name || '').toLowerCase().includes(searchQuery.toLowerCase().trim())
-      )
+      (item.name || '').toLowerCase().includes(searchQuery.toLowerCase().trim())
+    )
     : recentFiles;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
-      
+
       <View style={styles.header}>
         {isSearchOpen ? (
           <View style={styles.searchBarRow}>
@@ -245,8 +245,8 @@ const HomeScreen = ({ navigation }) => {
               onChangeText={setSearchQuery}
               autoFocus
             />
-            <TouchableOpacity 
-              style={styles.closeSearchBtn} 
+            <TouchableOpacity
+              style={styles.closeSearchBtn}
               onPress={() => {
                 setIsSearchOpen(false);
                 setSearchQuery('');
@@ -261,8 +261,8 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.headerTitle}>TIFF Converter</Text>
               <Text style={styles.headerSubtitle}>Convert TIFF to JPG, PNG, PDF, WEBP</Text>
             </View>
-            <TouchableOpacity 
-              style={styles.headerSearchBtn} 
+            <TouchableOpacity
+              style={styles.headerSearchBtn}
               activeOpacity={0.7}
               onPress={() => setIsSearchOpen(true)}
             >
@@ -272,8 +272,8 @@ const HomeScreen = ({ navigation }) => {
         )}
       </View>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
@@ -309,7 +309,7 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.storageCircleLabel}>Used</Text>
             </View>
           </View>
-          
+
           <View style={styles.storageInfo}>
             <Text style={styles.storageInfoTitle}>Device Storage</Text>
             <Text style={styles.storageInfoData}>{storageInfo.formattedUsed} / {storageInfo.formattedTotal}</Text>
@@ -323,7 +323,7 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.availableText}>{storageInfo.formattedFree} Available</Text>
             </View>
           </View>
-          
+
           <View style={styles.storageIllustrationWrapper}>
             <StorageBannerIllustration width={64} height={74} />
           </View>
@@ -331,41 +331,41 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Action Grid */}
         <View style={styles.grid}>
-          <ActionCard 
-            title="Auto Scan All TIFF" 
-            desc="Find all TIFF files on your device" 
+          <ActionCard
+            title="Auto Scan All TIFF"
+            desc="Find all TIFF files on your device"
             Icon={AutoScanIcon}
-            onPress={handleAutoScanPress} 
+            onPress={handleAutoScanPress}
           />
-          <ActionCard 
-            title="Pick & Convert" 
-            desc="Choose one TIFF file to convert" 
+          <ActionCard
+            title="Pick & Convert"
+            desc="Choose one TIFF file to convert"
             Icon={PickConvertIcon}
-            onPress={handlePickSingleFilePress} 
+            onPress={handlePickSingleFilePress}
           />
-          <ActionCard 
-            title="Batch Conversion" 
-            desc="Convert Multiple TIFF files together" 
+          <ActionCard
+            title="Batch Conversion"
+            desc="Convert Multiple TIFF files together"
             Icon={BatchConvertIcon}
-            onPress={handleBatchConversionPress} 
+            onPress={handleBatchConversionPress}
           />
-          <ActionCard 
-            title="Converted Outputs" 
-            desc="View all your converted files" 
+          <ActionCard
+            title="Converted Outputs"
+            desc="View all your converted files"
             Icon={ConvertedOutputsIcon}
-            onPress={handleConvertedOutputsPress} 
+            onPress={handleConvertedOutputsPress}
           />
-          <ActionCard 
-            title="Favorites" 
-            desc="Quick access to saved files" 
+          <ActionCard
+            title="Favorites"
+            desc="Quick access to saved files"
             Icon={FavoritesIcon}
-            onPress={handleFavoritesPress} 
+            onPress={handleFavoritesPress}
           />
-          <ActionCard 
-            title="Settings" 
-            desc="Manage app preferences" 
+          <ActionCard
+            title="Settings"
+            desc="Manage app preferences"
             Icon={SettingsIcon}
-            onPress={handleSettingsPress} 
+            onPress={handleSettingsPress}
           />
         </View>
 
@@ -379,7 +379,7 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.viewAll}>View All {'>'}</Text>
             </TouchableOpacity>
           </View>
-          
+
           {filteredRecentFiles.length === 0 ? (
             <Text style={styles.emptyRecentText}>
               {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No recent converted files.'}
@@ -392,8 +392,8 @@ const HomeScreen = ({ navigation }) => {
               const sizeMB = (item.size / 1024 / 1024).toFixed(1) + ' MB';
 
               return (
-                <TouchableOpacity 
-                  key={item.id} 
+                <TouchableOpacity
+                  key={item.id}
                   style={[styles.recentItem, !isLast && styles.recentItemBorder]}
                   activeOpacity={0.7}
                   onPress={() => handleFilePress(item)}
@@ -414,27 +414,27 @@ const HomeScreen = ({ navigation }) => {
                       {item.format} . {sizeMB} . {timeString}
                     </Text>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.recentActionBtn}
                     onPress={() => handleToggleFavorite(item)}
                     activeOpacity={0.6}
                   >
                     {favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri) ? (
-                      <HeartFilledIcon 
-                        width={18} 
-                        height={18} 
+                      <HeartFilledIcon
+                        width={18}
+                        height={18}
                         color="#2563EB"
-                        fill="#2563EB" 
+                        fill="#2563EB"
                       />
                     ) : (
-                      <HeartOutlineIcon 
-                        width={18} 
-                        height={18} 
-                        color="#9CA3AF" 
+                      <HeartOutlineIcon
+                        width={18}
+                        height={18}
+                        color="#9CA3AF"
                       />
                     )}
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.recentActionBtn}
                     onPress={handleConvertedOutputsPress}
                     activeOpacity={0.6}
@@ -456,12 +456,12 @@ const HomeScreen = ({ navigation }) => {
         onRequestClose={() => setPreviewFile(null)}
       >
         <View style={styles.previewModalOverlay}>
-          <TouchableOpacity 
-            style={styles.modalBackdropTap} 
-            activeOpacity={1} 
-            onPress={() => setPreviewFile(null)} 
+          <TouchableOpacity
+            style={styles.modalBackdropTap}
+            activeOpacity={1}
+            onPress={() => setPreviewFile(null)}
           />
-          
+
           <View style={styles.previewModalCard}>
             <View style={styles.previewModalHeader}>
               <View style={{ flex: 1 }}>
@@ -472,8 +472,8 @@ const HomeScreen = ({ navigation }) => {
                   {previewFile?.format} . {((previewFile?.size || 0) / 1024 / 1024).toFixed(1)} MB
                 </Text>
               </View>
-              <TouchableOpacity 
-                style={styles.previewModalCloseBtn} 
+              <TouchableOpacity
+                style={styles.previewModalCloseBtn}
                 onPress={() => setPreviewFile(null)}
                 activeOpacity={0.7}
               >
@@ -483,10 +483,10 @@ const HomeScreen = ({ navigation }) => {
 
             <View style={styles.previewModalImageContainer}>
               {previewFile?.uri ? (
-                <Image 
-                  source={{ uri: previewFile.uri }} 
-                  style={styles.previewModalImage} 
-                  resizeMode="contain" 
+                <Image
+                  source={{ uri: previewFile.uri }}
+                  style={styles.previewModalImage}
+                  resizeMode="contain"
                 />
               ) : (
                 <View style={styles.previewModalLoadingBox}>
@@ -591,11 +591,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 14,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 6,
+    borderWidth: 0.5,
+    borderColor: '#0b4586ff',
+    shadowColor: '#659bf1ff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 18,
+    shadowRadius: 62,
+    elevation: 10,
   },
   storageCircleWrapper: {
     width: 88,

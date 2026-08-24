@@ -337,21 +337,41 @@ const PreviewScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top Header */}
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {isEditMode ? 'Edit Photo' : file?.name || 'Image Preview'}
-        </Text>
-        <TouchableOpacity
-          style={styles.closeCrossBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.closeCrossText}>✕</Text>
-        </TouchableOpacity>
+        {route.params?.fromScreen === 'PickFilesScreen' ? (
+          <>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <Text style={styles.backBtnText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {isEditMode ? 'Edit Photo' : file?.name || 'Image Preview'}
+            </Text>
+            {isEditMode ? (
+              <TouchableOpacity style={styles.checkBtn} onPress={handleDoneOrClose} activeOpacity={0.7}>
+                <Text style={styles.checkIcon}>✓</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 28 }} />
+            )}
+          </>
+        ) : (
+          <>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {file?.name || 'Image Preview'}
+            </Text>
+            <TouchableOpacity
+              style={styles.closeCrossBtn}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.closeCrossText}>✕</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
-      {/* Main Center Image View (Full Screen Preview) */}
+      {/* Main Center Image View */}
       <View style={styles.imageWrapper}>
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -405,53 +425,87 @@ const PreviewScreen = ({ route, navigation }) => {
         )}
       </View>
 
-      {/* Edit Mode Controls (Only if explicitly in edit mode) */}
-      {isEditMode && (
-        <View style={styles.editBottomBar}>
-          <TouchableOpacity
-            style={styles.editTabItem}
-            activeOpacity={0.7}
-            onPress={handleCropPress}
-          >
-            <View style={styles.editIconWrapper}>
-              <CropIcon
-                width={26}
-                height={26}
-                fill={activeEditTool === 'crop' ? '#3B9FFB' : '#64748B'}
-              />
-            </View>
-            <Text
-              style={[
-                styles.editTabText,
-                activeEditTool === 'crop' && styles.activeEditTabText,
-              ]}
+      {/* Bottom Bar: Rendered when opened from Pick & Convert screen */}
+      {route.params?.fromScreen === 'PickFilesScreen' && (
+        isEditMode ? (
+          /* Edit Mode Controls: Crop & Rotate */
+          <View style={styles.editBottomBar}>
+            <TouchableOpacity
+              style={styles.editTabItem}
+              activeOpacity={0.7}
+              onPress={handleCropPress}
             >
-              Crop
-            </Text>
-          </TouchableOpacity>
+              <View style={styles.editIconWrapper}>
+                <CropIcon
+                  width={26}
+                  height={26}
+                  fill={activeEditTool === 'crop' ? '#3B9FFB' : '#64748B'}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.editTabText,
+                  activeEditTool === 'crop' && styles.activeEditTabText,
+                ]}
+              >
+                Crop
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.editTabItem}
-            activeOpacity={0.7}
-            onPress={handleRotatePress}
-          >
-            <View style={styles.editIconWrapper}>
-              <CropRotateIcon
-                width={26}
-                height={26}
-                fill={activeEditTool === 'rotate' ? '#3B9FFB' : '#1C1B1F'}
-              />
-            </View>
-            <Text
-              style={[
-                styles.editTabText,
-                activeEditTool === 'rotate' && styles.activeEditTabText,
-              ]}
+            <TouchableOpacity
+              style={styles.editTabItem}
+              activeOpacity={0.7}
+              onPress={handleRotatePress}
             >
-              Rotate
-            </Text>
-          </TouchableOpacity>
-        </View>
+              <View style={styles.editIconWrapper}>
+                <CropRotateIcon
+                  width={26}
+                  height={26}
+                  fill={activeEditTool === 'rotate' ? '#3B9FFB' : '#1C1B1F'}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.editTabText,
+                  activeEditTool === 'rotate' && styles.activeEditTabText,
+                ]}
+              >
+                Rotate
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* 4 Actions: Edit, Delete, Info, Share */
+          <View style={styles.bottomBar}>
+            <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleEdit}>
+              <View style={styles.iconSvgWrapper}>
+                <EditDocumentIcon width={22} height={22} />
+              </View>
+              <Text style={styles.bottomTabText}>Edit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleDeletePress}>
+              <View style={styles.iconSvgWrapper}>
+                <PreviewDeleteIcon width={22} height={22} />
+              </View>
+              <Text style={styles.bottomTabText}>Delete</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleInfoPress}>
+              <View style={styles.iconSvgWrapper}>
+                <PreviewInfoIcon width={22} height={22} />
+              </View>
+              <Text style={styles.bottomTabText}>Info</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleShare}>
+              <View style={styles.iconSvgWrapper}>
+                <PreviewShareIcon width={22} height={22} />
+              </View>
+              <Text style={styles.bottomTabText}>Share</Text>
+            </TouchableOpacity>
+          </View>
+        )
       )}
 
       {/* Info Details Modal */}

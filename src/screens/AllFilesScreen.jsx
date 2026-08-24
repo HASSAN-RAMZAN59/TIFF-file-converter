@@ -158,11 +158,7 @@ const AllFilesScreen = ({ route, navigation }) => {
   };
 
   const handleFileSelect = (file) => {
-    if (isBatchPickerMode || selectedFilePaths.size > 0) {
-      toggleFileSelection(file);
-    } else {
-      navigation.navigate('PreviewScreen', { file });
-    }
+    toggleFileSelection(file);
   };
 
   const handleProceedToBatchConvert = () => {
@@ -199,7 +195,6 @@ const AllFilesScreen = ({ route, navigation }) => {
           isSelected && styles.fileCardSelected,
         ]}
         onPress={() => handleFileSelect(item)}
-        onLongPress={() => toggleFileSelection(item)}
         activeOpacity={0.7}
       >
         <TiffThumbnail path={item.path} style={styles.thumbnailPlaceholder} />
@@ -214,12 +209,10 @@ const AllFilesScreen = ({ route, navigation }) => {
           <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
         </View>
 
-        {/* Selection Checkbox */}
-        {(isBatchPickerMode || selectedFilePaths.size > 0) && (
-          <View style={[styles.checkboxCircle, isSelected && styles.checkboxCircleSelected]}>
-            {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
-          </View>
-        )}
+        {/* Selection Checkbox on single click */}
+        <View style={[styles.checkboxCircle, isSelected && styles.checkboxCircleSelected]}>
+          {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
+        </View>
       </TouchableOpacity>
     );
   };
