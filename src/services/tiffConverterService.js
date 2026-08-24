@@ -53,59 +53,106 @@ export const convertTiffFile = async (sourcePath, targetFormat = 'jpg', onProgre
 
     if (onProgress) onProgress(45);
 
-    // Decode TIFF pages
-    const ifds = UTIF.decode(arrayBuffer);
-    if (!ifds || ifds.length === 0) {
-      throw new Error('Invalid or unreadable TIFF file.');
-    }
-
-    if (onProgress) onProgress(65);
+    // Check file header or extension to detect BMP vs TIFF
+    const isBmpFile = realPath.toLowerCase().endsWith('.bmp') ||
+      (fileBuffer.length > 2 && fileBuffer[0] === 0x42 && fileBuffer[1] === 0x4D); // 'BM'
 
     const outputDir = await getOutputDir();
-    const cleanName = (realPath.split('/').pop() || 'tiff_file').replace(/\.[^/.]+$/, '');
+    const cleanName = (realPath.split('/').pop() || 'file').replace(/\.[^/.]+$/, '');
     const timestamp = Date.now().toString().slice(-4);
     const fmt = targetFormat.toLowerCase();
 
     let outputFilePath = '';
     let outputSize = 0;
 
-    if (fmt === 'pdf') {
-      // Decode all pages into RGBA buffers for multi-page PDF
-      const pagesData = [];
-      for (let i = 0; i < ifds.length; i++) {
-        const ifd = ifds[i];
-        UTIF.decodeImage(arrayBuffer, ifd);
-        const rgba = UTIF.toRGBA8(ifd);
-        pagesData.push({
-          width: ifd.width,
-          height: ifd.height,
-          rgba,
-        });
+    if (isBmpFile) {
+      // Decode BMP image pixels
+      const pixelOffset = fileBuffer.readUInt32LE(10);
+      const width = Math.abs(fileBuffer.readInt32LE(18));
+      const rawHeight = fileBuffer.readInt32LE(22);
+      const height = Math.abs(rawHeight);
+      const isTopDown = rawHeight < 0;
+      const bpp = fileBuffer.readUInt16LE(28);
+
+      const rgba = new Uint8Array(width * height * 4);
+      let src = pixelOffset;
+      const bytesPerPixel = bpp / 8;
+      const rowSize = Math.ceil((bpp * width) / 32) * 4;
+
+      for (let y = 0; y < height; y++) {
+        const row = isTopDown ? y : height - 1 - y;
+        const rowStart = pixelOffset + row * rowSize;
+        for (let x = 0; x < width; x++) {
+          const pxOffset = rowStart + x * bytesPerPixel;
+          const dstOffset = (y * width + x) * 4;
+          rgba[dstOffset] = fileBuffer[pxOffset + 2] || 0;     // R
+          rgba[dstOffset + 1] = fileBuffer[pxOffset + 1] || 0; // G
+          rgba[dstOffset + 2] = fileBuffer[pxOffset] || 0;     // B
+          rgba[dstOffset + 3] = bytesPerPixel === 4 ? (fileBuffer[pxOffset + 3] || 255) : 255;
+        }
       }
 
-      if (onProgress) onProgress(85);
+      if (onProgress) onProgress(80);
 
-      // Generate PDF File
-      const pdfBuffer = generatePdfFromRgbaPages(pagesData);
-      outputFilePath = `${outputDir}/${cleanName}_${timestamp}.pdf`;
-      await RNFS.writeFile(outputFilePath, pdfBuffer.toString('base64'), 'base64');
-      outputSize = pdfBuffer.length;
+      if (fmt === 'pdf') {
+        const pdfBuffer = generatePdfFromRgbaPages([{ width, height, rgba }]);
+        outputFilePath = `${outputDir}/${cleanName}_${timestamp}.pdf`;
+        await RNFS.writeFile(outputFilePath, pdfBuffer.toString('base64'), 'base64');
+        outputSize = pdfBuffer.length;
+      } else {
+        const imageBuffer = createBmpBuffer(rgba, width, height);
+        const ext = fmt === 'jpeg' ? 'jpg' : fmt;
+        outputFilePath = `${outputDir}/${cleanName}_${timestamp}.${ext}`;
+        await RNFS.writeFile(outputFilePath, imageBuffer.toString('base64'), 'base64');
+        outputSize = imageBuffer.length;
+      }
     } else {
-      // Decode primary page 0 for image format export (jpg, png, webp, bmp)
-      const ifd = ifds[0];
-      UTIF.decodeImage(arrayBuffer, ifd);
-      const rgba = UTIF.toRGBA8(ifd);
-      const width = ifd.width;
-      const height = ifd.height;
+      // Decode TIFF pages
+      const ifds = UTIF.decode(arrayBuffer);
+      if (!ifds || ifds.length === 0) {
+        throw new Error('Invalid or unreadable TIFF file.');
+      }
 
-      if (onProgress) onProgress(85);
+      if (onProgress) onProgress(65);
 
-      // Create image buffer
-      const imageBuffer = createBmpBuffer(rgba, width, height);
-      const ext = fmt === 'jpeg' ? 'jpg' : fmt;
-      outputFilePath = `${outputDir}/${cleanName}_${timestamp}.${ext}`;
-      await RNFS.writeFile(outputFilePath, imageBuffer.toString('base64'), 'base64');
-      outputSize = imageBuffer.length;
+      if (fmt === 'pdf') {
+        // Decode all pages into RGBA buffers for multi-page PDF
+        const pagesData = [];
+        for (let i = 0; i < ifds.length; i++) {
+          const ifd = ifds[i];
+          UTIF.decodeImage(arrayBuffer, ifd);
+          const rgba = UTIF.toRGBA8(ifd);
+          pagesData.push({
+            width: ifd.width,
+            height: ifd.height,
+            rgba,
+          });
+        }
+
+        if (onProgress) onProgress(85);
+
+        // Generate PDF File
+        const pdfBuffer = generatePdfFromRgbaPages(pagesData);
+        outputFilePath = `${outputDir}/${cleanName}_${timestamp}.pdf`;
+        await RNFS.writeFile(outputFilePath, pdfBuffer.toString('base64'), 'base64');
+        outputSize = pdfBuffer.length;
+      } else {
+        // Decode primary page 0 for image format export (jpg, png, webp, bmp)
+        const ifd = ifds[0];
+        UTIF.decodeImage(arrayBuffer, ifd);
+        const rgba = UTIF.toRGBA8(ifd);
+        const width = ifd.width;
+        const height = ifd.height;
+
+        if (onProgress) onProgress(85);
+
+        // Create image buffer
+        const imageBuffer = createBmpBuffer(rgba, width, height);
+        const ext = fmt === 'jpeg' ? 'jpg' : fmt;
+        outputFilePath = `${outputDir}/${cleanName}_${timestamp}.${ext}`;
+        await RNFS.writeFile(outputFilePath, imageBuffer.toString('base64'), 'base64');
+        outputSize = imageBuffer.length;
+      }
     }
 
     if (onProgress) onProgress(100);

@@ -70,7 +70,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
       const successCount = results.filter((r) => r.success).length;
 
       Alert.alert(
-        'Batch Conversion Finished! 🎉',
+        'Batch Conversion Finished',
         `Successfully converted ${successCount} of ${files.length} TIFF files to ${selectedFormat.toUpperCase()}.\n\nFiles saved to Device Storage (Download/TIFF_Converted).`,
         [
           {

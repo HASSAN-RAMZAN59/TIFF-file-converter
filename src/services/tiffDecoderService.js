@@ -63,6 +63,46 @@ export const decodeTiffToBase64Uri = async (filePath, pageIndex = 0) => {
       fileBuffer.byteOffset + fileBuffer.byteLength
     );
 
+    // Check if input is a BMP file
+    const isBmp = realPath.toLowerCase().endsWith('.bmp') ||
+      (fileBuffer.length > 2 && fileBuffer[0] === 0x42 && fileBuffer[1] === 0x4D);
+
+    if (isBmp) {
+      const pixelOffset = fileBuffer.readUInt32LE(10);
+      const width = Math.abs(fileBuffer.readInt32LE(18));
+      const rawHeight = fileBuffer.readInt32LE(22);
+      const height = Math.abs(rawHeight);
+      const isTopDown = rawHeight < 0;
+      const bpp = fileBuffer.readUInt16LE(28);
+
+      const rgba = new Uint8Array(width * height * 4);
+      const bytesPerPixel = bpp / 8;
+      const rowSize = Math.ceil((bpp * width) / 32) * 4;
+
+      for (let y = 0; y < height; y++) {
+        const row = isTopDown ? y : height - 1 - y;
+        const rowStart = pixelOffset + row * rowSize;
+        for (let x = 0; x < width; x++) {
+          const pxOffset = rowStart + x * bytesPerPixel;
+          const dstOffset = (y * width + x) * 4;
+          rgba[dstOffset] = fileBuffer[pxOffset + 2] || 0;     // R
+          rgba[dstOffset + 1] = fileBuffer[pxOffset + 1] || 0; // G
+          rgba[dstOffset + 2] = fileBuffer[pxOffset] || 0;     // B
+          rgba[dstOffset + 3] = bytesPerPixel === 4 ? (fileBuffer[pxOffset + 3] || 255) : 255;
+        }
+      }
+
+      const bmpBuffer = createBmpBuffer(rgba, width, height);
+      return {
+        uri: `data:image/bmp;base64,${bmpBuffer.toString('base64')}`,
+        width,
+        height,
+        rgba,
+        totalPages: 1,
+        pageIndex: 0,
+      };
+    }
+
     // Decode TIFF IFDs (pages)
     const ifds = UTIF.decode(arrayBuffer);
     if (!ifds || ifds.length === 0) {
@@ -87,6 +127,7 @@ export const decodeTiffToBase64Uri = async (filePath, pageIndex = 0) => {
       uri: `data:image/bmp;base64,${base64Bmp}`,
       width,
       height,
+      rgba,
       totalPages: ifds.length,
       pageIndex: selectedPageIndex,
     };
@@ -97,9 +138,173 @@ export const decodeTiffToBase64Uri = async (filePath, pageIndex = 0) => {
 };
 
 /**
+ * Crops and rotates an RGBA image array and saves it as a new converted image file.
+ */
+export const cropAndRotateImage = async ({
+  filePath,
+  cropRect, // { x, y, width, height } in container coords
+  containerSize, // { width, height }
+  rotationDegree = 0, // 0, 90, 180, 270
+}) => {
+  const realPath = await resolveToAbsolutePath(filePath);
+  const base64Data = await RNFS.readFile(realPath, 'base64');
+  const fileBuffer = Buffer.from(base64Data, 'base64');
+  const arrayBuffer = fileBuffer.buffer.slice(
+    fileBuffer.byteOffset,
+    fileBuffer.byteOffset + fileBuffer.byteLength
+  );
+
+  let srcRgba;
+  let srcW;
+  let srcH;
+
+  const isBmp = realPath.toLowerCase().endsWith('.bmp') ||
+    (fileBuffer.length > 2 && fileBuffer[0] === 0x42 && fileBuffer[1] === 0x4D);
+
+  if (isBmp) {
+    const pixelOffset = fileBuffer.readUInt32LE(10);
+    srcW = Math.abs(fileBuffer.readInt32LE(18));
+    const rawHeight = fileBuffer.readInt32LE(22);
+    srcH = Math.abs(rawHeight);
+    const isTopDown = rawHeight < 0;
+    const bpp = fileBuffer.readUInt16LE(28);
+
+    srcRgba = new Uint8Array(srcW * srcH * 4);
+    const bytesPerPixel = bpp / 8;
+    const rowSize = Math.ceil((bpp * srcW) / 32) * 4;
+
+    for (let y = 0; y < srcH; y++) {
+      const row = isTopDown ? y : srcH - 1 - y;
+      const rowStart = pixelOffset + row * rowSize;
+      for (let x = 0; x < srcW; x++) {
+        const pxOffset = rowStart + x * bytesPerPixel;
+        const dstOffset = (y * srcW + x) * 4;
+        srcRgba[dstOffset] = fileBuffer[pxOffset + 2] || 0;
+        srcRgba[dstOffset + 1] = fileBuffer[pxOffset + 1] || 0;
+        srcRgba[dstOffset + 2] = fileBuffer[pxOffset] || 0;
+        srcRgba[dstOffset + 3] = bytesPerPixel === 4 ? (fileBuffer[pxOffset + 3] || 255) : 255;
+      }
+    }
+  } else {
+    const ifds = UTIF.decode(arrayBuffer);
+    if (!ifds || ifds.length === 0) throw new Error('Invalid TIFF');
+    const ifd = ifds[0];
+    UTIF.decodeImage(arrayBuffer, ifd);
+    srcRgba = UTIF.toRGBA8(ifd);
+    srcW = ifd.width;
+    srcH = ifd.height;
+  }
+
+  // Apply Rotation first if any
+  const normalizedRot = ((rotationDegree % 360) + 360) % 360;
+  if (normalizedRot === 90) {
+    const rotated = new Uint8Array(srcW * srcH * 4);
+    for (let y = 0; y < srcH; y++) {
+      for (let x = 0; x < srcW; x++) {
+        const srcIdx = (y * srcW + x) * 4;
+        const newX = srcH - 1 - y;
+        const newY = x;
+        const dstIdx = (newY * srcH + newX) * 4;
+        rotated[dstIdx] = srcRgba[srcIdx];
+        rotated[dstIdx + 1] = srcRgba[srcIdx + 1];
+        rotated[dstIdx + 2] = srcRgba[srcIdx + 2];
+        rotated[dstIdx + 3] = srcRgba[srcIdx + 3];
+      }
+    }
+    srcRgba = rotated;
+    const tmp = srcW;
+    srcW = srcH;
+    srcH = tmp;
+  } else if (normalizedRot === 180) {
+    const rotated = new Uint8Array(srcW * srcH * 4);
+    for (let y = 0; y < srcH; y++) {
+      for (let x = 0; x < srcW; x++) {
+        const srcIdx = (y * srcW + x) * 4;
+        const newX = srcW - 1 - x;
+        const newY = srcH - 1 - y;
+        const dstIdx = (newY * srcW + newX) * 4;
+        rotated[dstIdx] = srcRgba[srcIdx];
+        rotated[dstIdx + 1] = srcRgba[srcIdx + 1];
+        rotated[dstIdx + 2] = srcRgba[srcIdx + 2];
+        rotated[dstIdx + 3] = srcRgba[srcIdx + 3];
+      }
+    }
+    srcRgba = rotated;
+  } else if (normalizedRot === 270) {
+    const rotated = new Uint8Array(srcW * srcH * 4);
+    for (let y = 0; y < srcH; y++) {
+      for (let x = 0; x < srcW; x++) {
+        const srcIdx = (y * srcW + x) * 4;
+        const newX = y;
+        const newY = srcW - 1 - x;
+        const dstIdx = (newY * srcH + newX) * 4;
+        rotated[dstIdx] = srcRgba[srcIdx];
+        rotated[dstIdx + 1] = srcRgba[srcIdx + 1];
+        rotated[dstIdx + 2] = srcRgba[srcIdx + 2];
+        rotated[dstIdx + 3] = srcRgba[srcIdx + 3];
+      }
+    }
+    srcRgba = rotated;
+    const tmp = srcW;
+    srcW = srcH;
+    srcH = tmp;
+  }
+
+  // Calculate actual pixel crop coordinates based on container aspect ratio
+  const contW = containerSize.width || srcW;
+  const contH = containerSize.height || srcH;
+  const scaleX = srcW / contW;
+  const scaleY = srcH / contH;
+
+  const cropX = Math.max(0, Math.floor((cropRect.x || 0) * scaleX));
+  const cropY = Math.max(0, Math.floor((cropRect.y || 0) * scaleY));
+  const cropW = Math.min(srcW - cropX, Math.floor((cropRect.width || contW) * scaleX));
+  const cropH = Math.min(srcH - cropY, Math.floor((cropRect.height || contH) * scaleY));
+
+  if (cropW <= 0 || cropH <= 0) {
+    throw new Error('Invalid crop dimensions');
+  }
+
+  // Extract cropped pixels
+  const croppedRgba = new Uint8Array(cropW * cropH * 4);
+  for (let row = 0; row < cropH; row++) {
+    const srcRowStart = ((cropY + row) * srcW + cropX) * 4;
+    const dstRowStart = (row * cropW) * 4;
+    for (let col = 0; col < cropW * 4; col++) {
+      croppedRgba[dstRowStart + col] = srcRgba[srcRowStart + col];
+    }
+  }
+
+  // Encode as BMP buffer
+  const bmpBuf = createBmpBuffer(croppedRgba, cropW, cropH);
+
+  // Save to output folder
+  const root = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
+  const outputDir = `${root}/TIFF_Converted`;
+  if (!(await RNFS.exists(outputDir))) {
+    await RNFS.mkdir(outputDir);
+  }
+
+  const baseFileName = (realPath.split('/').pop() || 'image').replace(/\.[^/.]+$/, '');
+  const outFileName = `Edited_${baseFileName}_${Date.now().toString().slice(-4)}.jpg`;
+  const outPath = `${outputDir}/${outFileName}`;
+
+  await RNFS.writeFile(outPath, bmpBuf.toString('base64'), 'base64');
+
+  return {
+    path: outPath,
+    uri: `file://${outPath}`,
+    name: outFileName,
+    previewUri: `data:image/bmp;base64,${bmpBuf.toString('base64')}`,
+    width: cropW,
+    height: cropH,
+  };
+};
+
+/**
  * Generates an uncompressed 32-bit BMP Buffer from RGBA Uint8Array
  */
-function createBmpBuffer(rgba, width, height) {
+export function createBmpBuffer(rgba, width, height) {
   const fileHeaderSize = 14;
   const dibHeaderSize = 40;
   const pixelDataOffset = fileHeaderSize + dibHeaderSize;

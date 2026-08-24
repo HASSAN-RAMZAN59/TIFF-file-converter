@@ -143,6 +143,17 @@ const AllFilesScreen = ({ navigation }) => {
     navigation.navigate('PreviewScreen', { file });
   };
 
+  const formatDisplayPath = (fullPath) => {
+    if (!fullPath) return '';
+    let p = fullPath.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
+    if (p.startsWith('/')) p = p.substring(1);
+    const lastSlash = p.lastIndexOf('/');
+    if (lastSlash !== -1) {
+      return p.substring(0, lastSlash);
+    }
+    return p || 'Internal Storage';
+  };
+
   const renderFileItem = ({ item, index, total }) => {
     const isLast = index === total - 1;
     return (
@@ -158,7 +169,7 @@ const AllFilesScreen = ({ navigation }) => {
             {item.name}
           </Text>
           <Text style={styles.filePathText} numberOfLines={1}>
-            {item.path}
+            📁 {formatDisplayPath(item.path)}
           </Text>
           <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
         </View>

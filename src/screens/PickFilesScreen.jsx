@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
   StatusBar,
+  Modal,
 } from 'react-native';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 import { convertTiffFile } from '../services/tiffConverterService';
@@ -25,25 +26,41 @@ const FORMAT_OPTIONS = [
 ];
 
 const PickFilesScreen = ({ route, navigation }) => {
-  const file = route.params?.file || null;
+  const initialFile = route.params?.file || null;
+  const [currentFile, setCurrentFile] = useState(initialFile);
   const [decodedUri, setDecodedUri] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState('png');
   const [isConverting, setIsConverting] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [convertedResult, setConvertedResult] = useState(null);
 
   useEffect(() => {
-    if (file) {
-      loadTiffImage(0);
+    if (route.params?.editedFile) {
+      const ed = route.params.editedFile;
+      setCurrentFile({
+        ...currentFile,
+        name: ed.name,
+        path: ed.path,
+        uri: ed.uri,
+      });
+      if (ed.previewUri) {
+        setDecodedUri(ed.previewUri);
+      }
+    } else if (initialFile) {
+      setCurrentFile(initialFile);
+      loadTiffImage(initialFile, 0);
     } else {
       setIsLoading(false);
     }
-  }, [file]);
+  }, [route.params?.editedFile, initialFile]);
 
-  const loadTiffImage = async (pageIdx = 0) => {
-    if (!file) return;
+  const loadTiffImage = async (targetFile, pageIdx = 0) => {
+    const f = targetFile || currentFile;
+    if (!f) return;
     setIsLoading(true);
-    const filePath = file.path || file.uri;
+    const filePath = f.path || f.uri;
     try {
       const result = await decodeTiffToBase64Uri(filePath, pageIdx);
       if (result && result.uri) {
@@ -96,23 +113,17 @@ const PickFilesScreen = ({ route, navigation }) => {
   };
 
   const handleStartConversion = async () => {
-    if (!file) return;
+    if (!currentFile) return;
     setIsConverting(true);
     setConversionProgress(10);
-    const sourcePath = file.path || file.uri;
+    const sourcePath = currentFile.path || currentFile.uri;
     try {
       const result = await convertTiffFile(sourcePath, selectedFormat, (progress) => {
         setConversionProgress(progress);
       });
       if (result && result.success) {
-        Alert.alert(
-          'Conversion Complete! 🎉',
-          `File successfully saved to Device Storage:\n\n📁 ${result.outputFileName}`,
-          [
-            { text: 'View Converted Files', onPress: () => navigation.navigate('ConvertedFilesScreen') },
-            { text: 'OK', style: 'cancel' },
-          ]
-        );
+        setConvertedResult(result);
+        setSuccessModalVisible(true);
       }
     } catch (error) {
       Alert.alert('Conversion Failed', error?.message || 'Failed to convert TIFF file.');
@@ -122,7 +133,7 @@ const PickFilesScreen = ({ route, navigation }) => {
     }
   };
 
-  if (!file) {
+  if (!currentFile) {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.emptyText}>No TIFF file selected.</Text>
@@ -141,20 +152,31 @@ const PickFilesScreen = ({ route, navigation }) => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Image Placeholder / Preview */}
-        <View style={styles.imageWrapper}>
+        {/* Image Placeholder / Preview with Tap to Preview / Edit */}
+        <TouchableOpacity
+          style={styles.imageWrapper}
+          activeOpacity={0.8}
+          onPress={() => {
+            if (currentFile) {
+              navigation.navigate('PreviewScreen', {
+                file: currentFile,
+                fromScreen: 'PickFilesScreen',
+              });
+            }
+          }}
+        >
           {isLoading ? (
             <View style={styles.placeholderBox}>
               <ActivityIndicator size="large" color="#3B82F6" />
             </View>
           ) : decodedUri ? (
-            <Image source={{ uri: decodedUri }} style={styles.mainImage} resizeMode="cover" />
+            <Image source={{ uri: decodedUri }} style={styles.mainImage} resizeMode="contain" />
           ) : (
             <View style={styles.placeholderBox}>
               <Text style={styles.placeholderText}>Image Preview</Text>
             </View>
           )}
-        </View>
+        </TouchableOpacity>
 
         {/* Format Selector */}
         <View style={styles.formatRow}>
@@ -180,24 +202,24 @@ const PickFilesScreen = ({ route, navigation }) => {
 
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>File Name:</Text>
-            <Text style={styles.infoValue}>{file.name || file.fileName || 'Unknown'}</Text>
+            <Text style={styles.infoValue}>{currentFile?.name || currentFile?.fileName || 'Unknown'}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>File Size:</Text>
-            <Text style={styles.infoValue}>{formatFileSize(file.size)}</Text>
+            <Text style={styles.infoValue}>{formatFileSize(currentFile?.size)}</Text>
           </View>
 
           <View style={styles.infoItemExtra}>
             <Text style={styles.infoTextAfterConvert}>
               After Converting this file in <Text style={styles.boldText}>{selectedFormat.toUpperCase()}</Text> size will be
             </Text>
-            <Text style={styles.infoValueSmall}>{estimateConvertedSize(file.size, selectedFormat)}</Text>
+            <Text style={styles.infoValueSmall}>{estimateConvertedSize(currentFile?.size, selectedFormat)}</Text>
           </View>
 
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>File Path:</Text>
-            <Text style={styles.infoValueLight}>{getReadablePath(file.path || file.uri)}</Text>
+            <Text style={styles.infoValueLight}>{getReadablePath(currentFile?.path || currentFile?.uri)}</Text>
           </View>
         </View>
 
@@ -215,6 +237,71 @@ const PickFilesScreen = ({ route, navigation }) => {
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* Matching UI Success Modal */}
+      <Modal
+        visible={successModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSuccessModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdropTap}
+            activeOpacity={1}
+            onPress={() => setSuccessModalVisible(false)}
+          />
+
+          <View style={styles.successModalCard}>
+            <View style={styles.successIconCircle}>
+              <Text style={styles.successCheckmark}>✓</Text>
+            </View>
+
+            <Text style={styles.successModalTitle}>Conversion Complete</Text>
+            <Text style={styles.successModalSubtitle}>
+              Your file has been converted and saved to storage.
+            </Text>
+
+            <View style={styles.successDetailsBox}>
+              <View style={styles.successDetailRow}>
+                <Text style={styles.successDetailLabel}>File Name</Text>
+                <Text style={styles.successDetailValue} numberOfLines={1}>
+                  {convertedResult?.outputFileName || 'Converted File'}
+                </Text>
+              </View>
+              <View style={styles.successDetailRow}>
+                <Text style={styles.successDetailLabel}>Format</Text>
+                <View style={styles.successFormatBadge}>
+                  <Text style={styles.successFormatBadgeText}>
+                    {convertedResult?.format || selectedFormat.toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.successActionsRow}>
+              <TouchableOpacity
+                style={styles.successCloseBtn}
+                onPress={() => setSuccessModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.successCloseBtnText}>Done</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.successViewBtn}
+                onPress={() => {
+                  setSuccessModalVisible(false);
+                  navigation.navigate('ConvertedFilesScreen');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.successViewBtnText}>View Files</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -389,6 +476,135 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalBackdropTap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  successModalCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  successIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ECFDF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successCheckmark: {
+    fontSize: 28,
+    color: '#10B981',
+    fontFamily: 'Poppins-Bold',
+  },
+  successModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    color: '#1E293B',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  successModalSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 18,
+  },
+  successDetailsBox: {
+    width: '100%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 22,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 10,
+  },
+  successDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  successDetailLabel: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#64748B',
+  },
+  successDetailValue: {
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1E293B',
+    maxWidth: '65%',
+  },
+  successFormatBadge: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  successFormatBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
+  },
+  successActionsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+  },
+  successCloseBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successCloseBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#64748B',
+  },
+  successViewBtn: {
+    flex: 1.2,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  successViewBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
   },
 });
 
