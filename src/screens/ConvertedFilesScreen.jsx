@@ -10,20 +10,25 @@ import {
   RefreshControl,
   StatusBar,
   Modal,
-  Share,
   Alert,
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import SearchIcon from '../assets/search.svg';
 import HeartFilledIcon from '../assets/heart_filled.svg';
 import HeartOutlineIcon from '../assets/heart_outline.svg';
 import MoreVertIcon from '../assets/more_vert.svg';
+import DeleteIcon from '../assets/delete.svg';
+import ShareIcon from '../assets/share.svg';
+import RenameIcon from '../assets/drive_file_rename.svg';
+import ChatInfoIcon from '../assets/chat_info.svg';
 
 const ConvertedFilesScreen = ({ navigation }) => {
   const [convertedFiles, setConvertedFiles] = useState([]);
@@ -40,6 +45,15 @@ const ConvertedFilesScreen = ({ navigation }) => {
   // Rename State
   const [renameVisible, setRenameVisible] = useState(false);
   const [renameText, setRenameText] = useState('');
+
+  // Image Preview Modal State
+  const [previewFile, setPreviewFile] = useState(null);
+
+  // About Info Modal State
+  const [aboutModalVisible, setAboutModalVisible] = useState(false);
+
+  // Delete Confirm Modal State
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -95,43 +109,47 @@ const ConvertedFilesScreen = ({ navigation }) => {
   };
 
   const handleDelete = () => {
+    setMenuVisible(false);
+    setDeleteModalVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
     const file = selectedFile;
-    closeMenu();
-    Alert.alert('Delete File', `Are you sure you want to delete ${file.name}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await RNFS.unlink(file.path);
-            setConvertedFiles((prev) => prev.filter((f) => f.path !== file.path));
-            // Option: Also remove from favorites if it was there
-            if (favoritesSet.has(file.path)) {
-               await toggleFavorite(file);
-               const newSet = new Set(favoritesSet);
-               newSet.delete(file.path);
-               setFavoritesSet(newSet);
-            }
-          } catch (err) {
-            Alert.alert('Error', 'Could not delete file.');
-          }
-        },
-      },
-    ]);
+    setDeleteModalVisible(false);
+    if (!file) return;
+
+    try {
+      await RNFS.unlink(file.path);
+      setConvertedFiles((prev) => prev.filter((f) => f.path !== file.path));
+      if (favoritesSet.has(file.path)) {
+        await toggleFavorite(file);
+        const newSet = new Set(favoritesSet);
+        newSet.delete(file.path);
+        setFavoritesSet(newSet);
+      }
+    } catch (err) {
+      console.warn('Delete error:', err);
+    }
   };
 
   const handleShare = async () => {
     const file = selectedFile;
     closeMenu();
     try {
-      await Share.share({
+      const fileUri = file.uri.startsWith('file://') ? file.uri : `file://${file.path}`;
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const mimeType = ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+
+      await Share.open({
+        url: fileUri,
+        type: mimeType,
         title: file.name,
-        url: file.uri,
-        message: `Check out this file: ${file.name}`,
+        filename: file.name,
       });
     } catch (error) {
-      console.warn('Share error:', error);
+      if (error && error.message && !error.message.includes('User did not share')) {
+        console.warn('Share error:', error);
+      }
     }
   };
 
@@ -183,20 +201,12 @@ const ConvertedFilesScreen = ({ navigation }) => {
   };
 
   const handleAbout = () => {
-    const file = selectedFile;
-    closeMenu();
-    Alert.alert(
-      'File Info',
-      `Name: ${file.name}\n\nFormat: ${file.format}\n\nSize: ${formatFileSize(file.size)}\n\nPath: ${file.path}`
-    );
+    setMenuVisible(false);
+    setAboutModalVisible(true);
   };
 
   const handleFilePress = (item) => {
-    if (['JPG', 'PNG', 'WEBP', 'JPEG'].includes(item.format.toUpperCase())) {
-      navigation.navigate('PreviewScreen', { file: item });
-    } else {
-      Alert.alert('PDF Saved', `File is saved at:\n${item.path}`);
-    }
+    setPreviewFile(item);
   };
 
   const formatFileSize = (bytes) => {
@@ -353,22 +363,30 @@ const ConvertedFilesScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMenu}>
           <View style={styles.menuCard}>
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
-              <Text style={[styles.menuIcon, { color: '#EF4444' }]}>✕</Text>
+              <View style={styles.menuSvgWrapper}>
+                <DeleteIcon width={20} height={20} />
+              </View>
               <Text style={styles.menuText}>Delete</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.menuItem} onPress={handleShare}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>➔</Text>
+              <View style={styles.menuSvgWrapper}>
+                <ShareIcon width={20} height={20} />
+              </View>
               <Text style={styles.menuText}>Share</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleRenamePress}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>✎</Text>
+              <View style={styles.menuSvgWrapper}>
+                <RenameIcon width={20} height={20} />
+              </View>
               <Text style={styles.menuText}>Rename</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleAbout}>
-              <Text style={[styles.menuIcon, { color: '#3B82F6' }]}>ℹ</Text>
+              <View style={styles.menuSvgWrapper}>
+                <ChatInfoIcon width={20} height={20} />
+              </View>
               <Text style={styles.menuText}>About</Text>
             </TouchableOpacity>
           </View>
@@ -397,6 +415,158 @@ const ConvertedFilesScreen = ({ navigation }) => {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={!!previewFile}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setPreviewFile(null)}
+      >
+        <View style={styles.previewModalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackdropTap} 
+            activeOpacity={1} 
+            onPress={() => setPreviewFile(null)} 
+          />
+          
+          <View style={styles.previewModalCard}>
+            <View style={styles.previewModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.previewModalFileName} numberOfLines={1}>
+                  {previewFile?.name || 'Image Preview'}
+                </Text>
+                <Text style={styles.previewModalFileSize}>
+                  {previewFile?.format} . {formatFileSize(previewFile?.size || 0)}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.previewModalCloseBtn} 
+                onPress={() => setPreviewFile(null)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.previewModalCloseBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.previewModalImageContainer}>
+              {previewFile?.uri ? (
+                <Image 
+                  source={{ uri: previewFile.uri }} 
+                  style={styles.previewModalImage} 
+                  resizeMode="contain" 
+                />
+              ) : (
+                <View style={styles.previewModalLoadingBox}>
+                  <Text style={styles.previewModalLoadingText}>No image preview available</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* About File Info Modal */}
+      <Modal
+        visible={aboutModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setAboutModalVisible(false)}
+      >
+        <View style={styles.aboutModalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackdropTap} 
+            activeOpacity={1} 
+            onPress={() => setAboutModalVisible(false)} 
+          />
+          
+          <View style={styles.aboutModalCard}>
+            <View style={styles.aboutModalHeader}>
+              <View style={styles.aboutIconCircle}>
+                <ChatInfoIcon width={22} height={22} />
+              </View>
+              <Text style={styles.aboutModalTitle}>File Information</Text>
+            </View>
+
+            <View style={styles.aboutDetailsBox}>
+              <View style={styles.aboutItem}>
+                <Text style={styles.aboutLabel}>File Name:</Text>
+                <Text style={styles.aboutValue} numberOfLines={2}>{selectedFile?.name}</Text>
+              </View>
+
+              <View style={styles.aboutItem}>
+                <Text style={styles.aboutLabel}>Format:</Text>
+                <View style={[styles.aboutFormatBadge, { backgroundColor: selectedFile?.format === 'PDF' ? '#EF4444' : selectedFile?.format === 'PNG' ? '#3B82F6' : '#10B981' }]}>
+                  <Text style={styles.aboutFormatText}>{selectedFile?.format}</Text>
+                </View>
+              </View>
+
+              <View style={styles.aboutItem}>
+                <Text style={styles.aboutLabel}>File Size:</Text>
+                <Text style={styles.aboutValue}>{formatFileSize(selectedFile?.size || 0)}</Text>
+              </View>
+
+              <View style={styles.aboutItem}>
+                <Text style={styles.aboutLabel}>Location:</Text>
+                <Text style={styles.aboutPathValue}>{selectedFile?.path}</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.aboutOkBtn} 
+              onPress={() => setAboutModalVisible(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.aboutOkBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackdropTap} 
+            activeOpacity={1} 
+            onPress={() => setDeleteModalVisible(false)} 
+          />
+          
+          <View style={styles.deleteModalCard}>
+            <View style={styles.deleteIconCircle}>
+              <DeleteIcon width={24} height={24} />
+            </View>
+
+            <Text style={styles.deleteModalTitle}>Delete File?</Text>
+            <Text style={styles.deleteModalDesc}>
+              Are you sure you want to delete <Text style={styles.deleteFileNameHighlight}>{selectedFile?.name}</Text>? This action cannot be undone.
+            </Text>
+
+            <View style={styles.deleteActionsRow}>
+              <TouchableOpacity 
+                style={styles.deleteCancelBtn} 
+                onPress={() => setDeleteModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.deleteCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.deleteConfirmBtn} 
+                onPress={handleConfirmDelete}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.deleteConfirmBtnText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
     </SafeAreaView>
@@ -547,10 +717,10 @@ const styles = StyleSheet.create({
   actionsWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 0,
   },
   actionBtn: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     paddingVertical: 6,
     justifyContent: 'center',
     alignItems: 'center',
@@ -603,14 +773,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
-  menuIcon: {
-    fontSize: 18,
-    marginRight: 12,
+  menuSvgWrapper: {
     width: 24,
-    textAlign: 'center',
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   menuText: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#1F2937',
     fontFamily: 'Poppins-Medium',
   },
@@ -661,6 +832,266 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
     color: '#4B5563',
+  },
+
+  // Image Preview Modal Styles
+  previewModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalBackdropTap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  previewModalCard: {
+    width: '100%',
+    maxHeight: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  previewModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  previewModalFileName: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+  },
+  previewModalFileSize: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
+    marginTop: 2,
+  },
+  previewModalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  previewModalCloseBtnText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Bold',
+  },
+  previewModalImageContainer: {
+    height: 320,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewModalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  previewModalLoadingBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  previewModalLoadingText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: 'Poppins-Medium',
+  },
+
+  // About Info Modal Styles
+  aboutModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  aboutModalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  aboutModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  aboutIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  aboutModalTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+  },
+  aboutDetailsBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    gap: 10,
+    marginBottom: 20,
+  },
+  aboutItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  aboutLabel: {
+    width: 80,
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#6B7280',
+  },
+  aboutValue: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#1F2937',
+  },
+  aboutFormatBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  aboutFormatText: {
+    fontSize: 10,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
+  },
+  aboutPathValue: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    color: '#9CA3AF',
+    lineHeight: 16,
+  },
+  aboutOkBtn: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  aboutOkBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
+  },
+
+  // Delete Confirmation Modal Styles
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  deleteModalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  deleteIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  deleteModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  deleteModalDesc: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  deleteFileNameHighlight: {
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1F2937',
+  },
+  deleteActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  deleteCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteCancelBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#4B5563',
+  },
+  deleteConfirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  deleteConfirmBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
   },
 });
 

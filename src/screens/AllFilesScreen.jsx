@@ -17,6 +17,7 @@ import {
   requestOsStoragePermissionDialog,
 } from '../services/permissionService';
 import SearchIcon from '../assets/search.svg';
+import RescanBadgeIcon from '../assets/rescan_badge.svg';
 import LottieView from 'lottie-react-native';
 import searchingFilesAnimation from '../assets/searching_files.json';
 import noFilesFoundAnimation from '../assets/no_files_found.json';
@@ -71,6 +72,25 @@ const AllFilesScreen = ({ navigation }) => {
   const [isScanning, setIsScanning] = useState(true);
   const [hasPermission, setHasPermission] = useState(true);
 
+  const startTiffScan = async (isCancelledCheck = null) => {
+    const isCancelled = typeof isCancelledCheck === 'function' ? isCancelledCheck : null;
+    setIsScanning(true);
+    setTiffFiles([]);
+    try {
+      const discovered = await scanDeviceForTiffs(null, isCancelled);
+      if (!isCancelled || !isCancelled()) {
+        const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
+        setTiffFiles(validFiles);
+      }
+    } catch (e) {
+      console.warn('Scan error:', e);
+    } finally {
+      if (!isCancelled || !isCancelled()) {
+        setIsScanning(false);
+      }
+    }
+  };
+
   useEffect(() => {
     let isCancelled = false;
 
@@ -80,27 +100,13 @@ const AllFilesScreen = ({ navigation }) => {
 
       setHasPermission(permitted);
       if (permitted) {
-        setIsScanning(true);
-        setTiffFiles([]);
-        const discovered = await scanDeviceForTiffs(null, () => isCancelled);
-        if (!isCancelled) {
-          const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
-          setTiffFiles(validFiles);
-          setIsScanning(false);
-        }
+        await startTiffScan(() => isCancelled);
       } else {
         const granted = await requestOsStoragePermissionDialog();
         if (isCancelled) return;
         setHasPermission(granted);
         if (granted) {
-          setIsScanning(true);
-          setTiffFiles([]);
-          const discovered = await scanDeviceForTiffs(null, () => isCancelled);
-          if (!isCancelled) {
-            const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
-            setTiffFiles(validFiles);
-            setIsScanning(false);
-          }
+          await startTiffScan(() => isCancelled);
         } else {
           setIsScanning(false);
         }
@@ -119,12 +125,7 @@ const AllFilesScreen = ({ navigation }) => {
     const granted = await requestOsStoragePermissionDialog();
     setHasPermission(granted);
     if (granted) {
-      setIsScanning(true);
-      setTiffFiles([]);
-      const discovered = await scanDeviceForTiffs();
-      const validFiles = discovered.filter((f) => (Number(f.size) || 0) > 100);
-      setTiffFiles(validFiles);
-      setIsScanning(false);
+      startTiffScan();
     }
   };
 
@@ -266,6 +267,17 @@ const AllFilesScreen = ({ navigation }) => {
           renderItem={({ item, index }) => renderFileItem({ item, index, total: tiffFiles.length })}
           contentContainerStyle={styles.flatListContent}
         />
+
+        {/* Floating Rescan Button */}
+        <View style={styles.floatingRescanWrapper}>
+          <TouchableOpacity 
+            style={styles.floatingRescanBtn} 
+            activeOpacity={0.8}
+            onPress={() => startTiffScan()}
+          >
+            <RescanBadgeIcon width={110} height={20} />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -462,6 +474,28 @@ const styles = StyleSheet.create({
     padding: 6,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  floatingRescanWrapper: {
+    position: 'absolute',
+    bottom: 24,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  floatingRescanBtn: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });
 

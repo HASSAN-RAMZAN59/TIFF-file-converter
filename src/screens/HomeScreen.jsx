@@ -12,6 +12,8 @@ import {
   RefreshControl,
   Dimensions,
   TextInput,
+  Modal,
+  Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
@@ -53,6 +55,7 @@ const HomeScreen = ({ navigation }) => {
   const [favoritesSet, setFavoritesSet] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
 
   const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 GB';
@@ -148,11 +151,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleFilePress = (item) => {
-    if (['JPG', 'PNG', 'WEBP', 'JPEG'].includes(item.format.toUpperCase())) {
-      navigation.navigate('PreviewScreen', { file: item });
-    } else {
-      Alert.alert('PDF Saved', `File is saved at:\n${item.path}`);
-    }
+    setPreviewFile(item);
   };
 
   const handleAutoScanPress = () => navigation.navigate('AllFilesScreen');
@@ -438,6 +437,56 @@ const HomeScreen = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={!!previewFile}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setPreviewFile(null)}
+      >
+        <View style={styles.previewModalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackdropTap} 
+            activeOpacity={1} 
+            onPress={() => setPreviewFile(null)} 
+          />
+          
+          <View style={styles.previewModalCard}>
+            <View style={styles.previewModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.previewModalFileName} numberOfLines={1}>
+                  {previewFile?.name || 'Image Preview'}
+                </Text>
+                <Text style={styles.previewModalFileSize}>
+                  {previewFile?.format} . {((previewFile?.size || 0) / 1024 / 1024).toFixed(1)} MB
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.previewModalCloseBtn} 
+                onPress={() => setPreviewFile(null)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.previewModalCloseBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.previewModalImageContainer}>
+              {previewFile?.uri ? (
+                <Image 
+                  source={{ uri: previewFile.uri }} 
+                  style={styles.previewModalImage} 
+                  resizeMode="contain" 
+                />
+              ) : (
+                <View style={styles.previewModalLoadingBox}>
+                  <Text style={styles.previewModalLoadingText}>No image preview available</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -753,10 +802,88 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   recentActionBtn: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     paddingVertical: 6,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  // Image Preview Modal Styles
+  previewModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalBackdropTap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  previewModalCard: {
+    width: '100%',
+    maxHeight: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  previewModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  previewModalFileName: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+  },
+  previewModalFileSize: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
+    marginTop: 2,
+  },
+  previewModalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  previewModalCloseBtnText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Bold',
+  },
+  previewModalImageContainer: {
+    height: 320,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewModalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  previewModalLoadingBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  previewModalLoadingText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: 'Poppins-Medium',
   },
 });
 

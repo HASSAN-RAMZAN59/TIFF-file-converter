@@ -8,8 +8,12 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  StatusBar,
+  Modal,
+  Image,
 } from 'react-native';
 import { convertTiffBatch } from '../services/tiffConverterService';
+import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 
 const FORMAT_OPTIONS = [
   { label: 'JPG', value: 'jpg', color: '#1976D2' },
@@ -23,12 +27,13 @@ const FORMAT_OPTIONS = [
  * Converts multiple TIFF files to JPG, PNG, WEBP, or PDF in real-time.
  */
 const BatchConvertScreen = ({ route, navigation }) => {
-  const files = route.params?.files || [];
+  const initialFiles = route.params?.files || [];
+  const [files, setFiles] = useState(initialFiles);
   const [selectedFormat, setSelectedFormat] = useState('jpg');
   const [isConverting, setIsConverting] = useState(false);
   const [batchProgress, setBatchProgress] = useState({
     currentIndex: 0,
-    totalFiles: files.length,
+    totalFiles: initialFiles.length,
     currentFileName: '',
     progress: 0,
   });
@@ -41,6 +46,11 @@ const BatchConvertScreen = ({ route, navigation }) => {
       return `${(kb / 1024).toFixed(1)} MB`;
     }
     return `${kb.toFixed(1)} KB`;
+  };
+
+  const handleRemoveFile = (indexToRemove) => {
+    if (isConverting) return;
+    setFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   // REAL-TIME BATCH CONVERSION TRIGGER
@@ -78,46 +88,103 @@ const BatchConvertScreen = ({ route, navigation }) => {
     }
   };
 
-  const renderFileItem = ({ item, index }) => (
-    <View style={styles.fileCard}>
-      <Text style={styles.fileIndex}>{index + 1}.</Text>
-      <View style={styles.fileDetails}>
-        <Text style={styles.fileName} numberOfLines={1}>
-          {item.name || 'TIFF File'}
-        </Text>
-        <Text style={styles.fileSize}>Size: {formatFileSize(item.size)}</Text>
-      </View>
-      <Text style={styles.formatBadge}>{selectedFormat.toUpperCase()}</Text>
-    </View>
-  );
+  const [previewFile, setPreviewFile] = useState(null);
+  const [previewImageUri, setPreviewImageUri] = useState(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+  const handleOpenPreview = async (file) => {
+    setPreviewFile(file);
+    setPreviewImageUri(null);
+    setIsLoadingPreview(true);
+    try {
+      const filePath = file.path || file.uri;
+      const result = await decodeTiffToBase64Uri(filePath, 0);
+      if (result && result.uri) {
+        setPreviewImageUri(result.uri);
+      }
+    } catch (err) {
+      console.warn('Failed to load TIFF preview in modal:', err);
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setPreviewFile(null);
+    setPreviewImageUri(null);
+    setIsLoadingPreview(false);
+  };
+
+  const renderFileItem = ({ item, index }) => {
+    const isLast = index === files.length - 1;
+    const formatColor = selectedFormat === 'pdf' ? '#EF4444' : selectedFormat === 'png' ? '#3B82F6' : '#10B981';
+
+    return (
+      <TouchableOpacity 
+        style={[styles.fileCard, !isLast && styles.fileCardBorder]}
+        onPress={() => handleOpenPreview(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.thumbnailWrapper}>
+          <View style={styles.thumbnailPlaceholder}>
+            <Text style={styles.docIconPlaceholder}>🖼️</Text>
+          </View>
+          <View style={[styles.formatBadgeBadge, { backgroundColor: formatColor }]}>
+            <Text style={styles.formatBadgeText}>{selectedFormat.toUpperCase()}</Text>
+          </View>
+        </View>
+
+        <View style={styles.fileDetails}>
+          <Text style={styles.fileName} numberOfLines={1}>
+            {item.name || 'TIFF File'}
+          </Text>
+          <Text style={styles.fileSize}>Size: {formatFileSize(item.size)}</Text>
+        </View>
+
+        {!isConverting && (
+          <TouchableOpacity 
+            style={styles.removeBtn} 
+            onPress={() => handleRemoveFile(index)}
+            activeOpacity={0.6}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <View style={styles.removeIconCircle}>
+              <Text style={styles.removeIconText}>✕</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
+      
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Batch Conversion ({files.length} Files)</Text>
+        <Text style={styles.headerTitle}>Batch Conversion</Text>
+        <Text style={styles.headerSubtitle}>{files.length} TIFF files selected</Text>
       </View>
 
       {/* Global Output Format Selector */}
-      <View style={styles.selectorCard}>
-        <Text style={styles.cardLabel}>Select Conversion Format for All Files:</Text>
-        <View style={styles.formatsRow}>
+      <View style={styles.formatSelectorWrapper}>
+        <Text style={styles.cardLabel}>Choose Output Format</Text>
+        <View style={styles.formatRow}>
           {FORMAT_OPTIONS.map((fmt) => {
             const isSelected = selectedFormat === fmt.value;
             return (
               <TouchableOpacity
                 key={fmt.value}
-                style={[
-                  styles.formatChip,
-                  isSelected && { backgroundColor: fmt.color, borderColor: fmt.color },
-                ]}
+                style={[styles.formatChip, isSelected && styles.formatChipActive]}
                 onPress={() => !isConverting && setSelectedFormat(fmt.value)}
                 disabled={isConverting}
+                activeOpacity={0.7}
               >
                 <Text
                   style={[
                     styles.formatChipText,
-                    isSelected && styles.formatChipTextSelected,
+                    isSelected && styles.formatChipTextActive,
                   ]}
                 >
                   {fmt.label}
@@ -132,7 +199,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
       {isConverting && (
         <View style={styles.progressBox}>
           <View style={styles.progressRow}>
-            <ActivityIndicator size="small" color="#000000" />
+            <ActivityIndicator size="small" color="#2563EB" />
             <Text style={styles.progressTitle}>
               Converting {batchProgress.currentIndex} of {batchProgress.totalFiles}...
             </Text>
@@ -143,8 +210,8 @@ const BatchConvertScreen = ({ route, navigation }) => {
         </View>
       )}
 
-      {/* Files List */}
-      <View style={styles.listContainer}>
+      {/* Files List Card */}
+      <View style={styles.listCardContainer}>
         <FlatList
           data={files}
           keyExtractor={(item, idx) => item.uri || item.path || idx.toString()}
@@ -172,6 +239,61 @@ const BatchConvertScreen = ({ route, navigation }) => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Image Preview Modal with Glassy Dark Backdrop */}
+      <Modal
+        visible={!!previewFile}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleClosePreview}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackdropTap} 
+            activeOpacity={1} 
+            onPress={handleClosePreview} 
+          />
+          
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalFileName} numberOfLines={1}>
+                  {previewFile?.name || 'TIFF Preview'}
+                </Text>
+                <Text style={styles.modalFileSize}>
+                  Size: {formatFileSize(previewFile?.size)}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.modalCloseBtn} 
+                onPress={handleClosePreview}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCloseBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalImageContainer}>
+              {isLoadingPreview ? (
+                <View style={styles.modalLoadingBox}>
+                  <ActivityIndicator size="large" color="#2563EB" />
+                  <Text style={styles.modalLoadingText}>Decoding TIFF image...</Text>
+                </View>
+              ) : previewImageUri ? (
+                <Image 
+                  source={{ uri: previewImageUri }} 
+                  style={styles.modalImage} 
+                  resizeMode="contain" 
+                />
+              ) : (
+                <View style={styles.modalLoadingBox}>
+                  <Text style={styles.modalLoadingText}>Unable to preview TIFF file</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -179,71 +301,72 @@ const BatchConvertScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F7F9FC',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
-  backButton: {
-    fontSize: 16,
-    marginRight: 16,
-    color: '#000000',
-    fontFamily: 'Poppins-SemiBold',
-  },
-  title: {
-    fontSize: 18,
+  headerTitle: {
+    fontSize: 22,
     fontFamily: 'Poppins-Bold',
-    color: '#000000',
+    color: '#111827',
   },
-  selectorCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    gap: 12,
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+    fontFamily: 'Poppins-Medium',
+  },
+  formatSelectorWrapper: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   cardLabel: {
-    fontSize: 14,
-    fontFamily: 'Poppins-Bold',
-    color: '#333333',
+    fontSize: 13,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#374151',
+    marginBottom: 10,
   },
-  formatsRow: {
+  formatRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 8,
   },
   formatChip: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#CCCCCC',
+    paddingVertical: 10,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
+    justifyContent: 'center',
+  },
+  formatChipActive: {
+    backgroundColor: '#2563EB',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
   },
   formatChipText: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
-    color: '#444444',
+    fontFamily: 'Poppins-Medium',
+    color: '#4B5563',
   },
-  formatChipTextSelected: {
+  formatChipTextActive: {
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
   },
   progressBox: {
-    backgroundColor: '#E3F2FD',
-    padding: 12,
+    backgroundColor: '#EFF6FF',
+    padding: 14,
     marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 8,
+    marginBottom: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#90CAF9',
+    borderColor: '#BFDBFE',
   },
   progressRow: {
     flexDirection: 'row',
@@ -252,91 +375,226 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Poppins-Bold',
-    color: '#1565C0',
+    color: '#1D4ED8',
   },
   currentFileText: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Medium',
-    color: '#1E88E5',
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    color: '#2563EB',
   },
-  listContainer: {
+  listCardContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    marginTop: 12,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    overflow: 'hidden',
   },
   listContent: {
-    gap: 8,
-    paddingBottom: 16,
+    paddingVertical: 8,
   },
   fileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
-  fileIndex: {
-    fontSize: 14,
+  fileCardBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  thumbnailWrapper: {
+    position: 'relative',
+    marginRight: 14,
+  },
+  thumbnailPlaceholder: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  docIconPlaceholder: {
+    fontSize: 18,
+  },
+  formatBadgeBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  formatBadgeText: {
+    fontSize: 8,
     fontFamily: 'Poppins-Bold',
-    color: '#666666',
-    marginRight: 10,
-    width: 24,
+    color: '#FFFFFF',
   },
   fileDetails: {
     flex: 1,
+    justifyContent: 'center',
   },
   fileName: {
     fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
-    color: '#000000',
+    color: '#1F2937',
+    marginBottom: 2,
   },
   fileSize: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Poppins-Regular',
-    color: '#777777',
-    marginTop: 2,
+    color: '#6B7280',
   },
-  formatBadge: {
-    fontSize: 12,
+  removeBtn: {
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  removeIconCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeIconText: {
+    fontSize: 10,
+    color: '#9CA3AF',
     fontFamily: 'Poppins-Bold',
-    color: '#1565C0',
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    lineHeight: 12,
   },
   emptyBox: {
     padding: 32,
     alignItems: 'center',
   },
   emptyText: {
-    color: '#888888',
+    color: '#9CA3AF',
     fontFamily: 'Poppins-Regular',
-    fontSize: 14,
+    fontSize: 13,
   },
   footer: {
     padding: 16,
+    paddingBottom: 24,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: '#F3F4F6',
   },
   convertButton: {
-    backgroundColor: '#000000',
-    paddingVertical: 14,
-    borderRadius: 8,
+    backgroundColor: '#2563EB',
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   disabledButton: {
-    backgroundColor: '#888888',
+    backgroundColor: '#9CA3AF',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   convertBtnText: {
     color: '#FFFFFF',
     fontFamily: 'Poppins-Bold',
     fontSize: 15,
+  },
+  // Modal Preview Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalBackdropTap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: '100%',
+    maxHeight: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  modalFileName: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+  },
+  modalFileSize: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  modalCloseBtnText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Poppins-Bold',
+  },
+  modalImageContainer: {
+    height: 320,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalLoadingBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  modalLoadingText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: 'Poppins-Medium',
   },
 });
 
