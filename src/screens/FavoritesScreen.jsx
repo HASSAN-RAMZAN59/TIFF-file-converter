@@ -606,9 +606,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
   },
   searchBtn: {
     padding: 4,
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 13,
     fontFamily: 'Poppins-Regular',
-    color: '#111827',
+    color: '#1E1E1E',
     padding: 0,
   },
   closeSearchBtn: {
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
   },
   formatBadgeText: {
     fontSize: 8,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   fileInfo: {
@@ -710,10 +710,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fileName: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontFamily: 'Poppins-Medium',
-    color: '#1F2937',
-    marginBottom: 4,
+    color: '#1E1E1E',
+    marginBottom: 3,
   },
   fileSubtext: {
     fontSize: 11,
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontFamily: 'Poppins-Regular',
-    color: '#1F2937',
+    color: '#1E1E1E',
   },
   aboutFormatBadge: {
     paddingHorizontal: 6,
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
   },
   aboutFormatText: {
     fontSize: 10,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   aboutPathValue: {
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
   deleteModalTitle: {
     fontSize: 18,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
     marginBottom: 8,
   },
   deleteModalDesc: {
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
   },
   deleteFileNameHighlight: {
     fontFamily: 'Poppins-Medium',
-    color: '#1F2937',
+    color: '#1E1E1E',
   },
   deleteActionsRow: {
     flexDirection: 'row',

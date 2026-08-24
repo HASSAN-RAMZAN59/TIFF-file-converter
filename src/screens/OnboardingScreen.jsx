@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   skipText: {
     color: '#888888',
     fontSize: 15,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
   },
   topSpacer: {
     height: 20,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
     textAlign: 'center',
     lineHeight: 38,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#000000',
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
 });
 

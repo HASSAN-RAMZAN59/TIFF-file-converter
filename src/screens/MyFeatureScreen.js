@@ -117,7 +117,7 @@ const MyFeatureScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   actionBtn: { backgroundColor: '#3B82F6', padding: 14, borderRadius: 8 },
-  btnText: { color: '#FFF', fontWeight: 'bold' },
+  btnText: { color: '#FFF', fontFamily: 'Poppins-Medium' },
   statusText: { marginTop: 12, fontSize: 14, color: '#64748B' },
   modalOverlay: {
     flex: 1,
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dialogCard: { width: '85%', backgroundColor: '#FFF', padding: 20, borderRadius: 12 },
-  dialogTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
+  dialogTitle: { fontSize: 18, fontFamily: 'Poppins-Medium', marginBottom: 8 },
   dialogBody: { fontSize: 14, color: '#475569', marginBottom: 20 },
   btnRow: { flexDirection: 'row', justifyContent: 'flex-end' },
   cancelBtn: { padding: 10, marginRight: 10 },
   cancelBtnText: { color: '#64748B' },
   allowBtn: { backgroundColor: '#3B82F6', padding: 10, borderRadius: 6 },
-  allowBtnText: { color: '#FFF', fontWeight: 'bold' },
+  allowBtnText: { color: '#FFF', fontFamily: 'Poppins-Medium' },
 });
 
 export default MyFeatureScreen;

@@ -609,13 +609,12 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#111827',
+    color: '#1E1E1E',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
   },
   searchBtn: {
     padding: 4,
@@ -636,7 +635,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 13,
     fontFamily: 'Poppins-Regular',
-    color: '#111827',
+    color: '#1E1E1E',
     padding: 0,
   },
   closeSearchBtn: {
@@ -646,7 +645,7 @@ const styles = StyleSheet.create({
   closeSearchText: {
     fontSize: 14,
     color: '#9CA3AF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   searchIcon: {
     fontSize: 20,
@@ -713,7 +712,7 @@ const styles = StyleSheet.create({
   },
   formatBadgeText: {
     fontSize: 8,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   fileInfo: {
@@ -721,10 +720,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fileName: {
-    fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
-    marginBottom: 4,
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
+    marginBottom: 3,
   },
   fileSubtext: {
     fontSize: 11,
@@ -748,8 +747,7 @@ const styles = StyleSheet.create({
   },
   actionIconDots: {
     fontSize: 20,
-    color: '#111827',
-    fontWeight: 'bold',
+    color: '#1E1E1E',
   },
   loadingBox: {
     flex: 1,
@@ -817,8 +815,8 @@ const styles = StyleSheet.create({
   },
   renameTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
-    color: '#1F2937',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 16,
   },
   renameInput: {
@@ -829,7 +827,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     fontFamily: 'Poppins-Regular',
-    color: '#1F2937',
+    color: '#1E1E1E',
     backgroundColor: '#F9FAFB',
     marginBottom: 20,
   },
@@ -847,7 +845,7 @@ const styles = StyleSheet.create({
   },
   renameBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#4B5563',
   },
 
@@ -885,8 +883,8 @@ const styles = StyleSheet.create({
   },
   previewModalFileName: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   previewModalFileSize: {
     fontSize: 12,
@@ -906,7 +904,7 @@ const styles = StyleSheet.create({
   previewModalCloseBtnText: {
     fontSize: 14,
     color: '#6B7280',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   previewModalImageContainer: {
     height: 320,
@@ -964,8 +962,8 @@ const styles = StyleSheet.create({
   },
   aboutModalTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   aboutDetailsBox: {
     backgroundColor: '#F9FAFB',
@@ -983,14 +981,14 @@ const styles = StyleSheet.create({
   aboutLabel: {
     width: 80,
     fontSize: 12,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#6B7280',
   },
   aboutValue: {
     flex: 1,
     fontSize: 12,
     fontFamily: 'Poppins-Medium',
-    color: '#1F2937',
+    color: '#1E1E1E',
   },
   aboutFormatBadge: {
     paddingHorizontal: 6,
@@ -1000,7 +998,7 @@ const styles = StyleSheet.create({
   },
   aboutFormatText: {
     fontSize: 10,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   aboutPathValue: {
@@ -1023,7 +1021,7 @@ const styles = StyleSheet.create({
   },
   aboutOkBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
 
@@ -1058,8 +1056,8 @@ const styles = StyleSheet.create({
   },
   deleteModalTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 8,
   },
   deleteModalDesc: {
@@ -1071,8 +1069,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   deleteFileNameHighlight: {
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   deleteActionsRow: {
     flexDirection: 'row',
@@ -1089,7 +1087,7 @@ const styles = StyleSheet.create({
   },
   deleteCancelBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#4B5563',
   },
   deleteConfirmBtn: {
@@ -1107,7 +1105,7 @@ const styles = StyleSheet.create({
   },
   deleteConfirmBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
 });

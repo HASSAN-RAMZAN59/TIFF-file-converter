@@ -100,13 +100,13 @@ const PickFilesScreen = ({ route, navigation }) => {
   const getReadablePath = (pathString) => {
     if (!pathString) return 'Storage';
     let p = pathString;
-    
+
     if (p.startsWith('content://')) {
       if (p.includes('downloads') || p.includes('Download')) return 'Storage / Download';
       if (p.includes('media') || p.includes('image')) return 'Storage / Pictures';
       return 'Storage / Documents';
     }
-    
+
     p = p.replace('file://', '');
     p = p.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
     if (p.startsWith('/')) p = p.substring(1);
@@ -148,14 +148,14 @@ const PickFilesScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TIFF File Viewer & Converter</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+
         {/* Image Placeholder / Preview with Tap to Preview / Edit */}
         <TouchableOpacity
           style={styles.imageWrapper}
@@ -228,8 +228,8 @@ const PickFilesScreen = ({ route, navigation }) => {
         </View>
 
         {/* Convert Button */}
-        <TouchableOpacity 
-          style={[styles.convertBtnPrimary, isConverting && styles.convertBtnDisabled]} 
+        <TouchableOpacity
+          style={[styles.convertBtnPrimary, isConverting && styles.convertBtnDisabled]}
           onPress={handleStartConversion}
           disabled={isConverting}
         >
@@ -263,30 +263,19 @@ const PickFilesScreen = ({ route, navigation }) => {
 
             <Text style={styles.successModalTitle}>Conversion Complete</Text>
             <Text style={styles.successModalSubtitle}>
-              Your file has been converted and saved to storage.
+              Your file <Text style={styles.highlightText}>{convertedResult?.outputFileName || currentFile?.name || 'file'}</Text> has been converted into <Text style={styles.highlightText}>{(convertedResult?.format || selectedFormat).toUpperCase()}</Text> format and saved to storage.
             </Text>
-
-            <View style={styles.successDetailsBox}>
-              <View style={styles.successDetailRow}>
-                <Text style={styles.successDetailLabel}>File Name</Text>
-                <Text style={styles.successDetailValue} numberOfLines={1}>
-                  {convertedResult?.outputFileName || 'Converted File'}
-                </Text>
-              </View>
-              <View style={styles.successDetailRow}>
-                <Text style={styles.successDetailLabel}>Format</Text>
-                <View style={styles.successFormatBadge}>
-                  <Text style={styles.successFormatBadgeText}>
-                    {convertedResult?.format || selectedFormat.toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-            </View>
 
             <View style={styles.successActionsRow}>
               <TouchableOpacity
                 style={styles.successCloseBtn}
-                onPress={() => setSuccessModalVisible(false)}
+                onPress={() => {
+                  setSuccessModalVisible(false);
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'HomeScreen' }],
+                  });
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.successCloseBtnText}>Done</Text>
@@ -296,7 +285,13 @@ const PickFilesScreen = ({ route, navigation }) => {
                 style={styles.successViewBtn}
                 onPress={() => {
                   setSuccessModalVisible(false);
-                  navigation.navigate('ConvertedFilesScreen');
+                  navigation.reset({
+                    index: 1,
+                    routes: [
+                      { name: 'HomeScreen' },
+                      { name: 'ConvertedFilesScreen' },
+                    ],
+                  });
                 }}
                 activeOpacity={0.8}
               >
@@ -324,8 +319,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingTop: 10,
+    paddingBottom: 0,
   },
   backBtn: {
     marginRight: 12,
@@ -333,16 +328,16 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#111827',
+    color: '#1E1E1E',
   },
   headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontSize: 16,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   imageWrapper: {
@@ -351,7 +346,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#E5E7EB',
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -380,34 +375,34 @@ const styles = StyleSheet.create({
   },
   formatChip: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 4,
     backgroundColor: '#E5E7EB',
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   formatChipActive: {
     backgroundColor: '#2563EB',
     shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
   },
   formatChipText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: 'Poppins-Medium',
     color: '#4B5563',
   },
   formatChipTextActive: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   infoCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 18,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -418,8 +413,8 @@ const styles = StyleSheet.create({
   },
   infoCardTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
-    color: '#1F2937',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 12,
   },
   infoItem: {
@@ -431,7 +426,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#374151',
     marginBottom: 2,
   },
@@ -447,7 +442,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   boldText: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   infoValueSmall: {
     fontSize: 11,
@@ -462,15 +457,15 @@ const styles = StyleSheet.create({
   },
   convertBtnPrimary: {
     backgroundColor: '#3B82F6',
-    paddingVertical: 14,
-    borderRadius: 30,
+    paddingVertical: 8,
+    borderRadius: 24,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-    marginHorizontal: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   convertBtnDisabled: {
     backgroundColor: '#93C5FD',
@@ -478,8 +473,8 @@ const styles = StyleSheet.create({
   },
   convertBtnTextPrimary: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
   },
 
   // Modal Styles
@@ -498,7 +493,7 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    padding: 24,
+    padding: 14,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
@@ -507,24 +502,24 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   successIconCircle: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 30,
     backgroundColor: '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 1,
   },
   successCheckmark: {
     fontSize: 28,
     color: '#10B981',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   successModalTitle: {
-    fontSize: 18,
-    fontFamily: 'Poppins-Bold',
-    color: '#1E293B',
-    marginBottom: 6,
+    fontSize: 17,
+    fontFamily: 'Poppins-Regular',
+    color: '#1E1E1E',
+    marginBottom: 2,
     textAlign: 'center',
   },
   successModalSubtitle: {
@@ -532,45 +527,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     color: '#64748B',
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 18,
-  },
-  successDetailsBox: {
-    width: '100%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 22,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 10,
-  },
-  successDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  successDetailLabel: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Medium',
-    color: '#64748B',
-  },
-  successDetailValue: {
-    fontSize: 12,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1E293B',
-    maxWidth: '65%',
-  },
-  successFormatBadge: {
-    backgroundColor: '#3B82F6',
+    marginBottom: 14,
+    lineHeight: 20,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
   },
-  successFormatBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Poppins-Bold',
-    color: '#FFFFFF',
+  highlightText: {
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   successActionsRow: {
     flexDirection: 'row',
@@ -579,7 +542,7 @@ const styles = StyleSheet.create({
   },
   successCloseBtn: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 2,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -589,12 +552,12 @@ const styles = StyleSheet.create({
   },
   successCloseBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#64748B',
   },
   successViewBtn: {
     flex: 1.2,
-    paddingVertical: 12,
+    paddingVertical: 6,
     borderRadius: 14,
     backgroundColor: '#3B82F6',
     alignItems: 'center',
@@ -607,7 +570,7 @@ const styles = StyleSheet.create({
   },
   successViewBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
 });

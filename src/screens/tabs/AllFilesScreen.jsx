@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
     marginBottom: 8,
   },

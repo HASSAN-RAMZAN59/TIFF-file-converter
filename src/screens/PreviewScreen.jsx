@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
     marginRight: 12,
   },
   closeCrossBtn: {
@@ -653,8 +653,8 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     fontSize: 20,
-    color: '#111827',
-    fontWeight: 'bold',
+    color: '#1E1E1E',
+    fontFamily: 'Poppins-Medium',
   },
   imageWrapper: {
     flex: 1,
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
   },
   activeEditTabText: {
     color: '#3B9FFB',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
 
   bottomBar: {
@@ -857,8 +857,8 @@ const styles = StyleSheet.create({
   },
   infoModalTitle: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   infoDetailsBox: {
     backgroundColor: '#F9FAFB',
@@ -876,14 +876,14 @@ const styles = StyleSheet.create({
   infoLabel: {
     width: 80,
     fontSize: 12,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#6B7280',
   },
   infoValue: {
     flex: 1,
     fontSize: 12,
     fontFamily: 'Poppins-Medium',
-    color: '#1F2937',
+    color: '#1E1E1E',
   },
   infoFormatBadge: {
     backgroundColor: '#2563EB',
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
   },
   infoFormatText: {
     fontSize: 10,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   infoPathValue: {
@@ -917,7 +917,7 @@ const styles = StyleSheet.create({
   },
   infoOkBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
 
@@ -945,8 +945,8 @@ const styles = StyleSheet.create({
   },
   deleteModalTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 8,
   },
   deleteModalDesc: {
@@ -958,8 +958,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   deleteFileNameHighlight: {
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   deleteActionsRow: {
     flexDirection: 'row',
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   },
   deleteCancelBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#4B5563',
   },
   deleteConfirmBtn: {
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
   },
   deleteConfirmBtnText: {
     fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
 });

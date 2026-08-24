@@ -266,7 +266,7 @@ const HomeScreen = ({ navigation }) => {
               activeOpacity={0.7}
               onPress={() => setIsSearchOpen(true)}
             >
-              <SearchIcon width={20} height={20} fill="#111827" />
+              <SearchIcon width={20} height={20} fill="#1E1E1E" />
             </TouchableOpacity>
           </>
         )}
@@ -505,9 +505,9 @@ const ActionCard = ({ title, desc, onPress, Icon }) => (
   <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
     <View style={styles.actionCardIconWrapper}>
       {Icon ? (
-        <Icon width={38} height={38} />
+        <Icon width={40} height={40} />
       ) : (
-        <View style={[styles.iconPlaceholder, { width: 38, height: 38, borderRadius: 19 }]} />
+        <View style={[styles.iconPlaceholder, { width: 40, height: 40, borderRadius: 20 }]} />
       )}
     </View>
     <Text style={styles.actionCardTitle} numberOfLines={2}>{title}</Text>
@@ -524,27 +524,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F9FC',
   },
   scrollContent: {
-    padding: 14,
-    paddingBottom: 24,
+    paddingHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 19,
     paddingTop: 10,
     paddingBottom: 8,
   },
   headerTitle: {
-    fontSize: 21,
+    fontSize: 20,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
+    lineHeight: 24,
   },
   headerSubtitle: {
     fontSize: 11,
     color: '#6B7280',
-    marginTop: 1,
+    marginTop: 0,
     fontFamily: 'Poppins-Regular',
+    lineHeight: 14,
   },
   headerSearchBtn: {
     padding: 6,
@@ -567,7 +570,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 13,
     fontFamily: 'Poppins-Regular',
-    color: '#111827',
+    color: '#1E1E1E',
     padding: 0,
   },
   closeSearchBtn: {
@@ -672,52 +675,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   actionCard: {
-    width: (width - 28 - 16) / 3, // 3 cols with compact 14px padding
+    width: '31.5%',
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
     borderWidth: 1,
     borderColor: '#F3F4F6',
   },
   actionCardIconWrapper: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   actionCardTitle: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
     textAlign: 'center',
-    marginBottom: 2,
+    marginBottom: 1,
     minHeight: 28,
     lineHeight: 14,
   },
   actionCardDesc: {
-    fontSize: 8.5,
+    fontSize: 9,
     fontFamily: 'Poppins-Regular',
     color: '#6B7280',
     textAlign: 'center',
     marginBottom: 6,
-    minHeight: 22,
+    minHeight: 20,
     lineHeight: 11,
   },
   actionCardBtn: {
-    width: '90%',
+    width: '85%',
     height: 20,
     backgroundColor: '#3B82F6',
     borderRadius: 10,
@@ -745,7 +747,7 @@ const styles = StyleSheet.create({
   recentTitle: {
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
   },
   viewAll: {
     fontSize: 12,
@@ -765,9 +767,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   recentItemTitle: {
-    fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 2,
   },
   recentItemSub: {
@@ -812,7 +814,7 @@ const styles = StyleSheet.create({
   },
   formatBadgeText: {
     fontSize: 8,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   recentActionBtn: {
@@ -856,8 +858,8 @@ const styles = StyleSheet.create({
   },
   previewModalFileName: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   previewModalFileSize: {
     fontSize: 12,
@@ -877,7 +879,7 @@ const styles = StyleSheet.create({
   previewModalCloseBtnText: {
     fontSize: 14,
     color: '#6B7280',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   previewModalImageContainer: {
     height: 320,

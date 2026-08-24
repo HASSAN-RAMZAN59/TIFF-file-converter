@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { convertTiffBatch } from '../services/tiffConverterService';
-import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
+import { decodeTiffToBase64Uri, decodeTiffThumbnailFast } from '../services/tiffDecoderService';
 
 const FORMAT_OPTIONS = [
   { label: 'JPG', value: 'jpg', color: '#1976D2' },
@@ -21,6 +21,41 @@ const FORMAT_OPTIONS = [
   { label: 'WEBP', value: 'webp', color: '#7B1FA2' },
   { label: 'PDF', value: 'pdf', color: '#D32F2F' },
 ];
+
+const TiffThumbnail = ({ path, style }) => {
+  const [imageUri, setImageUri] = useState(null);
+
+  useEffect(() => {
+    let isActive = true;
+    decodeTiffThumbnailFast(path, 120)
+      .then((result) => {
+        if (isActive && result && result.uri) {
+          setImageUri(result.uri);
+        }
+      })
+      .catch(() => { });
+
+    return () => {
+      isActive = false;
+    };
+  }, [path]);
+
+  if (imageUri) {
+    return (
+      <Image
+        source={{ uri: imageUri }}
+        style={[style, { borderWidth: 0 }]}
+        resizeMode="cover"
+      />
+    );
+  }
+
+  return (
+    <View style={[style, { justifyContent: 'center', alignItems: 'center' }]}>
+      <ActivityIndicator size="small" color="#D1D5DB" />
+    </View>
+  );
+};
 
 /**
  * BatchConvertScreen Component
@@ -120,18 +155,13 @@ const BatchConvertScreen = ({ route, navigation }) => {
     const formatColor = selectedFormat === 'pdf' ? '#EF4444' : selectedFormat === 'png' ? '#3B82F6' : '#10B981';
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.fileCard, !isLast && styles.fileCardBorder]}
         onPress={() => handleOpenPreview(item)}
         activeOpacity={0.7}
       >
         <View style={styles.thumbnailWrapper}>
-          <View style={styles.thumbnailPlaceholder}>
-            <Text style={styles.docIconPlaceholder}>🖼️</Text>
-          </View>
-          <View style={[styles.formatBadgeBadge, { backgroundColor: formatColor }]}>
-            <Text style={styles.formatBadgeText}>{selectedFormat.toUpperCase()}</Text>
-          </View>
+          <TiffThumbnail path={item.path || item.uri} style={styles.thumbnailPlaceholder} />
         </View>
 
         <View style={styles.fileDetails}>
@@ -142,8 +172,8 @@ const BatchConvertScreen = ({ route, navigation }) => {
         </View>
 
         {!isConverting && (
-          <TouchableOpacity 
-            style={styles.removeBtn} 
+          <TouchableOpacity
+            style={styles.removeBtn}
             onPress={() => handleRemoveFile(index)}
             activeOpacity={0.6}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -160,7 +190,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Batch Conversion</Text>
@@ -248,12 +278,12 @@ const BatchConvertScreen = ({ route, navigation }) => {
         onRequestClose={handleClosePreview}
       >
         <View style={styles.modalOverlay}>
-          <TouchableOpacity 
-            style={styles.modalBackdropTap} 
-            activeOpacity={1} 
-            onPress={handleClosePreview} 
+          <TouchableOpacity
+            style={styles.modalBackdropTap}
+            activeOpacity={1}
+            onPress={handleClosePreview}
           />
-          
+
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <View style={{ flex: 1 }}>
@@ -264,8 +294,8 @@ const BatchConvertScreen = ({ route, navigation }) => {
                   Size: {formatFileSize(previewFile?.size)}
                 </Text>
               </View>
-              <TouchableOpacity 
-                style={styles.modalCloseBtn} 
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
                 onPress={handleClosePreview}
                 activeOpacity={0.7}
               >
@@ -280,10 +310,10 @@ const BatchConvertScreen = ({ route, navigation }) => {
                   <Text style={styles.modalLoadingText}>Decoding TIFF image...</Text>
                 </View>
               ) : previewImageUri ? (
-                <Image 
-                  source={{ uri: previewImageUri }} 
-                  style={styles.modalImage} 
-                  resizeMode="contain" 
+                <Image
+                  source={{ uri: previewImageUri }}
+                  style={styles.modalImage}
+                  resizeMode="contain"
                 />
               ) : (
                 <View style={styles.modalLoadingBox}>
@@ -309,23 +339,23 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontSize: 18,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   headerSubtitle: {
     fontSize: 12,
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: 0,
     fontFamily: 'Poppins-Medium',
   },
   formatSelectorWrapper: {
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   cardLabel: {
     fontSize: 13,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#374151',
     marginBottom: 10,
   },
@@ -356,7 +386,7 @@ const styles = StyleSheet.create({
     color: '#4B5563',
   },
   formatChipTextActive: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   progressBox: {
@@ -376,7 +406,7 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#1D4ED8',
   },
   currentFileText: {
@@ -442,7 +472,7 @@ const styles = StyleSheet.create({
   },
   formatBadgeText: {
     fontSize: 8,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
   },
   fileDetails: {
@@ -450,9 +480,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fileName: {
-    fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 2,
   },
   fileSize: {
@@ -479,7 +509,7 @@ const styles = StyleSheet.create({
   removeIconText: {
     fontSize: 10,
     color: '#9CA3AF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     lineHeight: 12,
   },
   emptyBox: {
@@ -516,7 +546,7 @@ const styles = StyleSheet.create({
   },
   convertBtnText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     fontSize: 15,
   },
   // Modal Preview Styles
@@ -553,8 +583,8 @@ const styles = StyleSheet.create({
   },
   modalFileName: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   modalFileSize: {
     fontSize: 12,
@@ -563,7 +593,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   modalCloseBtn: {
-    width: 32,
+    width: 22,
     height: 32,
     borderRadius: 16,
     backgroundColor: '#F3F4F6',
@@ -572,9 +602,9 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   modalCloseBtnText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   modalImageContainer: {
     height: 320,

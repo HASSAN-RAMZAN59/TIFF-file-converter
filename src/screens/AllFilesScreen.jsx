@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   FlatList,
+  ScrollView,
   ActivityIndicator,
   StatusBar,
   Image,
@@ -279,29 +280,35 @@ const AllFilesScreen = ({ route, navigation }) => {
         </View>
       </View>
 
-      {/* Permission Warning Banner */}
-      {!hasPermission && (
-        <View style={styles.permissionBanner}>
-          <Text style={styles.permissionText}>
-            Storage access permission is required to scan device files.
-          </Text>
-          <TouchableOpacity style={styles.grantButton} onPress={handleGrantPermission}>
-            <Text style={styles.grantButtonText}>Grant Storage Access</Text>
-          </TouchableOpacity>
+      {/* Scrollable Container */}
+      <ScrollView
+        style={styles.scrollViewContainer}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Permission Warning Banner */}
+        {!hasPermission && (
+          <View style={styles.permissionBanner}>
+            <Text style={styles.permissionText}>
+              Storage access permission is required to scan device files.
+            </Text>
+            <TouchableOpacity style={styles.grantButton} onPress={handleGrantPermission}>
+              <Text style={styles.grantButtonText}>Grant Storage Access</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Main List Container that wraps to content */}
+        <View style={styles.mainListCard}>
+          {tiffFiles.map((item, index) => (
+            <React.Fragment key={item.path || item.id || index.toString()}>
+              {renderFileItem({ item, index, total: tiffFiles.length })}
+            </React.Fragment>
+          ))}
         </View>
-      )}
 
-      {/* Main List Container */}
-      <View style={styles.mainListCard}>
-        <FlatList
-          data={tiffFiles}
-          keyExtractor={(item, index) => item.path || item.id || index.toString()}
-          renderItem={({ item, index }) => renderFileItem({ item, index, total: tiffFiles.length })}
-          contentContainerStyle={styles.flatListContent}
-        />
-
-        {/* Floating Rescan Button */}
-        <View style={styles.floatingRescanWrapper}>
+        {/* Rescan Button below card */}
+        <View style={styles.rescanBottomWrapper}>
           <TouchableOpacity 
             style={styles.floatingRescanBtn} 
             activeOpacity={0.8}
@@ -310,7 +317,7 @@ const AllFilesScreen = ({ route, navigation }) => {
             <RescanBadgeIcon width={110} height={20} />
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -327,8 +334,8 @@ const styles = StyleSheet.create({
   },
   scanTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins-Bold',
-    color: '#111827',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
   },
   scanCenterContent: {
     flex: 1,
@@ -350,8 +357,8 @@ const styles = StyleSheet.create({
   },
   scanMainText: {
     fontSize: 15,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -391,14 +398,21 @@ const styles = StyleSheet.create({
   },
   rescanBlueButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     fontSize: 14,
   },
   // New Styles for List View
   listScreenContainer: {
     flex: 1,
     backgroundColor: '#F7F9FC',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  scrollViewContainer: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 40,
   },
   listHeaderTop: {
     flexDirection: 'row',
@@ -407,9 +421,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   listHeaderTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontFamily: 'Poppins-Medium',
-    color: '#111827',
+    color: '#1E1E1E',
   },
   listHeaderSubtitle: {
     fontSize: 12,
@@ -445,11 +459,10 @@ const styles = StyleSheet.create({
   },
   grantButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     fontSize: 12,
   },
   mainListCard: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     shadowColor: '#000',
@@ -459,6 +472,13 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F3F4F6',
+    overflow: 'hidden',
+  },
+  rescanBottomWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 10,
   },
   flatListContent: {
     paddingVertical: 8,
@@ -492,7 +512,7 @@ const styles = StyleSheet.create({
   checkboxCheck: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   floatingBatchWrapper: {
     position: 'absolute',
@@ -517,7 +537,7 @@ const styles = StyleSheet.create({
   floatingBatchBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   thumbnailPlaceholder: {
     width: 44,
@@ -533,9 +553,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   fileNameText: {
-    fontSize: 15,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#1F2937',
+    fontSize: 13,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
     marginBottom: 2,
   },
   filePathText: {
