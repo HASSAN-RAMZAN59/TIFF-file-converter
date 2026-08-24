@@ -183,11 +183,15 @@ const HomeScreen = ({ navigation }) => {
 
   const handleBatchConversionPress = async () => {
     try {
-      const results = await DocumentPicker.pickMultiple({
+      const results = await DocumentPicker.pick({
         type: [DocumentPicker.types.allFiles],
+        allowMultiSelection: true,
       });
-      if (results && results.length > 0) {
-        const validFiles = results
+
+      const pickedArray = Array.isArray(results) ? results : [results];
+
+      if (pickedArray && pickedArray.length > 0) {
+        const validFiles = pickedArray
           .filter((res) => {
             const name = res.name || res.fileName || '';
             const size = res.size || 0;
@@ -201,7 +205,7 @@ const HomeScreen = ({ navigation }) => {
           }));
 
         if (validFiles.length === 0) {
-          Alert.alert('Invalid Files', 'None of the selected files are valid TIFF files.');
+          Alert.alert('Invalid Files', 'Please select valid TIFF files (.tif or .tiff).');
           return;
         }
 
@@ -209,7 +213,8 @@ const HomeScreen = ({ navigation }) => {
       }
     } catch (err) {
       if (!DocumentPicker.isCancel(err)) {
-        Alert.alert('Error', 'Unable to pick files.');
+        console.warn('Batch pick error:', err);
+        Alert.alert('Error', err?.message || 'Unable to select files.');
       }
     }
   };
