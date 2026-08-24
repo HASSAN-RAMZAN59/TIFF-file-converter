@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 26,
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 0.5,

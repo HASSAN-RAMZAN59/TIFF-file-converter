@@ -344,14 +344,14 @@ const styles = StyleSheet.create({
   },
   listHeaderTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#111827',
   },
   listHeaderSubtitle: {
     fontSize: 12,
     color: '#6B7280',
     marginTop: 2,
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   headerSearchIconWrapper: {
     width: 36,
@@ -379,6 +379,7 @@ const styles = StyleSheet.create({
   permissionText: {
     fontSize: 13,
     color: '#856404',
+    fontFamily: 'Poppins-Regular',
     marginBottom: 8,
   },
   grantButton: {
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   },
   grantButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     fontSize: 12,
   },
   mainListCard: {
@@ -432,19 +433,20 @@ const styles = StyleSheet.create({
   },
   fileNameText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
     color: '#1F2937',
     marginBottom: 2,
   },
   filePathText: {
     fontSize: 11,
     color: '#9CA3AF',
+    fontFamily: 'Poppins-Regular',
     marginBottom: 4,
   },
   fileSizeText: {
     fontSize: 11,
     color: '#6B7280',
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   starBtn: {
     padding: 8,

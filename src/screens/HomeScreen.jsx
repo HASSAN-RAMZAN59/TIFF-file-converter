@@ -424,14 +424,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#111827',
   },
   headerSubtitle: {
     fontSize: 11,
     color: '#6B7280',
     marginTop: 2,
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   headerSearchBtn: {
     padding: 6,
@@ -472,11 +472,12 @@ const styles = StyleSheet.create({
   storageCirclePercent: {
     color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   storageCircleLabel: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: 10,
+    fontFamily: 'Poppins-Medium',
   },
   storageInfo: {
     flex: 1,
@@ -485,14 +486,14 @@ const styles = StyleSheet.create({
   storageInfoTitle: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
     marginBottom: 2,
   },
   storageInfoData: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: 11,
     marginBottom: 10,
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   progressBarBg: {
     height: 3,
@@ -517,7 +518,7 @@ const styles = StyleSheet.create({
   availableText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   storageIllustrationWrapper: {
     justifyContent: 'center',
@@ -555,7 +556,7 @@ const styles = StyleSheet.create({
   },
   actionCardTitle: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#1F2937',
     textAlign: 'center',
     marginBottom: 4,
@@ -563,6 +564,7 @@ const styles = StyleSheet.create({
   },
   actionCardDesc: {
     fontSize: 9,
+    fontFamily: 'Poppins-Regular',
     color: '#6B7280',
     textAlign: 'center',
     marginBottom: 12,
@@ -596,13 +598,13 @@ const styles = StyleSheet.create({
   },
   recentTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
     color: '#111827',
   },
   viewAll: {
     fontSize: 12,
     color: '#3B82F6',
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   recentItem: {
     flexDirection: 'row',
@@ -618,17 +620,19 @@ const styles = StyleSheet.create({
   },
   recentItemTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
     color: '#1F2937',
     marginBottom: 2,
   },
   recentItemSub: {
     fontSize: 11,
+    fontFamily: 'Poppins-Regular',
     color: '#6B7280',
   },
   emptyRecentText: {
     fontSize: 13,
     color: '#9CA3AF',
+    fontFamily: 'Poppins-Regular',
     textAlign: 'center',
     paddingVertical: 16,
   },
@@ -662,7 +666,7 @@ const styles = StyleSheet.create({
   },
   formatBadgeText: {
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
   },
   recentActionBtn: {

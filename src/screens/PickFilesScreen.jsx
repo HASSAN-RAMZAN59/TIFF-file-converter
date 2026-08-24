@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#111827',
   },
   scrollContent: {
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: '#9CA3AF',
-    fontWeight: '600',
+    fontFamily: 'Poppins-Medium',
   },
   formatRow: {
     flexDirection: 'row',
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   formatChipText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
     color: '#4B5563',
   },
   formatChipTextActive: {
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   infoCardTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#1F2937',
     marginBottom: 12,
   },
@@ -341,28 +341,32 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
     color: '#374151',
     marginBottom: 2,
   },
   infoValue: {
     fontSize: 12,
+    fontFamily: 'Poppins-Regular',
     color: '#6B7280',
   },
   infoTextAfterConvert: {
     fontSize: 11,
+    fontFamily: 'Poppins-Regular',
     color: '#374151',
     marginBottom: 2,
   },
   boldText: {
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
   },
   infoValueSmall: {
     fontSize: 11,
+    fontFamily: 'Poppins-Medium',
     color: '#6B7280',
   },
   infoValueLight: {
     fontSize: 11,
+    fontFamily: 'Poppins-Regular',
     color: '#9CA3AF',
     lineHeight: 16,
   },
@@ -385,7 +389,7 @@ const styles = StyleSheet.create({
   convertBtnTextPrimary: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
   },
 });
 

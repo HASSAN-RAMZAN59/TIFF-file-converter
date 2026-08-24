@@ -167,13 +167,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
     marginBottom: 12,
     textAlign: 'center',
   },
   description: {
-    fontSize: 15,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
     color: '#999999',
     textAlign: 'center',
     lineHeight: 22,
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
     color: '#FFFFFF',
   },
   statusBadge: {
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
   },
   grantedBadgeText: {
     color: '#000000',
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#000000',
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
   },
   bypassButton: {
     backgroundColor: '#111111',
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   bypassButtonText: {
     color: '#888888',
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

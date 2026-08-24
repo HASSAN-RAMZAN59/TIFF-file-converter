@@ -167,11 +167,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 16,
     color: '#000000',
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#000000',
   },
   listContainer: {
@@ -202,19 +202,20 @@ const styles = StyleSheet.create({
   },
   fileName: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#000000',
     marginBottom: 2,
   },
   filePath: {
     fontSize: 11,
     color: '#777777',
+    fontFamily: 'Poppins-Regular',
     marginBottom: 2,
   },
   fileMeta: {
     fontSize: 11,
     color: '#555555',
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   removeBtn: {
     padding: 8,
@@ -231,6 +232,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: '#666666',
+    fontFamily: 'Poppins-Regular',
   },
   emptyContainer: {
     padding: 40,
@@ -242,13 +244,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#333333',
     marginBottom: 6,
   },
   emptyText: {
     fontSize: 13,
     color: '#777777',
+    fontFamily: 'Poppins-Regular',
     textAlign: 'center',
     lineHeight: 18,
   },

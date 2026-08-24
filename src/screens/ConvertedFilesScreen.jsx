@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#111827',
   },
   searchBtn: {
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   },
   formatBadgeText: {
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
   },
   fileInfo: {
@@ -445,14 +445,14 @@ const styles = StyleSheet.create({
   },
   fileName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
     color: '#1F2937',
     marginBottom: 4,
   },
   fileSubtext: {
     fontSize: 11,
     color: '#6B7280',
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   actionsWrapper: {
     flexDirection: 'row',
@@ -484,6 +484,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
   },
   
   // Modal Styles
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 15,
     color: '#1F2937',
-    fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   
   // Rename Modal Styles
@@ -536,7 +537,7 @@ const styles = StyleSheet.create({
   },
   renameTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#1F2937',
     marginBottom: 16,
   },
@@ -546,7 +547,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
     color: '#1F2937',
     backgroundColor: '#F9FAFB',
     marginBottom: 20,
@@ -565,7 +567,7 @@ const styles = StyleSheet.create({
   },
   renameBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
     color: '#4B5563',
   },
 });

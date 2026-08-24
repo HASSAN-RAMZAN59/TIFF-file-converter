@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#374151',
     flex: 1,
     textAlign: 'center',
@@ -144,12 +144,12 @@ const styles = StyleSheet.create({
   toolPlaceholderText: {
     fontSize: 10,
     color: '#6B7280',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   toolText: {
     fontSize: 10,
     color: '#4B5563',
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

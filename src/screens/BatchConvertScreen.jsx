@@ -196,11 +196,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 16,
     color: '#000000',
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#000000',
   },
   selectorCard: {
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#333333',
   },
   formatsRow: {
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   formatChipText: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#444444',
   },
   formatChipTextSelected: {
@@ -256,11 +256,12 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#1565C0',
   },
   currentFileText: {
     fontSize: 12,
+    fontFamily: 'Poppins-Medium',
     color: '#1E88E5',
   },
   listContainer: {
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   },
   fileIndex: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#666666',
     marginRight: 10,
     width: 24,
@@ -293,17 +294,18 @@ const styles = StyleSheet.create({
   },
   fileName: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#000000',
   },
   fileSize: {
     fontSize: 12,
+    fontFamily: 'Poppins-Regular',
     color: '#777777',
     marginTop: 2,
   },
   formatBadge: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: '#1565C0',
     backgroundColor: '#E3F2FD',
     paddingHorizontal: 8,
@@ -316,6 +318,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#888888',
+    fontFamily: 'Poppins-Regular',
     fontSize: 14,
   },
   footer: {
@@ -335,7 +338,7 @@ const styles = StyleSheet.create({
   },
   convertBtnText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     fontSize: 15,
   },
 });
