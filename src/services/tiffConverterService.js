@@ -157,6 +157,15 @@ export const convertTiffFile = async (sourcePath, targetFormat = 'jpg', onProgre
 
     if (onProgress) onProgress(100);
 
+    // Notify Android Media Scanner so file instantly shows in Gallery & Downloads app
+    try {
+      if (RNFS.scanFile) {
+        await RNFS.scanFile(outputFilePath);
+      }
+    } catch (e) {
+      console.log('Media scan notice:', e);
+    }
+
     return {
       success: true,
       outputPath: outputFilePath,

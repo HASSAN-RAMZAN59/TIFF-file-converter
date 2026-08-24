@@ -537,14 +537,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#111827',
   },
   headerSubtitle: {
     fontSize: 11,
     color: '#6B7280',
     marginTop: 2,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Regular',
   },
   headerSearchBtn: {
     padding: 6,
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   closeSearchText: {
     fontSize: 14,
     color: '#9CA3AF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   iconPlaceholder: {
     backgroundColor: '#FFFFFF',
@@ -613,12 +613,12 @@ const styles = StyleSheet.create({
   storageCirclePercent: {
     color: '#FFFFFF',
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
   },
   storageCircleLabel: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: 10,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Regular',
   },
   storageInfo: {
     flex: 1,
@@ -627,14 +627,14 @@ const styles = StyleSheet.create({
   storageInfoTitle: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     marginBottom: 2,
   },
   storageInfoData: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: 11,
     marginBottom: 10,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Regular',
   },
   progressBarBg: {
     height: 3,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   availableText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Regular',
   },
   storageIllustrationWrapper: {
     justifyContent: 'center',
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
   },
   actionCardTitle: {
     fontSize: 12,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#111827',
     textAlign: 'center',
     marginBottom: 4,
@@ -740,13 +740,13 @@ const styles = StyleSheet.create({
   },
   recentTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
     color: '#111827',
   },
   viewAll: {
     fontSize: 12,
     color: '#3B82F6',
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Medium',
   },
   recentItem: {
     flexDirection: 'row',

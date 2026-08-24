@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
   rescanBlueButtonText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
     fontSize: 14,
   },
   // New Styles for List View
@@ -446,14 +446,14 @@ const styles = StyleSheet.create({
   },
   listHeaderTitle: {
     fontSize: 22,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Medium',
     color: '#111827',
   },
   listHeaderSubtitle: {
     fontSize: 12,
     color: '#6B7280',
     marginTop: 2,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Regular',
   },
   headerSearchIconWrapper: {
     padding: 6,
