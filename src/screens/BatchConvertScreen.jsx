@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   FlatList,
+  ScrollView,
   ActivityIndicator,
   Alert,
   StatusBar,
@@ -197,63 +198,70 @@ const BatchConvertScreen = ({ route, navigation }) => {
         <Text style={styles.headerSubtitle}>{files.length} TIFF files selected</Text>
       </View>
 
-      {/* Global Output Format Selector */}
-      <View style={styles.formatSelectorWrapper}>
-        <Text style={styles.cardLabel}>Choose Output Format</Text>
-        <View style={styles.formatRow}>
-          {FORMAT_OPTIONS.map((fmt) => {
-            const isSelected = selectedFormat === fmt.value;
-            return (
-              <TouchableOpacity
-                key={fmt.value}
-                style={[styles.formatChip, isSelected && styles.formatChipActive]}
-                onPress={() => !isConverting && setSelectedFormat(fmt.value)}
-                disabled={isConverting}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.formatChipText,
-                    isSelected && styles.formatChipTextActive,
-                  ]}
+      {/* Scrollable Body */}
+      <ScrollView
+        style={styles.scrollViewBody}
+        contentContainerStyle={styles.scrollContentBody}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Global Output Format Selector */}
+        <View style={styles.formatSelectorWrapper}>
+          <Text style={styles.cardLabel}>Choose Output Format</Text>
+          <View style={styles.formatRow}>
+            {FORMAT_OPTIONS.map((fmt) => {
+              const isSelected = selectedFormat === fmt.value;
+              return (
+                <TouchableOpacity
+                  key={fmt.value}
+                  style={[styles.formatChip, isSelected && styles.formatChipActive]}
+                  onPress={() => !isConverting && setSelectedFormat(fmt.value)}
+                  disabled={isConverting}
+                  activeOpacity={0.7}
                 >
-                  {fmt.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.formatChipText,
+                      isSelected && styles.formatChipTextActive,
+                    ]}
+                  >
+                    {fmt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </View>
 
-      {/* Progress Status Banner when converting */}
-      {isConverting && (
-        <View style={styles.progressBox}>
-          <View style={styles.progressRow}>
-            <ActivityIndicator size="small" color="#2563EB" />
-            <Text style={styles.progressTitle}>
-              Converting {batchProgress.currentIndex} of {batchProgress.totalFiles}...
+        {/* Progress Status Banner when converting */}
+        {isConverting && (
+          <View style={styles.progressBox}>
+            <View style={styles.progressRow}>
+              <ActivityIndicator size="small" color="#2563EB" />
+              <Text style={styles.progressTitle}>
+                Converting {batchProgress.currentIndex} of {batchProgress.totalFiles}...
+              </Text>
+            </View>
+            <Text style={styles.currentFileText} numberOfLines={1}>
+              {batchProgress.currentFileName}
             </Text>
           </View>
-          <Text style={styles.currentFileText} numberOfLines={1}>
-            {batchProgress.currentFileName}
-          </Text>
-        </View>
-      )}
+        )}
 
-      {/* Files List Card */}
-      <View style={styles.listCardContainer}>
-        <FlatList
-          data={files}
-          keyExtractor={(item, idx) => item.uri || item.path || idx.toString()}
-          renderItem={renderFileItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyText}>No TIFF files selected for batch conversion.</Text>
-            </View>
-          }
-        />
-      </View>
+        {/* Files List Card (Wraps dynamically up to last item) */}
+        {files.length > 0 ? (
+          <View style={styles.listCardContainer}>
+            {files.map((item, index) => (
+              <React.Fragment key={item.uri || item.path || index.toString()}>
+                {renderFileItem({ item, index })}
+              </React.Fragment>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>No TIFF files selected for batch conversion.</Text>
+          </View>
+        )}
+      </ScrollView>
 
       {/* Start Batch Trigger Button */}
       <View style={styles.footer}>
@@ -366,7 +374,7 @@ const styles = StyleSheet.create({
   },
   formatChip: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 4,
     backgroundColor: '#E5E7EB',
     borderRadius: 14,
     alignItems: 'center',
@@ -381,7 +389,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   formatChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Poppins-Medium',
     color: '#4B5563',
   },
@@ -414,8 +422,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     color: '#2563EB',
   },
-  listCardContainer: {
+  scrollViewBody: {
     flex: 1,
+  },
+  scrollContentBody: {
+    paddingBottom: 24,
+  },
+  listCardContainer: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginBottom: 16,
@@ -522,22 +535,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   footer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 24,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    backgroundColor: 'transparent',
   },
   convertButton: {
     backgroundColor: '#2563EB',
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderRadius: 14,
     alignItems: 'center',
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.9,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 9,
   },
   disabledButton: {
     backgroundColor: '#9CA3AF',

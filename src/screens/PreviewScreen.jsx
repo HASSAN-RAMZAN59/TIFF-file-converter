@@ -120,6 +120,18 @@ const PreviewScreen = ({ route, navigation }) => {
         } else if (handleType === 'bottomRight') {
           nextW = Math.min(Math.max(minSize, startWidth + dx), contW - startX);
           nextH = Math.min(Math.max(minSize, startHeight + dy), contH - startY);
+        } else if (handleType === 'edgeTop') {
+          const clampedY = Math.min(Math.max(0, startY + dy), startY + startHeight - minSize);
+          nextY = clampedY;
+          nextH = startHeight - (clampedY - startY);
+        } else if (handleType === 'edgeBottom') {
+          nextH = Math.min(Math.max(minSize, startHeight + dy), contH - startY);
+        } else if (handleType === 'edgeLeft') {
+          const clampedX = Math.min(Math.max(0, startX + dx), startX + startWidth - minSize);
+          nextX = clampedX;
+          nextW = startWidth - (clampedX - startX);
+        } else if (handleType === 'edgeRight') {
+          nextW = Math.min(Math.max(minSize, startWidth + dx), contW - startX);
         } else if (handleType === 'move') {
           nextX = Math.min(Math.max(0, startX + dx), Math.max(0, contW - startWidth));
           nextY = Math.min(Math.max(0, startY + dy), Math.max(0, contH - startHeight));
@@ -142,7 +154,33 @@ const PreviewScreen = ({ route, navigation }) => {
   const panTopRight = useRef(createPanResponder('topRight')).current;
   const panBottomLeft = useRef(createPanResponder('bottomLeft')).current;
   const panBottomRight = useRef(createPanResponder('bottomRight')).current;
+  const panEdgeTop = useRef(createPanResponder('edgeTop')).current;
+  const panEdgeBottom = useRef(createPanResponder('edgeBottom')).current;
+  const panEdgeLeft = useRef(createPanResponder('edgeLeft')).current;
+  const panEdgeRight = useRef(createPanResponder('edgeRight')).current;
   const panMove = useRef(createPanResponder('move')).current;
+
+  // Rotation Dial / Ruler Slider PanResponder (-45 to +45 degrees fine adjustment)
+  const startRotationRef = useRef(0);
+  const panSlider = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderGrant: () => {
+        startRotationRef.current = rotationDegree;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // 4 pixels drag = 1 degree
+        const deltaAngle = Math.round(gestureState.dx / 4);
+        const nextDeg = Math.max(-45, Math.min(45, startRotationRef.current + deltaAngle));
+        setRotationDegree(nextDeg);
+      },
+      onPanResponderTerminationRequest: () => false,
+      onShouldBlockNativeResponder: () => true,
+    })
+  ).current;
 
   useEffect(() => {
     let isActive = true;
@@ -192,7 +230,6 @@ const PreviewScreen = ({ route, navigation }) => {
 
   const handleRotatePress = () => {
     setActiveEditTool('rotate');
-    setRotationDegree((prev) => (prev + 90) % 360);
   };
 
   const handleCropPress = () => {
@@ -410,11 +447,19 @@ const PreviewScreen = ({ route, navigation }) => {
                 <View style={[styles.bracketCorner, styles.bottomLeft]} {...panBottomLeft.panHandlers} />
                 <View style={[styles.bracketCorner, styles.bottomRight]} {...panBottomRight.panHandlers} />
 
-                {/* Subtle Mid-Edge Markers */}
-                <View style={[styles.bracketEdge, styles.edgeTop]} />
-                <View style={[styles.bracketEdge, styles.edgeBottom]} />
-                <View style={[styles.bracketEdge, styles.edgeLeft]} />
-                <View style={[styles.bracketEdge, styles.edgeRight]} />
+                {/* Responsive Mid-Edge Drag Handles */}
+                <View style={[styles.bracketEdge, styles.edgeTop]} {...panEdgeTop.panHandlers}>
+                  <View style={styles.edgeBarH} />
+                </View>
+                <View style={[styles.bracketEdge, styles.edgeBottom]} {...panEdgeBottom.panHandlers}>
+                  <View style={styles.edgeBarH} />
+                </View>
+                <View style={[styles.bracketEdge, styles.edgeLeft]} {...panEdgeLeft.panHandlers}>
+                  <View style={styles.edgeBarV} />
+                </View>
+                <View style={[styles.bracketEdge, styles.edgeRight]} {...panEdgeRight.panHandlers}>
+                  <View style={styles.edgeBarV} />
+                </View>
               </View>
             )}
           </View>
@@ -428,51 +473,80 @@ const PreviewScreen = ({ route, navigation }) => {
       {/* Bottom Bar: Rendered when opened from Pick & Convert screen */}
       {route.params?.fromScreen === 'PickFilesScreen' && (
         isEditMode ? (
-          /* Edit Mode Controls: Crop & Rotate */
-          <View style={styles.editBottomBar}>
-            <TouchableOpacity
-              style={styles.editTabItem}
-              activeOpacity={0.7}
-              onPress={handleCropPress}
-            >
-              <View style={styles.editIconWrapper}>
-                <CropIcon
-                  width={26}
-                  height={26}
-                  fill={activeEditTool === 'crop' ? '#3B9FFB' : '#64748B'}
-                />
+          <View style={styles.editBottomContainer}>
+            {/* Fine Rotation Ruler Dial Slider */}
+            {activeEditTool === 'rotate' && (
+              <View style={styles.rotationDialWrapper}>
+                <View style={styles.rotationRulerArea} {...panSlider.panHandlers}>
+                  <View style={styles.rulerTicksContainer}>
+                    {[-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30].map((tick) => {
+                      const isCenter = tick === 0;
+                      const isMajor = tick % 10 === 0;
+                      return (
+                        <View
+                          key={tick}
+                          style={[
+                            styles.rulerTick,
+                            isCenter && styles.rulerTickCenter,
+                            isMajor && !isCenter && styles.rulerTickMajor,
+                          ]}
+                        />
+                      );
+                    })}
+                  </View>
+                  {/* Center Indicator Needle */}
+                  <View style={styles.rulerCenterNeedle} pointerEvents="none" />
+                </View>
+                <Text style={styles.rotationDegreeText}>{rotationDegree}°</Text>
               </View>
-              <Text
-                style={[
-                  styles.editTabText,
-                  activeEditTool === 'crop' && styles.activeEditTabText,
-                ]}
-              >
-                Crop
-              </Text>
-            </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={styles.editTabItem}
-              activeOpacity={0.7}
-              onPress={handleRotatePress}
-            >
-              <View style={styles.editIconWrapper}>
-                <CropRotateIcon
-                  width={26}
-                  height={26}
-                  fill={activeEditTool === 'rotate' ? '#3B9FFB' : '#1C1B1F'}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.editTabText,
-                  activeEditTool === 'rotate' && styles.activeEditTabText,
-                ]}
+            {/* Edit Mode Controls: Crop & Rotate */}
+            <View style={styles.editBottomBar}>
+              <TouchableOpacity
+                style={styles.editTabItem}
+                activeOpacity={0.7}
+                onPress={handleCropPress}
               >
-                Rotate
-              </Text>
-            </TouchableOpacity>
+                <View style={styles.editIconWrapper}>
+                  <CropIcon
+                    width={26}
+                    height={26}
+                    fill={activeEditTool === 'crop' ? '#3B82F6' : '#1E1E1E'}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.editTabText,
+                    activeEditTool === 'crop' && styles.activeEditTabText,
+                  ]}
+                >
+                  Crop
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.editTabItem}
+                activeOpacity={0.7}
+                onPress={handleRotatePress}
+              >
+                <View style={styles.editIconWrapper}>
+                  <CropRotateIcon
+                    width={26}
+                    height={26}
+                    fill={activeEditTool === 'rotate' ? '#3B82F6' : '#1E1E1E'}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.editTabText,
+                    activeEditTool === 'rotate' && styles.activeEditTabText,
+                  ]}
+                >
+                  Rotate
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           /* 4 Actions: Edit, Delete, Info, Share */
@@ -725,42 +799,112 @@ const styles = StyleSheet.create({
   },
   bracketEdge: {
     position: 'absolute',
-    backgroundColor: '#3B9FFB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15,
   },
   edgeTop: {
-    top: -1,
-    left: '35%',
-    width: '30%',
-    height: 2.5,
+    top: -15,
+    left: '25%',
+    width: '50%',
+    height: 30,
   },
   edgeBottom: {
-    bottom: -1,
-    left: '35%',
-    width: '30%',
-    height: 2.5,
+    bottom: -15,
+    left: '25%',
+    width: '50%',
+    height: 30,
   },
   edgeLeft: {
-    left: -1,
-    top: '38%',
-    width: 2.5,
-    height: '24%',
+    left: -15,
+    top: '25%',
+    width: 30,
+    height: '50%',
   },
   edgeRight: {
-    right: -1,
-    top: '38%',
-    width: 2.5,
-    height: '24%',
+    right: -15,
+    top: '25%',
+    width: 30,
+    height: '50%',
+  },
+  edgeBarH: {
+    width: 36,
+    height: 3,
+    backgroundColor: '#3B9FFB',
+    borderRadius: 1.5,
+  },
+  edgeBarV: {
+    width: 3,
+    height: 36,
+    backgroundColor: '#3B9FFB',
+    borderRadius: 1.5,
   },
 
-  // Edit Mode Bottom Bar Styles (Crop / Rotate)
+  // Edit Mode Bottom Container (Dial Slider + Tabs)
+  editBottomContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  rotationDialWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+    paddingHorizontal: 20,
+    backgroundColor: '#F8FAFC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  rotationRulerArea: {
+    width: '100%',
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  rulerTicksContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    height: '100%',
+  },
+  rulerTick: {
+    width: 1.5,
+    height: 12,
+    backgroundColor: '#94A3B8',
+    borderRadius: 1,
+  },
+  rulerTickMajor: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#64748B',
+  },
+  rulerTickCenter: {
+    width: 2.5,
+    height: 24,
+    backgroundColor: '#3B82F6',
+  },
+  rulerCenterNeedle: {
+    position: 'absolute',
+    width: 3,
+    height: 30,
+    backgroundColor: '#3B82F6',
+    borderRadius: 1.5,
+  },
+  rotationDegreeText: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
+    marginTop: 2,
+  },
   editBottomBar: {
-    height: 80,
+    height: 72,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
     paddingHorizontal: 32,
     gap: 48,
   },
@@ -780,10 +924,10 @@ const styles = StyleSheet.create({
   editTabText: {
     fontSize: 12,
     fontFamily: 'Poppins-Medium',
-    color: '#64748B',
+    color: '#1E1E1E',
   },
   activeEditTabText: {
-    color: '#3B9FFB',
+    color: '#3B82F6',
     fontFamily: 'Poppins-Medium',
   },
 
