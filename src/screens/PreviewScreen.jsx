@@ -160,7 +160,7 @@ const PreviewScreen = ({ route, navigation }) => {
   const panEdgeRight = useRef(createPanResponder('edgeRight')).current;
   const panMove = useRef(createPanResponder('move')).current;
 
-  // Rotation Dial / Ruler Slider PanResponder (-45 to +45 degrees fine adjustment)
+  // Rotation Dial / Ruler Slider PanResponder (Full 360° rotation: left, right, up, down)
   const startRotationRef = useRef(0);
   const panSlider = useRef(
     PanResponder.create({
@@ -172,9 +172,11 @@ const PreviewScreen = ({ route, navigation }) => {
         startRotationRef.current = rotationDegree;
       },
       onPanResponderMove: (_, gestureState) => {
-        // 4 pixels drag = 1 degree
-        const deltaAngle = Math.round(gestureState.dx / 4);
-        const nextDeg = Math.max(-45, Math.min(45, startRotationRef.current + deltaAngle));
+        // Smooth 360 degree rotation (drag sensitivity)
+        const deltaAngle = Math.round(gestureState.dx / 1.5);
+        let nextDeg = (startRotationRef.current + deltaAngle) % 360;
+        if (nextDeg < -180) nextDeg += 360;
+        if (nextDeg > 180) nextDeg -= 360;
         setRotationDegree(nextDeg);
       },
       onPanResponderTerminationRequest: () => false,
@@ -474,14 +476,14 @@ const PreviewScreen = ({ route, navigation }) => {
       {route.params?.fromScreen === 'PickFilesScreen' && (
         isEditMode ? (
           <View style={styles.editBottomContainer}>
-            {/* Fine Rotation Ruler Dial Slider */}
+            {/* Full 360° Rotation Ruler Dial Slider */}
             {activeEditTool === 'rotate' && (
               <View style={styles.rotationDialWrapper}>
                 <View style={styles.rotationRulerArea} {...panSlider.panHandlers}>
                   <View style={styles.rulerTicksContainer}>
-                    {[-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30].map((tick) => {
+                    {[-90, -75, -60, -45, -30, -15, 0, 15, 30, 45, 60, 75, 90].map((tick) => {
                       const isCenter = tick === 0;
-                      const isMajor = tick % 10 === 0;
+                      const isMajor = tick % 45 === 0;
                       return (
                         <View
                           key={tick}
@@ -497,7 +499,25 @@ const PreviewScreen = ({ route, navigation }) => {
                   {/* Center Indicator Needle */}
                   <View style={styles.rulerCenterNeedle} pointerEvents="none" />
                 </View>
-                <Text style={styles.rotationDegreeText}>{rotationDegree}°</Text>
+                <View style={styles.degreeControlsRow}>
+                  <TouchableOpacity
+                    style={styles.quickRotateBtn}
+                    onPress={() => setRotationDegree((prev) => ((prev - 90) % 360))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.quickRotateBtnText}>↺ -90°</Text>
+                  </TouchableOpacity>
+
+                  <Text style={styles.rotationDegreeText}>{rotationDegree}°</Text>
+
+                  <TouchableOpacity
+                    style={styles.quickRotateBtn}
+                    onPress={() => setRotationDegree((prev) => ((prev + 90) % 360))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.quickRotateBtnText}>↻ +90°</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -894,10 +914,30 @@ const styles = StyleSheet.create({
     borderRadius: 1.5,
   },
   rotationDegreeText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins-Medium',
-    color: '#1E1E1E',
+    color: '#2563EB',
+  },
+  degreeControlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 12,
     marginTop: 2,
+  },
+  quickRotateBtn: {
+    backgroundColor: '#EEF4FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D8E5FE',
+  },
+  quickRotateBtnText: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
   },
   editBottomBar: {
     height: 72,
