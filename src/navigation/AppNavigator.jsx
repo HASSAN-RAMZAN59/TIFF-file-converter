@@ -11,6 +11,7 @@ import BatchConvertScreen from '../screens/BatchConvertScreen';
 import ConvertedFilesScreen from '../screens/ConvertedFilesScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import PreviewScreen from '../screens/PreviewScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,7 @@ const AppNavigator = () => {
       <Stack.Screen name="ConvertedFilesScreen" component={ConvertedFilesScreen} />
       <Stack.Screen name="FavoritesScreen" component={FavoritesScreen} />
       <Stack.Screen name="PreviewScreen" component={PreviewScreen} />
+      <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
     </Stack.Navigator>
   );
 };

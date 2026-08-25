@@ -221,7 +221,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleConvertedOutputsPress = () => navigation.navigate('ConvertedFilesScreen');
   const handleFavoritesPress = () => navigation.navigate('FavoritesScreen');
-  const handleSettingsPress = () => Alert.alert('Settings', 'Settings screen coming soon.');
+  const handleSettingsPress = () => navigation.navigate('SettingsScreen');
 
   const filteredRecentFiles = searchQuery.trim()
     ? recentFiles.filter((item) =>
