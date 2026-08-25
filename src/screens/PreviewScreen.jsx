@@ -13,6 +13,7 @@ import {
   PanResponder,
 } from 'react-native';
 import { decodeTiffToBase64Uri, decodeTiffThumbnailFast, cropAndRotateImage } from '../services/tiffDecoderService';
+import { moveToRecycleBin } from '../services/recycleBinService';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import EditDocumentIcon from '../assets/edit_document.svg';
@@ -283,8 +284,8 @@ const PreviewScreen = ({ route, navigation }) => {
   const handleConfirmDelete = async () => {
     setDeleteModalVisible(false);
     try {
-      if (file?.path) {
-        await RNFS.unlink(file.path);
+      if (file) {
+        await moveToRecycleBin(file);
       }
       navigation.goBack();
     } catch (err) {
@@ -1122,10 +1123,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   deleteModalTitle: {
     fontSize: 18,

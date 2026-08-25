@@ -125,7 +125,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleRecycleBinPress = () => {
-    Alert.alert('Recycle Bin', 'Recycle Bin feature is coming soon.');
+    navigation.navigate('RecycleBinScreen');
   };
 
   const handleLanguagePress = () => {

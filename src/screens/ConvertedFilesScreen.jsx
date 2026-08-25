@@ -21,6 +21,7 @@ import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import { moveToRecycleBin } from '../services/recycleBinService';
 import SearchIcon from '../assets/search.svg';
 import HeartFilledIcon from '../assets/heart_filled.svg';
 import HeartOutlineIcon from '../assets/heart_outline.svg';
@@ -119,8 +120,8 @@ const ConvertedFilesScreen = ({ navigation }) => {
     if (!file) return;
 
     try {
-      await RNFS.unlink(file.path);
-      setConvertedFiles((prev) => prev.filter((f) => f.path !== file.path));
+      await moveToRecycleBin(file);
+      setConvertedFiles((prev) => prev.filter((f) => f.path !== file.path && f.id !== file.id));
       if (favoritesSet.has(file.path)) {
         await toggleFavorite(file);
         const newSet = new Set(favoritesSet);
@@ -1063,10 +1064,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   deleteModalTitle: {
     fontSize: 18,

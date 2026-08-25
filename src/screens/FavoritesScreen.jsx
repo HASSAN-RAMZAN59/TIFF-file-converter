@@ -20,6 +20,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import { moveToRecycleBin } from '../services/recycleBinService';
 import SearchIcon from '../assets/search.svg';
 import HeartFilledIcon from '../assets/heart_filled.svg';
 import HeartOutlineIcon from '../assets/heart_outline.svg';
@@ -120,11 +121,9 @@ const FavoritesScreen = ({ navigation }) => {
     if (!file) return;
 
     try {
-      if (file.path) {
-        await RNFS.unlink(file.path);
-      }
+      await moveToRecycleBin(file);
       await toggleFavorite(file);
-      setFavoriteFiles((prev) => prev.filter((f) => f.path !== file.path));
+      setFavoriteFiles((prev) => prev.filter((f) => f.path !== file.path && f.id !== file.id));
       const newSet = new Set(favoritesSet);
       newSet.delete(file.path);
       setFavoritesSet(newSet);
@@ -1045,10 +1044,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   deleteModalTitle: {
     fontSize: 18,
