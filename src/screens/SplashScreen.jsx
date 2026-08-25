@@ -1,7 +1,18 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ActivityIndicator,
+  Dimensions,
+} from 'react-native';
 import { hasCompletedOnboarding } from '../services/onboardingService';
 import { checkOsStoragePermission } from '../services/permissionService';
+import SplashIcon from '../assets/Group 4.svg';
+
+const { width } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
@@ -22,16 +33,33 @@ const SplashScreen = ({ navigation }) => {
           navigation.replace('Permission');
         }
       }
-    }, 2000);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar barStyle="light-content" backgroundColor="#1A6CFA" />
       <View style={styles.container}>
-        <Text style={styles.title}>TIFF Viewer & Converter</Text>
+        {/* Main Center Content */}
+        <View style={styles.centerContent}>
+          {/* Splash Document Illustration Icon */}
+          <View style={styles.iconWrapper}>
+            <SplashIcon width={170} height={205} />
+          </View>
+
+          {/* Title & Subtitle */}
+          <Text style={styles.title}>TIFF File Viewer</Text>
+          <Text style={styles.subtitle}>
+            You can convert all your TIFF file easily
+          </Text>
+
+          {/* Clean White Loading Spinner Indicator */}
+          <View style={styles.loadingWrapper}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+          </View>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -40,22 +68,47 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#1A6CFA',
   },
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#1A6CFA',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
+  },
+  centerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  iconWrapper: {
+    marginBottom: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 26,
-    fontFamily: 'Poppins-Medium',
+    fontSize: 20,
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: 'rgba(255, 255, 255, 0.88)',
+    textAlign: 'center',
+    marginBottom: 36,
+    paddingHorizontal: 16,
+    lineHeight: 18,
+  },
+  loadingWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
   },
 });
 
 export default SplashScreen;
+

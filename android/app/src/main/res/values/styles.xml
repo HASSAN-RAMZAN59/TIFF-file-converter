@@ -1,5 +1,6 @@
 <resources>
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/splash_primary</item>
+        <item name="android:statusBarColor">@color/splash_primary</item>
     </style>
 </resources>
