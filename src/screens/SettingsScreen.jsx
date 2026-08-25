@@ -224,6 +224,15 @@ const SettingsScreen = ({ navigation }) => {
             onPress={handleAboutPress}
           />
         </View>
+
+        {/* Temporary Quick Test Onboarding Button */}
+        <TouchableOpacity
+          style={styles.testOnboardingBtn}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Onboarding')}
+        >
+          <Text style={styles.testOnboardingText}>▶ Test Onboarding Screens</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -307,5 +316,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 10,
+  },
+  testOnboardingBtn: {
+    marginTop: 24,
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#EEF4FF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#D8E5FE',
+  },
+  testOnboardingText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
   },
 });
