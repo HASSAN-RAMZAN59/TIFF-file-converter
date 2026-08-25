@@ -90,13 +90,22 @@ const BatchConvertScreen = ({ route, navigation }) => {
   };
 
   // REAL-TIME BATCH CONVERSION TRIGGER
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [batchSuccessInfo, setBatchSuccessInfo] = useState({ count: 0, total: 0, format: 'JPG' });
+
   const handleStartBatchConversion = async () => {
-    if (!files || files.length === 0) {
-      Alert.alert('No Files', 'No TIFF files selected for batch conversion.');
+    if (files.length === 0) {
+      Alert.alert('No Files', 'Please select at least one TIFF file.');
       return;
     }
 
     setIsConverting(true);
+    setBatchProgress({
+      currentIndex: 0,
+      totalFiles: files.length,
+      currentFileName: 'Starting batch...',
+      progress: 0,
+    });
 
     try {
       const results = await convertTiffBatch(files, selectedFormat, (progressInfo) => {
@@ -105,17 +114,12 @@ const BatchConvertScreen = ({ route, navigation }) => {
 
       const successCount = results.filter((r) => r.success).length;
 
-      Alert.alert(
-        'Batch Conversion Finished',
-        `Successfully converted ${successCount} of ${files.length} TIFF files to ${selectedFormat.toUpperCase()}.\n\nFiles saved to Device Storage (Download/TIFF_Converted).`,
-        [
-          {
-            text: 'View Converted Files',
-            onPress: () => navigation.navigate('ConvertedFilesScreen'),
-          },
-          { text: 'OK', style: 'cancel' },
-        ]
-      );
+      setBatchSuccessInfo({
+        count: successCount,
+        total: files.length,
+        format: selectedFormat.toUpperCase(),
+      });
+      setSuccessModalVisible(true);
     } catch (error) {
       console.warn('Batch Conversion error:', error);
       Alert.alert('Batch Conversion Error', 'An error occurred during batch conversion.');
@@ -328,6 +332,66 @@ const BatchConvertScreen = ({ route, navigation }) => {
                   <Text style={styles.modalLoadingText}>Unable to preview TIFF file</Text>
                 </View>
               )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Matching UI Success Modal for Batch Conversion */}
+      <Modal
+        visible={successModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSuccessModalVisible(false)}
+      >
+        <View style={styles.successModalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdropTap}
+            activeOpacity={1}
+            onPress={() => setSuccessModalVisible(false)}
+          />
+
+          <View style={styles.successModalCard}>
+            <View style={styles.successIconCircle}>
+              <Text style={styles.successCheckmark}>✓</Text>
+            </View>
+
+            <Text style={styles.successModalTitle}>Conversion Complete</Text>
+            <Text style={styles.successModalSubtitle}>
+              Successfully converted <Text style={styles.highlightText}>{batchSuccessInfo.count} of {batchSuccessInfo.total} files</Text> into <Text style={styles.highlightText}>{batchSuccessInfo.format}</Text> format and saved to storage.
+            </Text>
+
+            <View style={styles.successActionsRow}>
+              <TouchableOpacity
+                style={styles.successCloseBtn}
+                onPress={() => {
+                  setSuccessModalVisible(false);
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'HomeScreen' }],
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.successCloseBtnText}>Done</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.successViewBtn}
+                onPress={() => {
+                  setSuccessModalVisible(false);
+                  navigation.reset({
+                    index: 1,
+                    routes: [
+                      { name: 'HomeScreen' },
+                      { name: 'ConvertedFilesScreen' },
+                    ],
+                  });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.successViewBtnText}>View Files</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -635,8 +699,101 @@ const styles = StyleSheet.create({
   },
   modalLoadingText: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#6B7280',
+    fontFamily: 'Poppins-Regular',
+  },
+
+  // Success Modal Styles
+  successModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  successModalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  successIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: '#ECFDF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 1,
+  },
+  successCheckmark: {
+    fontSize: 28,
+    color: '#10B981',
     fontFamily: 'Poppins-Medium',
+  },
+  successModalTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-Regular',
+    color: '#1E1E1E',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  successModalSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 14,
+    lineHeight: 20,
+    paddingHorizontal: 8,
+  },
+  highlightText: {
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
+  },
+  successActionsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+  },
+  successCloseBtn: {
+    flex: 1,
+    paddingVertical: 2,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successCloseBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#64748B',
+  },
+  successViewBtn: {
+    flex: 1.2,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  successViewBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#FFFFFF',
   },
 });
 
