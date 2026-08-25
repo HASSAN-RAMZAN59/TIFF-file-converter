@@ -172,7 +172,13 @@ const BatchConvertScreen = ({ route, navigation }) => {
 
   const renderFileItem = ({ item, index }) => {
     const isLast = index === files.length - 1;
-    const formatColor = selectedFormat === 'pdf' ? '#EF4444' : selectedFormat === 'png' ? '#3B82F6' : '#10B981';
+    const fmt = (selectedFormat || 'JPG').toUpperCase();
+    const formatColor =
+      fmt === 'PDF' ? '#D63230' :
+      fmt === 'JPG' || fmt === 'JPEG' ? '#0E8131' :
+      fmt === 'WEBP' ? '#867AE3' :
+      fmt === 'PNG' ? '#2676D9' :
+      fmt === 'TIFF' || fmt === 'TIF' ? '#EAB308' : '#0E8131';
 
     return (
       <TouchableOpacity

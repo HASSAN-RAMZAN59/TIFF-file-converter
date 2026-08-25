@@ -409,7 +409,13 @@ const HomeScreen = ({ navigation }) => {
             </Text>
           ) : (
             filteredRecentFiles.map((item, index) => {
-              const formatColor = item.format === 'PDF' ? '#EF4444' : item.format === 'PNG' ? '#3B82F6' : '#10B981';
+              const fmt = (item.format || '').toUpperCase();
+              const formatColor =
+                fmt === 'PDF' ? '#D63230' :
+                fmt === 'JPG' || fmt === 'JPEG' ? '#0E8131' :
+                fmt === 'WEBP' ? '#867AE3' :
+                fmt === 'PNG' ? '#2676D9' :
+                fmt === 'TIFF' || fmt === 'TIF' ? '#EAB308' : '#0E8131';
               const isLast = index === filteredRecentFiles.length - 1;
               const timeString = new Date(item.mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const sizeMB = (item.size / 1024 / 1024).toFixed(1) + ' MB';

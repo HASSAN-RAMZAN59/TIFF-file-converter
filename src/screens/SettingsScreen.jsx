@@ -129,7 +129,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleLanguagePress = () => {
-    Alert.alert('Language', 'Default language is English.');
+    navigation.navigate('LanguageScreen');
   };
 
   const handlePrivacyPolicyPress = () => {

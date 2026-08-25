@@ -13,6 +13,7 @@ import FavoritesScreen from '../screens/FavoritesScreen';
 import PreviewScreen from '../screens/PreviewScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import RecycleBinScreen from '../screens/RecycleBinScreen';
+import LanguageScreen from '../screens/LanguageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +38,7 @@ const AppNavigator = () => {
       <Stack.Screen name="PreviewScreen" component={PreviewScreen} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       <Stack.Screen name="RecycleBinScreen" component={RecycleBinScreen} />
+      <Stack.Screen name="LanguageScreen" component={LanguageScreen} />
     </Stack.Navigator>
   );
 };

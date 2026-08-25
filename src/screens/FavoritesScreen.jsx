@@ -245,7 +245,13 @@ const FavoritesScreen = ({ navigation }) => {
   const renderFileItem = ({ item, index }) => {
     const isLast = index === filteredFiles.length - 1;
     const formatStr = (item.format || item.name.split('.').pop() || 'TIFF').toUpperCase();
-    const formatColor = formatStr === 'PDF' ? '#EF4444' : formatStr === 'PNG' ? '#3B82F6' : '#10B981';
+    const fmt = formatStr.toUpperCase();
+    const formatColor =
+      fmt === 'PDF' ? '#D63230' :
+      fmt === 'JPG' || fmt === 'JPEG' ? '#0E8131' :
+      fmt === 'WEBP' ? '#867AE3' :
+      fmt === 'PNG' ? '#2676D9' :
+      fmt === 'TIFF' || fmt === 'TIF' ? '#EAB308' : '#0E8131';
     const isFav = favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri);
 
     return (

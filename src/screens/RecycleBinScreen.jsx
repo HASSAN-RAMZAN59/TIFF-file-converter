@@ -108,7 +108,13 @@ const RecycleBinScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => {
     const isImage = item.format !== 'PDF' && (item.uri || item.binPath);
-    const formatColor = item.format === 'PDF' ? '#EF4444' : item.format === 'PNG' ? '#3B82F6' : '#10B981';
+    const fmt = (item.format || 'TIFF').toUpperCase();
+    const formatColor =
+      fmt === 'PDF' ? '#D63230' :
+      fmt === 'JPG' || fmt === 'JPEG' ? '#0E8131' :
+      fmt === 'WEBP' ? '#867AE3' :
+      fmt === 'PNG' ? '#2676D9' :
+      fmt === 'TIFF' || fmt === 'TIF' ? '#EAB308' : '#0E8131';
 
     return (
       <View style={styles.fileCard}>

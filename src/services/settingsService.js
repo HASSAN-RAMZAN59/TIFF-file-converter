@@ -47,3 +47,12 @@ export const getAutoResumeEnabled = async () => {
 export const setAutoResumeEnabled = async (enabled) => {
   return await saveAppSettings({ autoResume: !!enabled });
 };
+
+export const getAppLanguage = async () => {
+  const settings = await getAppSettings();
+  return settings.language || 'fr';
+};
+
+export const setAppLanguage = async (languageCode) => {
+  return await saveAppSettings({ language: languageCode });
+};
