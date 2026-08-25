@@ -259,12 +259,20 @@ const ConvertedFilesScreen = ({ navigation }) => {
       >
         
         <View style={styles.thumbnailWrapper}>
-           <View style={styles.thumbnailPlaceholder}>
+          {item.format !== 'PDF' && (item.uri || item.path) ? (
+            <Image
+              source={{ uri: item.uri || `file://${item.path}` }}
+              style={styles.thumbnailImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.thumbnailPlaceholder}>
               <Text style={styles.docIconPlaceholder}>📄</Text>
-           </View>
-           <View style={[styles.formatBadge, { backgroundColor: formatColor }]}>
-             <Text style={styles.formatBadgeText}>{item.format}</Text>
-           </View>
+            </View>
+          )}
+          <View style={[styles.formatBadge, { backgroundColor: formatColor }]}>
+            <Text style={styles.formatBadgeText}>{item.format}</Text>
+          </View>
         </View>
 
         <View style={styles.fileInfo}>
@@ -686,13 +694,19 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginRight: 14,
   },
+  thumbnailImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#E5E7EB',
+  },
   thumbnailPlaceholder: {
-    width: 46,
-    height: 46,
+    width: 44,
+    height: 44,
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
