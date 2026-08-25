@@ -189,16 +189,34 @@ export const convertTiffFile = async (sourcePath, targetFormat = 'jpg', onProgre
   }
 };
 
+import { saveActiveBatchQueue, clearActiveBatchQueue } from './batchQueueService';
+
 /**
  * Batch Conversion Function
  */
-export const convertTiffBatch = async (filesList, targetFormat = 'jpg', onProgress = null) => {
+export const convertTiffBatch = async (filesList, targetFormat = 'jpg', onProgress = null, startIndex = 0) => {
   const results = [];
   const total = filesList.length;
 
-  for (let i = 0; i < total; i++) {
+  // Persist current queue in storage
+  await saveActiveBatchQueue({
+    files: filesList,
+    targetFormat,
+    currentIndex: startIndex,
+    timestamp: new Date().toISOString(),
+  });
+
+  for (let i = startIndex; i < total; i++) {
     const file = filesList[i];
     const filePath = file.path || file.uri;
+
+    // Update active queue position
+    await saveActiveBatchQueue({
+      files: filesList,
+      targetFormat,
+      currentIndex: i,
+      timestamp: new Date().toISOString(),
+    });
 
     try {
       if (onProgress) {
@@ -206,7 +224,7 @@ export const convertTiffBatch = async (filesList, targetFormat = 'jpg', onProgre
           currentIndex: i + 1,
           totalFiles: total,
           currentFileName: file.name || `File ${i + 1}`,
-          progress: Math.round(((i) / total) * 100),
+          progress: Math.round(((i + 1) / total) * 100),
         });
       }
 
@@ -224,6 +242,9 @@ export const convertTiffBatch = async (filesList, targetFormat = 'jpg', onProgre
       });
     }
   }
+
+  // All completed, clear the queue
+  await clearActiveBatchQueue();
 
   if (onProgress) {
     onProgress({

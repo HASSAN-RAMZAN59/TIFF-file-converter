@@ -64,14 +64,15 @@ const TiffThumbnail = ({ path, style }) => {
  */
 const BatchConvertScreen = ({ route, navigation }) => {
   const initialFiles = route.params?.files || [];
+  const resumeQueue = route.params?.resumeQueue || null;
   const [files, setFiles] = useState(initialFiles);
-  const [selectedFormat, setSelectedFormat] = useState('jpg');
+  const [selectedFormat, setSelectedFormat] = useState(resumeQueue?.targetFormat || 'jpg');
   const [isConverting, setIsConverting] = useState(false);
   const [batchProgress, setBatchProgress] = useState({
-    currentIndex: 0,
+    currentIndex: resumeQueue?.currentIndex || 0,
     totalFiles: initialFiles.length,
     currentFileName: '',
-    progress: 0,
+    progress: resumeQueue ? Math.round(((resumeQueue.currentIndex) / initialFiles.length) * 100) : 0,
   });
 
   const formatFileSize = (bytes) => {
@@ -89,35 +90,49 @@ const BatchConvertScreen = ({ route, navigation }) => {
     setFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  // REAL-TIME BATCH CONVERSION TRIGGER
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [batchSuccessInfo, setBatchSuccessInfo] = useState({ count: 0, total: 0, format: 'JPG' });
 
-  const handleStartBatchConversion = async () => {
+  // Auto resume batch if requested via resumeQueue param
+  useEffect(() => {
+    if (resumeQueue && resumeQueue.files && resumeQueue.files.length > 0) {
+      const startIndex = resumeQueue.currentIndex || 0;
+      const targetFmt = resumeQueue.targetFormat || 'jpg';
+      handleStartBatchConversion(startIndex, targetFmt);
+    }
+  }, []);
+
+  const handleStartBatchConversion = async (startIndex = 0, formatToUse = null) => {
     if (files.length === 0) {
       Alert.alert('No Files', 'Please select at least one TIFF file.');
       return;
     }
 
+    const fmt = formatToUse || selectedFormat;
     setIsConverting(true);
     setBatchProgress({
-      currentIndex: 0,
+      currentIndex: startIndex,
       totalFiles: files.length,
-      currentFileName: 'Starting batch...',
-      progress: 0,
+      currentFileName: 'Resuming batch...',
+      progress: Math.round((startIndex / files.length) * 100),
     });
 
     try {
-      const results = await convertTiffBatch(files, selectedFormat, (progressInfo) => {
-        setBatchProgress(progressInfo);
-      });
+      const results = await convertTiffBatch(
+        files,
+        fmt,
+        (progressInfo) => {
+          setBatchProgress(progressInfo);
+        },
+        startIndex
+      );
 
       const successCount = results.filter((r) => r.success).length;
 
       setBatchSuccessInfo({
-        count: successCount,
+        count: successCount + startIndex,
         total: files.length,
-        format: selectedFormat.toUpperCase(),
+        format: fmt.toUpperCase(),
       });
       setSuccessModalVisible(true);
     } catch (error) {

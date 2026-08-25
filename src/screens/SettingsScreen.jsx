@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import SecurityIcon from '../assets/security.svg';
 import SettingDeleteIcon from '../assets/setting delete.svg';
 import SettingShareIcon from '../assets/setting share.svg';
 import SwitchActiveSvg from '../assets/Switch.svg';
+import { getAutoResumeEnabled, setAutoResumeEnabled } from '../services/settingsService';
 
 // Custom toggle component using the Switch SVG
 const CustomSwitch = ({ value, onValueChange }) => {
@@ -111,8 +112,16 @@ const SettingItem = ({
 const SettingsScreen = ({ navigation }) => {
   const [autoResume, setAutoResume] = useState(true);
 
-  const toggleAutoResume = () => {
-    setAutoResume((prev) => !prev);
+  useEffect(() => {
+    getAutoResumeEnabled().then((val) => {
+      setAutoResume(val);
+    });
+  }, []);
+
+  const toggleAutoResume = async () => {
+    const nextVal = !autoResume;
+    setAutoResume(nextVal);
+    await setAutoResumeEnabled(nextVal);
   };
 
   const handleRecycleBinPress = () => {

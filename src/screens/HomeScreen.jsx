@@ -35,6 +35,8 @@ import SearchIcon from '../assets/search.svg';
 import { isTiffFile } from '../services/tiffScannerService';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import { getAutoResumeEnabled } from '../services/settingsService';
+import { getActiveBatchQueue, clearActiveBatchQueue } from '../services/batchQueueService';
 
 const { width } = Dimensions.get('window');
 
@@ -128,21 +130,42 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
+  const checkAndAutoResumeBatch = useCallback(async () => {
+    try {
+      const isAutoResumeOn = await getAutoResumeEnabled();
+      if (!isAutoResumeOn) return;
+
+      const activeQueue = await getActiveBatchQueue();
+      if (activeQueue && Array.isArray(activeQueue.files) && activeQueue.files.length > 0) {
+        // Interrupted batch found, auto-navigate to BatchConvertScreen to resume
+        navigation.navigate('BatchConvertScreen', {
+          files: activeQueue.files,
+          resumeQueue: activeQueue,
+        });
+      }
+    } catch (e) {
+      console.warn('[HomeScreen] Auto-resume check error:', e);
+    }
+  }, [navigation]);
+
   useFocusEffect(
     useCallback(() => {
       loadAllData();
-    }, [loadAllData])
+      checkAndAutoResumeBatch();
+    }, [loadAllData, checkAndAutoResumeBatch])
   );
 
   useEffect(() => {
     loadAllData();
+    checkAndAutoResumeBatch();
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         loadAllData();
+        checkAndAutoResumeBatch();
       }
     });
     return () => subscription?.remove();
-  }, [fetchStorageInfo]);
+  }, [fetchStorageInfo, checkAndAutoResumeBatch]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
