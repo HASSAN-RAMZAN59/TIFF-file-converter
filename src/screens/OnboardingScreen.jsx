@@ -8,10 +8,13 @@ import {
   StatusBar,
   ScrollView,
   Dimensions,
+  Image,
 } from 'react-native';
 
 import { setOnboardingCompleted } from '../services/onboardingService';
 import HeroIllustration from '../assets/Hero Illustration Area.svg';
+import GroupIllustration from '../assets/Group 1000007532.svg';
+import ThirdIllustration from '../assets/Group 1000007279.svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -20,16 +23,19 @@ const ONBOARDING_DATA = [
     id: '1',
     title: 'Convert TIFF Files Easily',
     subtitle: 'Turn your TIFF images into JPG,\nPNG, PDF or WEBP in just a few\ntaps.',
+    type: 'svg',
   },
   {
     id: '2',
-    title: 'Batch Convert in Seconds',
-    subtitle: 'Convert multiple TIFF images simultaneously with lightning speed.',
+    title: 'Convert Multiple Files',
+    subtitle: 'Select multiple TIFF files and convert them together with our fast batch conversion.',
+    type: 'svg2',
   },
   {
     id: '3',
-    title: 'Fast & Offline Viewing',
-    subtitle: 'View, edit, crop, rotate and organize your files anytime without internet.',
+    title: <>Your Files, <Text style={{ color: '#2780FB', fontWeight: '700' }}>Organized</Text></>,
+    subtitle: 'Keep your converted files organized,\nAccess your outputs anytime and save\nimportant files to Favorites.',
+    type: 'svg3',
   },
 ];
 
@@ -37,7 +43,13 @@ const SlideItem = React.memo(({ item, illustrationWidth, illustrationHeight }) =
   <View style={styles.slide}>
     {/* Hero Illustration Area */}
     <View style={styles.illustrationWrapper}>
-      <HeroIllustration width={illustrationWidth} height={illustrationHeight} />
+      {item.type === 'svg2' ? (
+        <GroupIllustration width={illustrationWidth} height={illustrationHeight} />
+      ) : item.type === 'svg3' ? (
+        <ThirdIllustration width={illustrationWidth} height={illustrationHeight} />
+      ) : (
+        <HeroIllustration width={illustrationWidth} height={illustrationHeight} />
+      )}
     </View>
 
     {/* Text Content */}
@@ -83,9 +95,13 @@ const OnboardingScreen = ({ navigation }) => {
         {/* Top Header: Skip Pill Button */}
         <View style={styles.topBar}>
           <TouchableOpacity
-            style={styles.skipPill}
+            style={[
+              styles.skipPill,
+              { opacity: currentIndex === ONBOARDING_DATA.length - 1 ? 0 : 1 }
+            ]}
             onPress={handleFinish}
             activeOpacity={0.8}
+            disabled={currentIndex === ONBOARDING_DATA.length - 1}
           >
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
@@ -172,20 +188,16 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   skipPill: {
-    backgroundColor: '#2780FB',
-    paddingHorizontal: 20,
-    paddingVertical: 7,
-    borderRadius: 20,
-    shadowColor: '#2780FB',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: '#E8F1FF', // Very light blue
+    paddingHorizontal: 16,
+    paddingVertical: 4, // Smaller height
+    borderRadius: 16,
+    // Removed shadow so it's less prominent
   },
   skipText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontFamily: 'Poppins-Medium',
+    color: '#2780FB',
+    fontSize: 12,
+    fontWeight: '500',
   },
   carouselContainer: {
     flex: 1,
@@ -204,24 +216,24 @@ const styles = StyleSheet.create({
   illustrationWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -15, // Further push up inside the slide
-    marginBottom: -15, // Pull text up closer
+    marginTop: -15, // Push up inside the slide
+    marginBottom: 20, // Add space below illustration
   },
   textContainer: {
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginTop: -15, // Pull text even closer to the illustration
+    marginTop: 0, // Reset margin
   },
   title: {
     fontSize: 22,
-    fontFamily: 'Poppins-Bold',
+    fontWeight: '700',
     color: '#1E1E1E',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 13,
-    fontFamily: 'Poppins-Regular',
+    fontWeight: '400',
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 20,
@@ -250,7 +262,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontFamily: 'Poppins-Medium',
+    fontWeight: '500',
   },
   paginationContainer: {
     flexDirection: 'row',
