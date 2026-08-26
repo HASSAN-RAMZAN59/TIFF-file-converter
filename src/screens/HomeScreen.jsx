@@ -348,6 +348,16 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* Storage Banner */}
         <View style={styles.storageBanner}>
+          <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+            <Defs>
+              <LinearGradient id="storageBannerGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#1A6CFA" />
+                <Stop offset="100%" stopColor="#3FA5FC" />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="1" height="1" fill="url(#storageBannerGrad)" />
+          </Svg>
+
           <View style={styles.storageCircleWrapper}>
             <Svg width={88} height={88} viewBox="0 0 88 88">
               {/* Background Track */}
@@ -734,19 +744,18 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   storageBanner: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#1A6CFA',
     borderRadius: 16,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 14,
-    borderWidth: 0.5,
-    borderColor: '#0b4586ff',
-    shadowColor: '#659bf1ff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 18,
-    shadowRadius: 62,
-    elevation: 10,
+    overflow: 'hidden',
+    shadowColor: '#1A6CFA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
   },
   storageCircleWrapper: {
     width: 88,
