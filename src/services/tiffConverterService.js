@@ -189,7 +189,7 @@ export const convertTiffFile = async (sourcePath, targetFormat = 'jpg', onProgre
   }
 };
 
-import { saveActiveBatchQueue, clearActiveBatchQueue } from './batchQueueService';
+import { saveActiveBatchQueue, getActiveBatchQueue, clearActiveBatchQueue } from './batchQueueService';
 
 /**
  * Batch Conversion Function
@@ -198,7 +198,7 @@ export const convertTiffBatch = async (filesList, targetFormat = 'jpg', onProgre
   const results = [];
   const total = filesList.length;
 
-  // Persist current queue in storage
+  // Persist current queue in storage (and cache content:// URIs to local sandbox)
   await saveActiveBatchQueue({
     files: filesList,
     targetFormat,
@@ -206,13 +206,16 @@ export const convertTiffBatch = async (filesList, targetFormat = 'jpg', onProgre
     timestamp: new Date().toISOString(),
   });
 
+  const activeQueue = await getActiveBatchQueue();
+  const workingFiles = activeQueue?.files || filesList;
+
   for (let i = startIndex; i < total; i++) {
-    const file = filesList[i];
+    const file = workingFiles[i];
     const filePath = file.path || file.uri;
 
     // Update active queue position
     await saveActiveBatchQueue({
-      files: filesList,
+      files: workingFiles,
       targetFormat,
       currentIndex: i,
       timestamp: new Date().toISOString(),
