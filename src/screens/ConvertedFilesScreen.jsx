@@ -15,7 +15,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ScrollView,
 } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
@@ -365,30 +367,40 @@ const ConvertedFilesScreen = ({ navigation }) => {
         )}
       </View>
 
-      <View style={styles.listContainer}>
-        {isLoading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#000000" />
-          </View>
-        ) : (
-          <View style={styles.cardContainer}>
-            <FlatList
-              data={filteredFiles}
-              keyExtractor={(item) => item.id}
-              renderItem={renderFileItem}
-              contentContainerStyle={styles.listContent}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No converted files yet.'}
-                  </Text>
-                </View>
-              }
-            />
-          </View>
-        )}
-      </View>
+      {isLoading ? (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color="#000000" />
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        >
+          {filteredFiles.length > 0 ? (
+            <View style={styles.cardContainer}>
+              {filteredFiles.map((item, index) => (
+                <React.Fragment key={item.id || item.path || index.toString()}>
+                  {renderFileItem({ item, index })}
+                </React.Fragment>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <LottieView
+                source={require('../assets/no_files_found.json')}
+                autoPlay
+                loop
+                style={styles.emptyLottie}
+              />
+              <Text style={styles.emptyText}>
+                {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No converted files yet.'}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
 
       {/* Options Menu Modal */}
       <Modal visible={menuVisible} transparent={true} animationType="fade" onRequestClose={closeMenu}>
@@ -666,13 +678,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#111827',
   },
-  listContainer: {
+  scrollContainer: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   cardContainer: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
@@ -683,9 +697,6 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F3F4F6',
-  },
-  listContent: {
-    paddingVertical: 8,
   },
   fileItem: {
     flexDirection: 'row',
@@ -776,8 +787,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyContainer: {
-    padding: 40,
+    flex: 1,
+    padding: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 350,
+  },
+  emptyLottie: {
+    width: 200,
+    height: 200,
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: 14,
