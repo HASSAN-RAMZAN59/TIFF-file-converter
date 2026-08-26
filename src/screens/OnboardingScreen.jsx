@@ -118,17 +118,7 @@ const OnboardingScreen = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             bounces={false}
             overScrollMode="never"
-            scrollEventThrottle={16}
-            onScroll={(event) => {
-              const offsetX = event.nativeEvent.contentOffset.x;
-              // Prevent scrolling backwards
-              if (offsetX < currentIndex * SCREEN_WIDTH) {
-                scrollViewRef.current?.scrollTo({
-                  x: currentIndex * SCREEN_WIDTH,
-                  animated: false,
-                });
-              }
-            }}
+            scrollEnabled={false} // Disable manual swiping to prevent backward scrolling smoothly
             onMomentumScrollEnd={(event) => {
               const offsetX = event.nativeEvent.contentOffset.x;
               const index = Math.round(offsetX / SCREEN_WIDTH);
