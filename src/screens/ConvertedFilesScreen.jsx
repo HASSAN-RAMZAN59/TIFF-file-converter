@@ -17,6 +17,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
@@ -550,11 +551,6 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 <Text style={styles.aboutLabel}>File Size:</Text>
                 <Text style={styles.aboutValue}>{formatFileSize(selectedFile?.size || 0)}</Text>
               </View>
-
-              <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>Location:</Text>
-                <Text style={styles.aboutPathValue}>{formatDisplayPath(selectedFile?.path || selectedFile?.uri)}</Text>
-              </View>
             </View>
 
             <TouchableOpacity 
@@ -562,6 +558,15 @@ const ConvertedFilesScreen = ({ navigation }) => {
               onPress={() => setAboutModalVisible(false)}
               activeOpacity={0.8}
             >
+              <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                <Defs>
+                  <LinearGradient id="aboutOkBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                    <Stop offset="0%" stopColor="#1A6CFA" />
+                    <Stop offset="100%" stopColor="#3FA5FC" />
+                  </LinearGradient>
+                </Defs>
+                <Rect x="0" y="0" width="1" height="1" fill="url(#aboutOkBtnGrad)" />
+              </Svg>
               <Text style={styles.aboutOkBtnText}>Done</Text>
             </TouchableOpacity>
           </View>
@@ -1049,11 +1054,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   aboutOkBtn: {
-    backgroundColor: '#2563EB',
     paddingVertical: 12,
     borderRadius: 12,
+    overflow: 'hidden',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    justifyContent: 'center',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import SearchIcon from '../assets/search.svg';
 import { getAppLanguage, setAppLanguage } from '../services/settingsService';
 
@@ -118,6 +119,15 @@ const LanguageScreen = ({ navigation }) => {
           activeOpacity={0.85}
           onPress={handleApply}
         >
+          <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+            <Defs>
+              <LinearGradient id="langApplyBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#1A6CFA" />
+                <Stop offset="100%" stopColor="#3FA5FC" />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="1" height="1" fill="url(#langApplyBtnGrad)" />
+          </Svg>
           <Text style={styles.applyBtnText}>Apply</Text>
         </TouchableOpacity>
       </View>
@@ -238,14 +248,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   applyBtn: {
-    backgroundColor: '#2B87FF',
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2B87FF',
+    overflow: 'hidden',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },

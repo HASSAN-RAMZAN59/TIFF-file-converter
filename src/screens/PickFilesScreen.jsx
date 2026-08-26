@@ -13,6 +13,7 @@ import {
   StatusBar,
   Modal,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 import { convertTiffFile } from '../services/tiffConverterService';
 
@@ -192,6 +193,17 @@ const PickFilesScreen = ({ route, navigation }) => {
                 style={[styles.formatChip, isSelected && styles.formatChipActive]}
                 onPress={() => setSelectedFormat(fmt.value)}
               >
+                {isSelected && (
+                  <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                    <Defs>
+                      <LinearGradient id={`chipGrad_${fmt.value}`} x1="0" y1="0" x2="1" y2="0">
+                        <Stop offset="0%" stopColor="#1A6CFA" />
+                        <Stop offset="100%" stopColor="#3FA5FC" />
+                      </LinearGradient>
+                    </Defs>
+                    <Rect x="0" y="0" width="1" height="1" fill={`url(#chipGrad_${fmt.value})`} />
+                  </Svg>
+                )}
                 <Text style={[styles.formatChipText, isSelected && styles.formatChipTextActive]}>
                   {fmt.label}
                 </Text>
@@ -233,6 +245,17 @@ const PickFilesScreen = ({ route, navigation }) => {
           onPress={handleStartConversion}
           disabled={isConverting}
         >
+          {!isConverting && (
+            <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="convertBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0%" stopColor="#1A6CFA" />
+                  <Stop offset="100%" stopColor="#3FA5FC" />
+                </LinearGradient>
+              </Defs>
+              <Rect x="0" y="0" width="1" height="1" fill="url(#convertBtnGrad)" />
+            </Svg>
+          )}
           {isConverting ? (
             <Text style={styles.convertBtnTextPrimary}>Converting... {conversionProgress}%</Text>
           ) : (
@@ -295,6 +318,15 @@ const PickFilesScreen = ({ route, navigation }) => {
                 }}
                 activeOpacity={0.8}
               >
+                <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                  <Defs>
+                    <LinearGradient id="successViewBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                      <Stop offset="0%" stopColor="#1A6CFA" />
+                      <Stop offset="100%" stopColor="#3FA5FC" />
+                    </LinearGradient>
+                  </Defs>
+                  <Rect x="0" y="0" width="1" height="1" fill="url(#successViewBtnGrad)" />
+                </Svg>
                 <Text style={styles.successViewBtnText}>View Files</Text>
               </TouchableOpacity>
             </View>
@@ -382,8 +414,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   formatChipActive: {
-    backgroundColor: '#2563EB',
-    shadowColor: '#2563EB',
+    overflow: 'hidden',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
@@ -456,12 +488,13 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   convertBtnPrimary: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 8,
+    width: '100%',
+    paddingVertical: 14,
     borderRadius: 24,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3B82F6',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -557,12 +590,12 @@ const styles = StyleSheet.create({
   },
   successViewBtn: {
     flex: 1.2,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: '#3B82F6',
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3B82F6',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

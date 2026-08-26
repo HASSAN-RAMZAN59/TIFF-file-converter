@@ -620,14 +620,14 @@ const HomeScreen = ({ navigation }) => {
               onPress={handleAllowPermission}
               activeOpacity={0.85}
             >
-              <Svg width="100%" height="100%" style={StyleSheet.absoluteFillObject}>
+              <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
                 <Defs>
-                  <LinearGradient id="permAllowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <LinearGradient id="permAllowGrad" x1="0" y1="0" x2="1" y2="0">
                     <Stop offset="0%" stopColor="#1A6CFA" />
                     <Stop offset="100%" stopColor="#3FA5FC" />
                   </LinearGradient>
                 </Defs>
-                <Rect width="100%" height="100%" rx={28} fill="url(#permAllowGrad)" />
+                <Rect x="0" y="0" width="1" height="1" fill="url(#permAllowGrad)" />
               </Svg>
               <Text style={styles.permAllowBtnText}>Allow</Text>
             </TouchableOpacity>
@@ -650,6 +650,15 @@ const ActionCard = ({ title, desc, onPress, Icon }) => (
     <Text style={styles.actionCardTitle} numberOfLines={2}>{title}</Text>
     <Text style={styles.actionCardDesc} numberOfLines={2}>{desc}</Text>
     <View style={styles.actionCardBtn}>
+      <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+        <Defs>
+          <LinearGradient id="cardBtnGrad" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor="#1A6CFA" />
+            <Stop offset="100%" stopColor="#3FA5FC" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="1" height="1" fill="url(#cardBtnGrad)" />
+      </Svg>
       <ArrowForwardIcon width={12} height={12} />
     </View>
   </TouchableOpacity>
@@ -858,8 +867,8 @@ const styles = StyleSheet.create({
   actionCardBtn: {
     width: '85%',
     height: 20,
-    backgroundColor: '#3B82F6',
     borderRadius: 10,
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },

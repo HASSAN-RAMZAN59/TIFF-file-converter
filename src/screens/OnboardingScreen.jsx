@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native';
 
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { setOnboardingCompleted } from '../services/onboardingService';
 import HeroIllustration from '../assets/Hero Illustration Area.svg';
 import GroupIllustration from '../assets/Group 1000007536.svg';
@@ -146,6 +147,15 @@ const OnboardingScreen = ({ navigation }) => {
             onPress={handleNext}
             activeOpacity={0.85}
           >
+            <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="onboardBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor="#1A6CFA" />
+                  <Stop offset="1" stopColor="#3FA5FC" />
+                </LinearGradient>
+              </Defs>
+              <Rect x="0" y="0" width="1" height="1" fill="url(#onboardBtnGrad)" />
+            </Svg>
             <Text style={styles.buttonText}>
               {currentIndex === ONBOARDING_DATA.length - 1 ? 'Get Started' : 'Next'}
             </Text>
@@ -250,14 +260,15 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    backgroundColor: '#2780FB',
+    backgroundColor: '#1A6CFA',
     borderRadius: 25,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2780FB',
+    overflow: 'hidden',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
     marginBottom: 28,

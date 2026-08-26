@@ -13,6 +13,7 @@ import {
   Modal,
   Image,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { convertTiffBatch } from '../services/tiffConverterService';
 import { decodeTiffToBase64Uri, decodeTiffThumbnailFast } from '../services/tiffDecoderService';
 
@@ -244,6 +245,17 @@ const BatchConvertScreen = ({ route, navigation }) => {
                   disabled={isConverting}
                   activeOpacity={0.7}
                 >
+                  {isSelected && (
+                    <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                      <Defs>
+                        <LinearGradient id={`batchChipGrad_${fmt.value}`} x1="0" y1="0" x2="1" y2="0">
+                          <Stop offset="0%" stopColor="#1A6CFA" />
+                          <Stop offset="100%" stopColor="#3FA5FC" />
+                        </LinearGradient>
+                      </Defs>
+                      <Rect x="0" y="0" width="1" height="1" fill={`url(#batchChipGrad_${fmt.value})`} />
+                    </Svg>
+                  )}
                   <Text
                     style={[
                       styles.formatChipText,
@@ -296,6 +308,17 @@ const BatchConvertScreen = ({ route, navigation }) => {
           onPress={() => handleStartBatchConversion(0, selectedFormat)}
           disabled={isConverting || files.length === 0}
         >
+          {!(isConverting || files.length === 0) && (
+            <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="batchConvertBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0%" stopColor="#1A6CFA" />
+                  <Stop offset="100%" stopColor="#3FA5FC" />
+                </LinearGradient>
+              </Defs>
+              <Rect x="0" y="0" width="1" height="1" fill="url(#batchConvertBtnGrad)" />
+            </Svg>
+          )}
           <Text style={styles.convertBtnText}>
             {isConverting
               ? `Processing (${batchProgress.progress}%)...`
@@ -412,6 +435,15 @@ const BatchConvertScreen = ({ route, navigation }) => {
                 }}
                 activeOpacity={0.8}
               >
+                <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                  <Defs>
+                    <LinearGradient id="batchSuccessViewBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                      <Stop offset="0%" stopColor="#1A6CFA" />
+                      <Stop offset="100%" stopColor="#3FA5FC" />
+                    </LinearGradient>
+                  </Defs>
+                  <Rect x="0" y="0" width="1" height="1" fill="url(#batchSuccessViewBtnGrad)" />
+                </Svg>
                 <Text style={styles.successViewBtnText}>View Files</Text>
               </TouchableOpacity>
             </View>
@@ -467,8 +499,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   formatChipActive: {
-    backgroundColor: '#2563EB',
-    shadowColor: '#2563EB',
+    overflow: 'hidden',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.45,
     shadowRadius: 10,
@@ -627,15 +659,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   convertButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 10,
+    paddingVertical: 14,
     borderRadius: 14,
+    overflow: 'hidden',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    justifyContent: 'center',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.9,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
-    elevation: 9,
+    elevation: 6,
   },
   disabledButton: {
     backgroundColor: '#9CA3AF',
@@ -801,12 +834,12 @@ const styles = StyleSheet.create({
   },
   successViewBtn: {
     flex: 1.2,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: '#3B82F6',
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3B82F6',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

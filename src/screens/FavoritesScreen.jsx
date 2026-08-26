@@ -17,6 +17,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
@@ -53,6 +54,7 @@ const FavoritesScreen = ({ navigation }) => {
 
   // About Info Modal State
   const [aboutModalVisible, setAboutModalVisible] = useState(false);
+  const closeAboutModal = () => setAboutModalVisible(false);
 
   // Delete Confirm Modal State
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -511,13 +513,13 @@ const FavoritesScreen = ({ navigation }) => {
         visible={aboutModalVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setAboutModalVisible(false)}
+        onRequestClose={closeAboutModal}
       >
         <View style={styles.aboutModalOverlay}>
           <TouchableOpacity
             style={styles.modalBackdropTap}
             activeOpacity={1}
-            onPress={() => setAboutModalVisible(false)}
+            onPress={closeAboutModal}
           />
 
           <View style={styles.aboutModalCard}>
@@ -552,11 +554,20 @@ const FavoritesScreen = ({ navigation }) => {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.aboutOkBtn}
-              onPress={() => setAboutModalVisible(false)}
+            <TouchableOpacity 
+              style={styles.aboutOkBtn} 
+              onPress={closeAboutModal}
               activeOpacity={0.8}
             >
+              <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                <Defs>
+                  <LinearGradient id="favAboutOkBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                    <Stop offset="0%" stopColor="#1A6CFA" />
+                    <Stop offset="100%" stopColor="#3FA5FC" />
+                  </LinearGradient>
+                </Defs>
+                <Rect x="0" y="0" width="1" height="1" fill="url(#favAboutOkBtnGrad)" />
+              </Svg>
               <Text style={styles.aboutOkBtnText}>Done</Text>
             </TouchableOpacity>
           </View>
@@ -1028,11 +1039,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   aboutOkBtn: {
-    backgroundColor: '#2563EB',
     paddingVertical: 12,
     borderRadius: 12,
+    overflow: 'hidden',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    justifyContent: 'center',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,

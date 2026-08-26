@@ -12,6 +12,7 @@ import {
   Modal,
   PanResponder,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { decodeTiffToBase64Uri, decodeTiffThumbnailFast, cropAndRotateImage } from '../services/tiffDecoderService';
 import { moveToRecycleBin } from '../services/recycleBinService';
 import Share from 'react-native-share';
@@ -654,6 +655,15 @@ const PreviewScreen = ({ route, navigation }) => {
               onPress={() => setInfoModalVisible(false)}
               activeOpacity={0.8}
             >
+              <Svg style={StyleSheet.absoluteFillObject} viewBox="0 0 1 1" preserveAspectRatio="none">
+                <Defs>
+                  <LinearGradient id="infoOkBtnGrad" x1="0" y1="0" x2="1" y2="0">
+                    <Stop offset="0%" stopColor="#1A6CFA" />
+                    <Stop offset="100%" stopColor="#3FA5FC" />
+                  </LinearGradient>
+                </Defs>
+                <Rect x="0" y="0" width="1" height="1" fill="url(#infoOkBtnGrad)" />
+              </Svg>
               <Text style={styles.infoOkBtnText}>Done</Text>
             </TouchableOpacity>
           </View>
@@ -1090,11 +1100,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   infoOkBtn: {
-    backgroundColor: '#2563EB',
     paddingVertical: 12,
     borderRadius: 12,
+    overflow: 'hidden',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    justifyContent: 'center',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
