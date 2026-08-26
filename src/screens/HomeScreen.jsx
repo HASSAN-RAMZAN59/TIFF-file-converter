@@ -358,53 +358,55 @@ const HomeScreen = ({ navigation }) => {
             <Rect x="0" y="0" width="1" height="1" fill="url(#storageBannerGrad)" />
           </Svg>
 
-          <View style={styles.storageCircleWrapper}>
-            <Svg width={88} height={88} viewBox="0 0 88 88">
-              {/* Background Track */}
-              <Circle
-                cx="44"
-                cy="44"
-                r="38"
-                stroke="rgba(255,255,255,0.2)"
-                strokeWidth="6"
-                fill="none"
-              />
-              {/* Animated / Dynamic Progress Fill */}
-              <Circle
-                cx="44"
-                cy="44"
-                r="38"
-                stroke="#FFFFFF"
-                strokeWidth="6"
-                strokeDasharray={`${2 * Math.PI * 38}`}
-                strokeDashoffset={`${2 * Math.PI * 38 * (1 - (storageInfo.usedPercentage || 0) / 100)}`}
-                strokeLinecap="round"
-                fill="none"
-                transform="rotate(-90 44 44)"
-              />
-            </Svg>
-            <View style={styles.storageCircleTextOverlay}>
-              <Text style={styles.storageCirclePercent}>{storageInfo.usedPercentage}%</Text>
-              <Text style={styles.storageCircleLabel}>Used</Text>
-            </View>
-          </View>
-
-          <View style={styles.storageInfo}>
-            <Text style={styles.storageInfoTitle}>Device Storage</Text>
-            <Text style={styles.storageInfoData}>{storageInfo.formattedUsed} / {storageInfo.formattedTotal}</Text>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${storageInfo.usedPercentage}%` }]} />
-            </View>
-            <View style={styles.availableRow}>
-              <View style={styles.availableIconWrapper}>
-                <PieChartIcon width={12} height={12} />
+          <View style={styles.storageBannerContent}>
+            <View style={styles.storageCircleWrapper}>
+              <Svg width={88} height={88} viewBox="0 0 88 88">
+                {/* Background Track */}
+                <Circle
+                  cx="44"
+                  cy="44"
+                  r="38"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="6"
+                  fill="none"
+                />
+                {/* Animated / Dynamic Progress Fill */}
+                <Circle
+                  cx="44"
+                  cy="44"
+                  r="38"
+                  stroke="#FFFFFF"
+                  strokeWidth="6"
+                  strokeDasharray={`${2 * Math.PI * 38}`}
+                  strokeDashoffset={`${2 * Math.PI * 38 * (1 - (storageInfo.usedPercentage || 0) / 100)}`}
+                  strokeLinecap="round"
+                  fill="none"
+                  transform="rotate(-90 44 44)"
+                />
+              </Svg>
+              <View style={styles.storageCircleTextOverlay}>
+                <Text style={styles.storageCirclePercent}>{storageInfo.usedPercentage}%</Text>
+                <Text style={styles.storageCircleLabel}>Used</Text>
               </View>
-              <Text style={styles.availableText}>{storageInfo.formattedFree} Available</Text>
             </View>
-          </View>
 
-          <View style={styles.storageIllustrationWrapper}>
-            <StorageBannerIllustration width={64} height={74} />
+            <View style={styles.storageInfo}>
+              <Text style={styles.storageInfoTitle}>Device Storage</Text>
+              <Text style={styles.storageInfoData}>{storageInfo.formattedUsed} / {storageInfo.formattedTotal}</Text>
+              <View style={styles.progressBarBg}>
+                <View style={[styles.progressBarFill, { width: `${storageInfo.usedPercentage}%` }]} />
+              </View>
+              <View style={styles.availableRow}>
+                <View style={styles.availableIconWrapper}>
+                  <PieChartIcon width={12} height={12} />
+                </View>
+                <Text style={styles.availableText}>{storageInfo.formattedFree} Available</Text>
+              </View>
+            </View>
+
+            <View style={styles.storageIllustrationWrapper}>
+              <StorageBannerIllustration width={64} height={74} />
+            </View>
           </View>
         </View>
 
@@ -744,11 +746,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   storageBanner: {
-    backgroundColor: '#1A6CFA',
     borderRadius: 16,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 14,
     overflow: 'hidden',
     shadowColor: '#1A6CFA',
@@ -756,6 +754,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6,
+  },
+  storageBannerContent: {
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   storageCircleWrapper: {
     width: 88,
