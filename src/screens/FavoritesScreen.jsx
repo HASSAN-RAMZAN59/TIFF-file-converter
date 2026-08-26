@@ -16,6 +16,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
@@ -376,6 +377,12 @@ const FavoritesScreen = ({ navigation }) => {
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
+                  <LottieView
+                    source={require('../assets/no_files_found.json')}
+                    autoPlay
+                    loop
+                    style={styles.emptyLottie}
+                  />
                   <Text style={styles.emptyText}>
                     {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No favorite files yet.'}
                   </Text>
@@ -758,6 +765,12 @@ const styles = StyleSheet.create({
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyLottie: {
+    width: 200,
+    height: 200,
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: 14,

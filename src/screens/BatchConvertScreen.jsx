@@ -108,13 +108,14 @@ const BatchConvertScreen = ({ route, navigation }) => {
       return;
     }
 
-    const fmt = formatToUse || selectedFormat;
+    const safeStartIndex = typeof startIndex === 'number' ? startIndex : 0;
+    const fmt = typeof formatToUse === 'string' && formatToUse ? formatToUse : selectedFormat;
     setIsConverting(true);
     setBatchProgress({
-      currentIndex: startIndex,
+      currentIndex: safeStartIndex,
       totalFiles: files.length,
-      currentFileName: 'Resuming batch...',
-      progress: Math.round((startIndex / files.length) * 100),
+      currentFileName: safeStartIndex > 0 ? 'Resuming batch...' : 'Starting batch...',
+      progress: Math.round((safeStartIndex / files.length) * 100),
     });
 
     try {
@@ -124,13 +125,13 @@ const BatchConvertScreen = ({ route, navigation }) => {
         (progressInfo) => {
           setBatchProgress(progressInfo);
         },
-        startIndex
+        safeStartIndex
       );
 
       const successCount = results.filter((r) => r.success).length;
 
       setBatchSuccessInfo({
-        count: successCount + startIndex,
+        count: successCount + safeStartIndex,
         total: files.length,
         format: fmt.toUpperCase(),
       });
@@ -292,7 +293,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.convertButton, (isConverting || files.length === 0) && styles.disabledButton]}
-          onPress={handleStartBatchConversion}
+          onPress={() => handleStartBatchConversion(0, selectedFormat)}
           disabled={isConverting || files.length === 0}
         >
           <Text style={styles.convertBtnText}>
