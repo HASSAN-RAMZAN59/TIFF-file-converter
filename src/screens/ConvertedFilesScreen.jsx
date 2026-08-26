@@ -1054,9 +1054,10 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   aboutOkBtn: {
-    paddingVertical: 12,
+    height: 48,
     borderRadius: 12,
     overflow: 'hidden',
+    backgroundColor: '#1A6CFA',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#1A6CFA',

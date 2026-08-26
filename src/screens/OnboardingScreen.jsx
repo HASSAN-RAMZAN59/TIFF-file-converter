@@ -260,9 +260,9 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
+    height: 50,
     backgroundColor: '#1A6CFA',
     borderRadius: 25,
-    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

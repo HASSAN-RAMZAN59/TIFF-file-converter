@@ -248,8 +248,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   applyBtn: {
-    borderRadius: 24,
-    paddingVertical: 14,
+    borderRadius: 25,
+    height: 50,
+    backgroundColor: '#1A6CFA',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

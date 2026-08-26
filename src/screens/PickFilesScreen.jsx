@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   formatChip: {
     flex: 1,
-    paddingVertical: 4,
+    height: 36,
     backgroundColor: '#E5E7EB',
     borderRadius: 12,
     alignItems: 'center',
@@ -489,9 +489,10 @@ const styles = StyleSheet.create({
   },
   convertBtnPrimary: {
     width: '100%',
-    paddingVertical: 14,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     overflow: 'hidden',
+    backgroundColor: '#1A6CFA',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#1A6CFA',
@@ -590,9 +591,10 @@ const styles = StyleSheet.create({
   },
   successViewBtn: {
     flex: 1.2,
-    paddingVertical: 8,
+    height: 44,
     borderRadius: 14,
     overflow: 'hidden',
+    backgroundColor: '#1A6CFA',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#1A6CFA',
