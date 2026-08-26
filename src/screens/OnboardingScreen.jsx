@@ -13,7 +13,7 @@ import {
 
 import { setOnboardingCompleted } from '../services/onboardingService';
 import HeroIllustration from '../assets/Hero Illustration Area.svg';
-import GroupIllustration from '../assets/Group 1000007532.svg';
+import GroupIllustration from '../assets/Group 1000007536.svg';
 import ThirdIllustration from '../assets/Group 1000007279.svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -70,10 +70,12 @@ const OnboardingScreen = ({ navigation }) => {
 
   const handleNext = () => {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
+      const nextIndex = currentIndex + 1;
       scrollViewRef.current?.scrollTo({
-        x: (currentIndex + 1) * SCREEN_WIDTH,
+        x: nextIndex * SCREEN_WIDTH,
         animated: true,
       });
+      setCurrentIndex(nextIndex); // Manually update index for Android programmatic scroll
     } else {
       handleFinish();
     }
@@ -116,6 +118,17 @@ const OnboardingScreen = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             bounces={false}
             overScrollMode="never"
+            scrollEventThrottle={16}
+            onScroll={(event) => {
+              const offsetX = event.nativeEvent.contentOffset.x;
+              // Prevent scrolling backwards
+              if (offsetX < currentIndex * SCREEN_WIDTH) {
+                scrollViewRef.current?.scrollTo({
+                  x: currentIndex * SCREEN_WIDTH,
+                  animated: false,
+                });
+              }
+            }}
             onMomentumScrollEnd={(event) => {
               const offsetX = event.nativeEvent.contentOffset.x;
               const index = Math.round(offsetX / SCREEN_WIDTH);
