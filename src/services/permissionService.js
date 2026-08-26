@@ -57,14 +57,7 @@ export const requestOsStoragePermissionDialog = async () => {
 
   try {
     if (isAndroid13OrHigher()) {
-      const granted = await PermissionsAndroid.request(
-        'android.permission.READ_MEDIA_IMAGES',
-        {
-          title: 'Storage Permission Required',
-          message: 'This app needs access to your images to view and convert TIFF files.',
-          buttonPositive: 'Allow',
-        }
-      );
+      const granted = await PermissionsAndroid.request('android.permission.READ_MEDIA_IMAGES');
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     } else {
       const granted = await PermissionsAndroid.requestMultiple([

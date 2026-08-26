@@ -21,17 +21,9 @@ const SplashScreen = ({ navigation }) => {
       const permissionGranted = await checkOsStoragePermission();
 
       if (onboardingDone) {
-        if (permissionGranted) {
-          navigation.replace('MainApp');
-        } else {
-          navigation.replace('Permission');
-        }
+        navigation.replace('MainApp');
       } else {
-        if (permissionGranted) {
-          navigation.replace('Onboarding');
-        } else {
-          navigation.replace('Permission');
-        }
+        navigation.replace('Onboarding');
       }
     }, 2500);
 

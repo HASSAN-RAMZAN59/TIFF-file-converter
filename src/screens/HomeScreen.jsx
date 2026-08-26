@@ -14,10 +14,12 @@ import {
   TextInput,
   Modal,
   Image,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
+import { checkOsStoragePermission, requestOsStoragePermissionDialog } from '../services/permissionService';
 import Svg, { Circle, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import ArrowForwardIcon from '../assets/arrow_forward.svg';
 import StorageBannerIllustration from '../assets/storage_banner.svg';
@@ -32,6 +34,7 @@ import HeartFilledIcon from '../assets/heart_filled.svg';
 import HeartOutlineIcon from '../assets/heart_outline.svg';
 import MoreVertIcon from '../assets/more_vert.svg';
 import SearchIcon from '../assets/search.svg';
+import StoragePermissionFolderIcon from '../assets/storage_permission_icon.svg';
 import { isTiffFile } from '../services/tiffScannerService';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
@@ -173,77 +176,120 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
+  const [permissionModalVisible, setPermissionModalVisible] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const executeWithPermission = async (actionFn) => {
+    if (Platform.OS !== 'android') {
+      if (actionFn) actionFn();
+      return;
+    }
+    const hasPermission = await checkOsStoragePermission();
+    if (hasPermission) {
+      if (actionFn) actionFn();
+    } else {
+      setPendingAction(() => actionFn);
+      setPermissionModalVisible(true);
+    }
+  };
+
+  const handleAllowPermission = async () => {
+    const granted = await requestOsStoragePermissionDialog();
+    setPermissionModalVisible(false);
+    if (granted) {
+      loadAllData();
+      if (pendingAction) {
+        pendingAction();
+        setPendingAction(null);
+      }
+    } else {
+      setPendingAction(null);
+    }
+  };
+
   const handleFilePress = (item) => {
-    setPreviewFile(item);
+    executeWithPermission(() => setPreviewFile(item));
   };
 
-  const handleAutoScanPress = () => navigation.navigate('AllFilesScreen');
-
-  const handlePickSingleFilePress = async () => {
-    try {
-      const result = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.allFiles],
-      });
-      if (result) {
-        const fileName = result.name || result.fileName || '';
-        const fileSize = result.size || 0;
-        if (!isTiffFile(fileName)) {
-          Alert.alert('Invalid File', 'Please select a valid TIFF file (.tif or .tiff).');
-          return;
-        }
-        if (fileSize <= 0) {
-          Alert.alert('Empty File', 'The selected TIFF file is empty.');
-          return;
-        }
-        navigation.navigate('PickFilesScreen', { file: { uri: result.uri, name: fileName, size: fileSize, type: result.type } });
-      }
-    } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        Alert.alert('Error', 'Unable to pick the file.');
-      }
-    }
+  const handleAutoScanPress = () => {
+    executeWithPermission(() => navigation.navigate('AllFilesScreen'));
   };
 
-  const handleBatchConversionPress = async () => {
-    try {
-      const results = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
-        allowMultiSelection: true,
-      });
-
-      const pickedArray = Array.isArray(results) ? results : [results];
-
-      if (pickedArray && pickedArray.length > 0) {
-        const validFiles = pickedArray
-          .filter((res) => {
-            const name = res.name || res.fileName || '';
-            const size = res.size || 0;
-            return isTiffFile(name) && size > 0;
-          })
-          .map((res) => ({
-            uri: res.uri,
-            name: res.name || res.fileName || 'TIFF File',
-            size: res.size || 0,
-            type: res.type,
-          }));
-
-        if (validFiles.length === 0) {
-          Alert.alert('Invalid Files', 'Please select valid TIFF files (.tif or .tiff).');
-          return;
+  const handlePickSingleFilePress = () => {
+    executeWithPermission(async () => {
+      try {
+        const result = await DocumentPicker.pickSingle({
+          type: [DocumentPicker.types.allFiles],
+        });
+        if (result) {
+          const fileName = result.name || result.fileName || '';
+          const fileSize = result.size || 0;
+          if (!isTiffFile(fileName)) {
+            Alert.alert('Invalid File', 'Please select a valid TIFF file (.tif or .tiff).');
+            return;
+          }
+          if (fileSize <= 0) {
+            Alert.alert('Empty File', 'The selected TIFF file is empty.');
+            return;
+          }
+          navigation.navigate('PickFilesScreen', { file: { uri: result.uri, name: fileName, size: fileSize, type: result.type } });
         }
-
-        navigation.navigate('BatchConvertScreen', { files: validFiles });
+      } catch (err) {
+        if (!DocumentPicker.isCancel(err)) {
+          Alert.alert('Error', 'Unable to pick the file.');
+        }
       }
-    } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        console.warn('Batch pick error:', err);
-        Alert.alert('Error', err?.message || 'Unable to select files.');
-      }
-    }
+    });
   };
 
-  const handleConvertedOutputsPress = () => navigation.navigate('ConvertedFilesScreen');
-  const handleFavoritesPress = () => navigation.navigate('FavoritesScreen');
+  const handleBatchConversionPress = () => {
+    executeWithPermission(async () => {
+      try {
+        const results = await DocumentPicker.pick({
+          type: [DocumentPicker.types.allFiles],
+          allowMultiSelection: true,
+        });
+
+        const pickedArray = Array.isArray(results) ? results : [results];
+
+        if (pickedArray && pickedArray.length > 0) {
+          const validFiles = pickedArray
+            .filter((res) => {
+              const name = res.name || res.fileName || '';
+              const size = res.size || 0;
+              return isTiffFile(name) && size > 0;
+            })
+            .map((res) => ({
+              uri: res.uri,
+              name: res.name || res.fileName || 'TIFF File',
+              size: res.size || 0,
+              type: res.type,
+            }));
+
+          if (validFiles.length === 0) {
+            Alert.alert('Invalid Files', 'Please select valid TIFF files (.tif or .tiff).');
+            return;
+          }
+
+          navigation.navigate('BatchConvertScreen', { files: validFiles });
+        }
+      } catch (err) {
+        if (!DocumentPicker.isCancel(err)) {
+          console.warn('Batch pick error:', err);
+          Alert.alert('Error', err?.message || 'Unable to select files.');
+        }
+      }
+    });
+  };
+
+  const handleConvertedOutputsPress = () => {
+    executeWithPermission(() => navigation.navigate('ConvertedFilesScreen'));
+  };
+
+  const handleFavoritesPress = () => {
+    executeWithPermission(() => navigation.navigate('FavoritesScreen'));
+  };
+
   const handleSettingsPress = () => navigation.navigate('SettingsScreen');
 
   const filteredRecentFiles = searchQuery.trim()
@@ -531,6 +577,51 @@ const HomeScreen = ({ navigation }) => {
                 </View>
               )}
             </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Storage Permission Dialog Modal */}
+      <Modal
+        visible={permissionModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setPermissionModalVisible(false);
+          setPendingAction(null);
+        }}
+      >
+        <View style={styles.permModalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdropTap}
+            activeOpacity={1}
+            onPress={() => {
+              setPermissionModalVisible(false);
+              setPendingAction(null);
+            }}
+          />
+
+          <View style={styles.permModalCard}>
+            {/* Top Folder Illustration Icon */}
+            <View style={styles.permFolderWrapper}>
+              <StoragePermissionFolderIcon width={125} height={144} />
+            </View>
+
+            {/* Title */}
+            <Text style={styles.permModalTitle}>Storage Permission !</Text>
+
+            {/* Description */}
+            <Text style={styles.permModalDesc}>
+              Allow Document Reader to access all your Documents on this Device ?
+            </Text>
+
+            {/* Allow Button */}
+            <TouchableOpacity
+              style={styles.permAllowBtn}
+              onPress={handleAllowPermission}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.permAllowBtnText}>Allow</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -943,6 +1034,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     fontFamily: 'Poppins-Medium',
+  },
+
+  // Storage Permission Modal Styles
+  permModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  permModalCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 28,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  permFolderWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  permModalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-Bold',
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  permModalDesc: {
+    fontSize: 13.5,
+    fontFamily: 'Poppins-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 20,
+    paddingHorizontal: 12,
+  },
+  permAllowBtn: {
+    backgroundColor: '#2563EB',
+    borderRadius: 28,
+    width: '100%',
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 28,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  permAllowBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    fontWeight: '600',
   },
 });
 
