@@ -620,6 +620,15 @@ const HomeScreen = ({ navigation }) => {
               onPress={handleAllowPermission}
               activeOpacity={0.85}
             >
+              <Svg width="100%" height="100%" style={StyleSheet.absoluteFillObject}>
+                <Defs>
+                  <LinearGradient id="permAllowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <Stop offset="0%" stopColor="#1A6CFA" />
+                    <Stop offset="100%" stopColor="#3FA5FC" />
+                  </LinearGradient>
+                </Defs>
+                <Rect width="100%" height="100%" rx={28} fill="url(#permAllowGrad)" />
+              </Svg>
               <Text style={styles.permAllowBtnText}>Allow</Text>
             </TouchableOpacity>
           </View>
@@ -1082,14 +1091,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   permAllowBtn: {
-    backgroundColor: '#2563EB',
     borderRadius: 28,
     width: '100%',
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 28,
-    shadowColor: '#2563EB',
+    overflow: 'hidden',
+    shadowColor: '#1A6CFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
