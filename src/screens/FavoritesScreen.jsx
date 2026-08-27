@@ -416,21 +416,21 @@ const FavoritesScreen = ({ navigation }) => {
               <View style={styles.menuSvgWrapper}>
                 <ShareIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>Share</Text>
+              <Text style={styles.menuText}>{t('Share')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleRenamePress}>
               <View style={styles.menuSvgWrapper}>
                 <RenameIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>Rename</Text>
+              <Text style={styles.menuText}>{t('Rename')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleAbout}>
               <View style={styles.menuSvgWrapper}>
                 <ChatInfoIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>About</Text>
+              <Text style={styles.menuText}>{t('About')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -450,10 +450,10 @@ const FavoritesScreen = ({ navigation }) => {
             />
             <View style={styles.renameActions}>
               <TouchableOpacity style={styles.renameBtn} onPress={() => setRenameVisible(false)}>
-                <Text style={styles.renameBtnText}>Cancel</Text>
+                <Text style={styles.renameBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.renameBtn, { backgroundColor: '#3B82F6', borderWidth: 0 }]} onPress={handleRenameSubmit}>
-                <Text style={[styles.renameBtnText, { color: '#FFFFFF' }]}>Rename</Text>
+                <Text style={[styles.renameBtnText, { color: '#FFFFFF' }]}>{t('Rename')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -534,24 +534,24 @@ const FavoritesScreen = ({ navigation }) => {
 
             <View style={styles.aboutDetailsBox}>
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>File Name:</Text>
+                <Text style={styles.aboutLabel}>{t('File Name:')}</Text>
                 <Text style={styles.aboutValue} numberOfLines={2}>{selectedFile?.name}</Text>
               </View>
 
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>Format:</Text>
+                <Text style={styles.aboutLabel}>{t('Format:')}</Text>
                 <View style={[styles.aboutFormatBadge, { backgroundColor: '#3B82F6' }]}>
                   <Text style={styles.aboutFormatText}>{(selectedFile?.format || selectedFile?.name?.split('.').pop() || 'FILE').toUpperCase()}</Text>
                 </View>
               </View>
 
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>File Size:</Text>
+                <Text style={styles.aboutLabel}>{t('File Size:')}</Text>
                 <Text style={styles.aboutValue}>{formatFileSize(selectedFile?.size || 0)}</Text>
               </View>
 
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>Location:</Text>
+                <Text style={styles.aboutLabel}>{t('Location:')}</Text>
                 <Text style={styles.aboutPathValue}>{formatDisplayPath(selectedFile?.path || selectedFile?.uri)}</Text>
               </View>
             </View>
@@ -570,7 +570,7 @@ const FavoritesScreen = ({ navigation }) => {
                 </Defs>
                 <Rect x="0" y="0" width="1" height="1" fill="url(#favAboutOkBtnGrad)" />
               </Svg>
-              <Text style={styles.aboutOkBtnText}>Done</Text>
+              <Text style={styles.aboutOkBtnText}>{t('Done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
