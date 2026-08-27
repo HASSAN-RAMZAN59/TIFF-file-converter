@@ -36,6 +36,18 @@ const ChevronLeftIcon = ({ size = 22, color = '#1E1E1E' }) => (
   </Svg>
 );
 
+const CheckCircleIcon = ({ size = 24, color = '#10B981' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 const RecycleBinScreen = ({ navigation }) => {
   const [binFiles, setBinFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +56,8 @@ const RecycleBinScreen = ({ navigation }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [emptyModalVisible, setEmptyModalVisible] = useState(false);
+  const [restoreSuccessModalVisible, setRestoreSuccessModalVisible] = useState(false);
+  const [restoredFileName, setRestoredFileName] = useState('');
 
   // Emptying Progress Indicator State
   const [emptyProgress, setEmptyProgress] = useState({
@@ -71,7 +85,11 @@ const RecycleBinScreen = ({ navigation }) => {
     const success = await restoreFromRecycleBin(item);
     if (success) {
       setBinFiles((prev) => prev.filter((f) => f.id !== item.id));
-      Alert.alert('Restored', `"${item.name}" has been restored.`);
+      setRestoredFileName(item.name);
+      setRestoreSuccessModalVisible(true);
+      setTimeout(() => {
+        setRestoreSuccessModalVisible(false);
+      }, 1500);
     } else {
       Alert.alert('Error', 'Could not restore file.');
     }
@@ -393,6 +411,26 @@ const RecycleBinScreen = ({ navigation }) => {
                 {emptyProgress.percentage}%
               </Text>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Restore Success Modal */}
+      <Modal
+        visible={restoreSuccessModalVisible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={[styles.modalDeleteIconCircle, { borderColor: '#D1FAE5', backgroundColor: '#ECFDF5' }]}>
+              <CheckCircleIcon size={28} color="#10B981" />
+            </View>
+
+            <Text style={styles.modalTitle}>File Restored</Text>
+            <Text style={[styles.modalDesc, { marginBottom: 4 }]}>
+              <Text style={styles.modalHighlight}>{restoredFileName}</Text> has been restored successfully.
+            </Text>
           </View>
         </View>
       </Modal>
