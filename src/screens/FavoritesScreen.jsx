@@ -22,6 +22,7 @@ import LottieView from 'lottie-react-native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import { moveToRecycleBin } from '../services/recycleBinService';
 import SearchIcon from '../assets/search.svg';
