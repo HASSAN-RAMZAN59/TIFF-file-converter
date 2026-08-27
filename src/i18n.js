@@ -167,7 +167,10 @@ const en = {
   "Files to": "Files to",
   "Rename": "Rename",
   "About": "About",
-  "Rename File": "Rename File"
+  "Rename File": "Rename File",
+  "Share with Friends": "Share with Friends",
+  "Rate Us": "Rate Us",
+  "Privacy Policy": "Privacy Policy"
 };
 
 // Hindi (hi)
@@ -327,7 +330,10 @@ const hi = {
   "Files to": "फ़ाइलों को",
   "Rename": "नाम बदलें",
   "About": "के बारे में",
-  "Rename File": "फ़ाइल का नाम बदलें"
+  "Rename File": "फ़ाइल का नाम बदलें",
+  "Share with Friends": "दोस्तों के साथ साझा करें",
+  "Rate Us": "हमें रेट करें",
+  "Privacy Policy": "गोपनीयता नीति"
 };
 
 // French (fr)
@@ -487,7 +493,10 @@ const fr = {
   "Files to": "Fichiers en",
   "Rename": "Renommer",
   "About": "À propos",
-  "Rename File": "Renommer le fichier"
+  "Rename File": "Renommer le fichier",
+  "Share with Friends": "Partager avec des amis",
+  "Rate Us": "Évaluez nous",
+  "Privacy Policy": "Politique de confidentialité"
 };
 
 // Arabic (ar)
@@ -647,7 +656,10 @@ const ar = {
   "Files to": "ملفات إلى",
   "Rename": "إعادة تسمية",
   "About": "حول",
-  "Rename File": "إعادة تسمية الملف"
+  "Rename File": "إعادة تسمية الملف",
+  "Share with Friends": "شارك مع الأصدقاء",
+  "Rate Us": "قيمنا",
+  "Privacy Policy": "سياسة الخصوصية"
 };
 
 // Italian (it)
@@ -807,7 +819,10 @@ const it = {
   "Files to": "File in",
   "Rename": "Rinomina",
   "About": "Informazioni",
-  "Rename File": "Rinomina file"
+  "Rename File": "Rinomina file",
+  "Share with Friends": "Condividi con gli amici",
+  "Rate Us": "Valutaci",
+  "Privacy Policy": "Informativa sulla privacy"
 };
 
 // Zulu (zu)
@@ -930,7 +945,10 @@ const zu = {
   "Files to": "Amafayela abe",
   "Rename": "Qamba kabusha",
   "About": "Mayelana",
-  "Rename File": "Qamba kabusha ifayela"
+  "Rename File": "Qamba kabusha ifayela",
+  "Share with Friends": "Yabelana nabangani",
+  "Rate Us": "Silinganisele",
+  "Privacy Policy": "Inqubomgomo yobumfihlo"
 };
 
 // Kalaallisut (kl)
@@ -1042,7 +1060,10 @@ const kl = {
   "Files to": "Fiilit uunga",
   "Rename": "Ateq allanngortiguk",
   "About": "Pillugu",
-  "Rename File": "Fiilip atia allanngortiguk"
+  "Rename File": "Fiilip atia allanngortiguk",
+  "Share with Friends": "Ikinngutinut ingerlateqqiuk",
+  "Rate Us": "Nalilersutigut",
+  "Privacy Policy": "Isumannaallisaanermut politikki"
 };
 
 // Dutch (nl)
@@ -1202,7 +1223,10 @@ const nl = {
   "Files to": "Bestanden naar",
   "Rename": "Hernoemen",
   "About": "Over",
-  "Rename File": "Bestand hernoemen"
+  "Rename File": "Bestand hernoemen",
+  "Share with Friends": "Deel met vrienden",
+  "Rate Us": "Beoordeel ons",
+  "Privacy Policy": "Privacybeleid"
 };
 
 // German (de)
@@ -1362,7 +1386,10 @@ const de = {
   "Files to": "Dateien in",
   "Rename": "Umbenennen",
   "About": "Über",
-  "Rename File": "Datei umbenennen"
+  "Rename File": "Datei umbenennen",
+  "Share with Friends": "Mit Freunden teilen",
+  "Rate Us": "Bewerten Sie uns",
+  "Privacy Policy": "Datenschutz-Bestimmungen"
 };
 
 const resources = {
