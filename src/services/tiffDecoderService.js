@@ -392,16 +392,15 @@ export const cropAndRotateImage = async ({
   // Encode as BMP buffer
   const bmpBuf = createBmpBuffer(croppedRgba, cropW, cropH);
 
-  // Save to output folder
-  const root = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
-  const outputDir = `${root}/TIFF_Converted`;
-  if (!(await RNFS.exists(outputDir))) {
-    await RNFS.mkdir(outputDir);
+  // Save to temporary cache folder (NOT TIFF_Converted) so it doesn't show in Recent Converted before user converts it
+  const cacheDir = `${RNFS.CachesDirectoryPath}/crop_cache`;
+  if (!(await RNFS.exists(cacheDir))) {
+    await RNFS.mkdir(cacheDir);
   }
 
   const baseFileName = (realPath.split('/').pop() || 'image').replace(/\.[^/.]+$/, '');
-  const outFileName = `Edited_${baseFileName}_${Date.now().toString().slice(-4)}.jpg`;
-  const outPath = `${outputDir}/${outFileName}`;
+  const outFileName = `Edited_${baseFileName}_${Date.now().toString().slice(-4)}.bmp`;
+  const outPath = `${cacheDir}/${outFileName}`;
 
   await RNFS.writeFile(outPath, bmpBuf.toString('base64'), 'base64');
 

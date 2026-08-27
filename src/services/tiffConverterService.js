@@ -421,13 +421,47 @@ function createBmpBuffer(rgba, width, height) {
   return buf;
 }
 
+const RECYCLE_BIN_METADATA_FILE = `${RNFS.DocumentDirectoryPath}/recycle_bin.json`;
+
+const getRecycleBinSet = async () => {
+  try {
+    const exists = await RNFS.exists(RECYCLE_BIN_METADATA_FILE);
+    if (!exists) return { paths: new Set(), names: new Set() };
+    const content = await RNFS.readFile(RECYCLE_BIN_METADATA_FILE, 'utf8');
+    const parsed = JSON.parse(content);
+    const paths = new Set();
+    const names = new Set();
+    if (Array.isArray(parsed)) {
+      parsed.forEach((b) => {
+        if (b.originalPath) paths.add(b.originalPath.replace(/^file:\/\//, ''));
+        if (b.name) names.add(b.name);
+        if (b.path) paths.add(b.path.replace(/^file:\/\//, ''));
+        if (b.id) names.add(b.id);
+      });
+    }
+    return { paths, names };
+  } catch (e) {
+    return { paths: new Set(), names: new Set() };
+  }
+};
+
 export const getConvertedFilesList = async () => {
   const outputDir = await getOutputDir();
   const exists = await RNFS.exists(outputDir);
   if (!exists) return [];
+
+  const { paths: binPaths, names: binNames } = await getRecycleBinSet();
+
   const items = await RNFS.readDir(outputDir);
   return items
-    .filter((item) => item.isFile() && (item.size || 0) > 0)
+    .filter((item) => {
+      if (!item.isFile() || (item.size || 0) <= 0) return false;
+      const cleanPath = item.path.replace(/^file:\/\//, '');
+      if (binPaths.has(cleanPath) || binNames.has(item.name)) {
+        return false;
+      }
+      return true;
+    })
     .map((item) => {
       const ext = item.name.split('.').pop().toLowerCase();
       return {

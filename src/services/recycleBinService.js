@@ -48,24 +48,69 @@ export const moveToRecycleBin = async (fileItem) => {
     if (!fileItem) return false;
     await ensureRecycleBinDir();
 
-    let originalPath = fileItem.path || (fileItem.uri ? fileItem.uri.replace('file://', '') : null);
+    let originalPath = fileItem.path || (fileItem.uri ? fileItem.uri : null);
+    if (originalPath && typeof originalPath === 'string') {
+      originalPath = originalPath.replace(/^file:\/\//, '');
+    }
+
     const fileName = fileItem.name || (originalPath ? originalPath.split('/').pop() : `file_${Date.now()}`);
     const binFileName = `${Date.now()}_${fileName}`;
     const binFilePath = `${RECYCLE_BIN_DIR}/${binFileName}`;
 
-    // Safely copy to sandbox recycle bin and remove original
+    const outputDir = await getOutputDir();
+    const fallbackPath = `${outputDir}/${fileName}`;
+
+    // Resolve working originalPath
+    let pathToDelete = null;
     if (originalPath && (await RNFS.exists(originalPath))) {
+      pathToDelete = originalPath;
+    } else if (await RNFS.exists(fallbackPath)) {
+      pathToDelete = fallbackPath;
+    }
+
+    // Safely move / copy to sandbox recycle bin and remove original
+    if (pathToDelete) {
       try {
-        await RNFS.copyFile(originalPath, binFilePath);
-        await RNFS.unlink(originalPath);
+        await RNFS.copyFile(pathToDelete, binFilePath);
+        await RNFS.unlink(pathToDelete);
       } catch (copyErr) {
-        // Fallback: read base64 and write
-        const base64 = await RNFS.readFile(originalPath, 'base64');
-        await RNFS.writeFile(binFilePath, base64, 'base64');
         try {
-          await RNFS.unlink(originalPath);
-        } catch (_) {}
+          const base64 = await RNFS.readFile(pathToDelete, 'base64');
+          await RNFS.writeFile(binFilePath, base64, 'base64');
+          await RNFS.unlink(pathToDelete);
+        } catch (readErr) {
+          console.warn('[recycleBinService] Error backing up file to bin:', readErr);
+        }
       }
+
+      // Ensure original file is removed from disk
+      if (await RNFS.exists(pathToDelete)) {
+        try {
+          await RNFS.unlink(pathToDelete);
+        } catch (unlinkErr) {
+          try {
+            await RNFS.writeFile(pathToDelete, '', 'utf8');
+          } catch (_) {}
+        }
+      }
+
+      // Also check fallback path if different
+      if (fallbackPath !== pathToDelete && (await RNFS.exists(fallbackPath))) {
+        try {
+          await RNFS.unlink(fallbackPath);
+        } catch (_) {
+          try {
+            await RNFS.writeFile(fallbackPath, '', 'utf8');
+          } catch (_) {}
+        }
+      }
+
+      // Notify Media Scanner so it disappears from gallery / media store
+      try {
+        if (RNFS.scanFile) {
+          await RNFS.scanFile(pathToDelete);
+        }
+      } catch (_) {}
     } else if (fileItem.uri && fileItem.uri.startsWith('data:image')) {
       const base64 = fileItem.uri.split(',')[1];
       await RNFS.writeFile(binFilePath, base64, 'base64');
@@ -75,7 +120,7 @@ export const moveToRecycleBin = async (fileItem) => {
     const newEntry = {
       id: binFileName,
       name: fileName,
-      originalPath: originalPath,
+      originalPath: pathToDelete || originalPath || fallbackPath,
       binPath: binFilePath,
       uri: `file://${binFilePath}`,
       size: fileItem.size || 0,
@@ -99,7 +144,15 @@ export const restoreFromRecycleBin = async (item) => {
   try {
     if (!item) return false;
     const outputDir = await getOutputDir();
-    const targetPath = item.originalPath || `${outputDir}/${item.name}`;
+    let targetPath = item.originalPath || `${outputDir}/${item.name}`;
+    if (targetPath && typeof targetPath === 'string') {
+      targetPath = targetPath.replace(/^file:\/\//, '');
+    }
+
+    let binPath = item.binPath || (item.uri ? item.uri : null);
+    if (binPath && typeof binPath === 'string') {
+      binPath = binPath.replace(/^file:\/\//, '');
+    }
 
     // Ensure target folder exists
     const lastSlash = targetPath.lastIndexOf('/');
@@ -111,7 +164,7 @@ export const restoreFromRecycleBin = async (item) => {
       }
     }
 
-    if (item.binPath && (await RNFS.exists(item.binPath))) {
+    if (binPath && (await RNFS.exists(binPath))) {
       // If target file already exists, remove it first
       if (await RNFS.exists(targetPath)) {
         try {
@@ -120,10 +173,10 @@ export const restoreFromRecycleBin = async (item) => {
       }
 
       try {
-        await RNFS.copyFile(item.binPath, targetPath);
+        await RNFS.copyFile(binPath, targetPath);
       } catch (cpErr) {
         // Fallback: binary base64 stream
-        const base64Data = await RNFS.readFile(item.binPath, 'base64');
+        const base64Data = await RNFS.readFile(binPath, 'base64');
         await RNFS.writeFile(targetPath, base64Data, 'base64');
       }
 
@@ -136,7 +189,7 @@ export const restoreFromRecycleBin = async (item) => {
 
       // Remove from bin directory
       try {
-        await RNFS.unlink(item.binPath);
+        await RNFS.unlink(binPath);
       } catch (_) {}
     }
 
@@ -155,9 +208,26 @@ export const restoreFromRecycleBin = async (item) => {
  */
 export const deletePermanentlyFromRecycleBin = async (item) => {
   try {
-    if (item.binPath && (await RNFS.exists(item.binPath))) {
-      await RNFS.unlink(item.binPath);
+    let binPath = item?.binPath || (item?.uri ? item.uri : null);
+    if (binPath && typeof binPath === 'string') {
+      binPath = binPath.replace(/^file:\/\//, '');
     }
+    if (binPath && (await RNFS.exists(binPath))) {
+      try {
+        await RNFS.unlink(binPath);
+      } catch (_) {}
+    }
+
+    let origPath = item?.originalPath;
+    if (origPath && typeof origPath === 'string') {
+      origPath = origPath.replace(/^file:\/\//, '');
+      if (await RNFS.exists(origPath)) {
+        try {
+          await RNFS.unlink(origPath);
+        } catch (_) {}
+      }
+    }
+
     const currentBin = await getRecycleBinFiles();
     const updatedList = currentBin.filter((f) => f.id !== item.id);
     await saveRecycleBinMetadata(updatedList);
@@ -176,7 +246,18 @@ export const emptyRecycleBin = async () => {
     const list = await getRecycleBinFiles();
     for (const item of list) {
       if (item.binPath && (await RNFS.exists(item.binPath))) {
-        await RNFS.unlink(item.binPath);
+        try {
+          await RNFS.unlink(item.binPath);
+        } catch (_) {}
+      }
+      let origPath = item?.originalPath;
+      if (origPath && typeof origPath === 'string') {
+        origPath = origPath.replace(/^file:\/\//, '');
+        if (await RNFS.exists(origPath)) {
+          try {
+            await RNFS.unlink(origPath);
+          } catch (_) {}
+        }
       }
     }
     await saveRecycleBinMetadata([]);

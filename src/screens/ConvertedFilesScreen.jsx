@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,8 +16,9 @@ import {
   Platform,
   Image,
   ScrollView,
+  BackHandler,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
@@ -34,6 +35,18 @@ import ShareIcon from '../assets/share.svg';
 import RenameIcon from '../assets/drive_file_rename.svg';
 import ChatInfoIcon from '../assets/chat_info.svg';
 
+const CheckmarkIcon = ({ size = 12, color = '#FFFFFF' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M20 6L9 17L4 12"
+      stroke={color}
+      strokeWidth="3.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 const ConvertedFilesScreen = ({ navigation }) => {
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [favoritesSet, setFavoritesSet] = useState(new Set());
@@ -41,6 +54,11 @@ const ConvertedFilesScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Multi-Selection State
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedFileKeys, setSelectedFileKeys] = useState(new Set());
+  const [multiDeleteModalVisible, setMultiDeleteModalVisible] = useState(false);
 
   // Menu State
   const [menuVisible, setMenuVisible] = useState(false);
@@ -58,6 +76,20 @@ const ConvertedFilesScreen = ({ navigation }) => {
 
   // Delete Confirm Modal State
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  // Handle hardware back button in selection mode
+  useEffect(() => {
+    const backAction = () => {
+      if (isSelectionMode) {
+        setIsSelectionMode(false);
+        setSelectedFileKeys(new Set());
+        return true;
+      }
+      return false;
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [isSelectionMode]);
 
   useFocusEffect(
     useCallback(() => {
@@ -250,6 +282,87 @@ const ConvertedFilesScreen = ({ navigation }) => {
       )
     : convertedFiles;
 
+  const handleItemLongPress = (item) => {
+    const key = item.path || item.id || item.uri;
+    if (!isSelectionMode) {
+      setIsSelectionMode(true);
+      setSelectedFileKeys(new Set([key]));
+    } else {
+      toggleSelectFile(key);
+    }
+  };
+
+  const toggleSelectFile = (key) => {
+    setSelectedFileKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllToggle = () => {
+    if (selectedFileKeys.size === filteredFiles.length && filteredFiles.length > 0) {
+      setSelectedFileKeys(new Set());
+    } else {
+      const allKeys = filteredFiles.map((f) => f.path || f.id || f.uri).filter(Boolean);
+      setSelectedFileKeys(new Set(allKeys));
+    }
+  };
+
+  const exitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedFileKeys(new Set());
+  };
+
+  const handleDeleteSelectedPress = () => {
+    if (selectedFileKeys.size === 0) {
+      Alert.alert('Selection', 'Please select at least one file to delete.');
+      return;
+    }
+    setMultiDeleteModalVisible(true);
+  };
+
+  const handleConfirmMultiDelete = async () => {
+    setMultiDeleteModalVisible(false);
+    const itemsToDelete = convertedFiles.filter((f) =>
+      selectedFileKeys.has(f.path || f.id || f.uri)
+    );
+    if (itemsToDelete.length === 0) {
+      exitSelectionMode();
+      return;
+    }
+    try {
+      for (const file of itemsToDelete) {
+        await moveToRecycleBin(file);
+        if (favoritesSet.has(file.path) || favoritesSet.has(file.id) || favoritesSet.has(file.uri)) {
+          await toggleFavorite(file);
+        }
+      }
+      const updatedFiles = convertedFiles.filter(
+        (f) => !selectedFileKeys.has(f.path || f.id || f.uri)
+      );
+      setConvertedFiles(updatedFiles);
+      setFavoritesSet((prev) => {
+        const next = new Set(prev);
+        itemsToDelete.forEach((f) => {
+          next.delete(f.path);
+          next.delete(f.id);
+          next.delete(f.uri);
+        });
+        return next;
+      });
+    } catch (err) {
+      console.warn('Multi delete error:', err);
+      Alert.alert('Error', 'An error occurred while deleting files.');
+    } finally {
+      exitSelectionMode();
+    }
+  };
+
   const renderFileItem = ({ item, index }) => {
     const isLast = index === filteredFiles.length - 1;
     const fmt = (item.format || (item.name ? item.name.split('.').pop() : '')).toUpperCase();
@@ -259,13 +372,27 @@ const ConvertedFilesScreen = ({ navigation }) => {
       fmt === 'WEBP' ? '#867AE3' :
       fmt === 'PNG' ? '#2676D9' :
       fmt === 'TIFF' || fmt === 'TIF' ? '#EAB308' : '#0E8131';
+    const fileKey = item.path || item.id || item.uri;
     const isFav = favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri);
+    const isSelected = selectedFileKeys.has(fileKey);
 
     return (
       <TouchableOpacity 
-        style={[styles.fileItem, !isLast && styles.fileItemBorder]} 
+        style={[
+          styles.fileItem,
+          !isLast && styles.fileItemBorder,
+          isSelected && styles.fileItemSelected,
+        ]} 
         activeOpacity={0.7}
-        onPress={() => handleFilePress(item)}
+        onPress={() => {
+          if (isSelectionMode) {
+            toggleSelectFile(fileKey);
+          } else {
+            handleFilePress(item);
+          }
+        }}
+        onLongPress={() => handleItemLongPress(item)}
+        delayLongPress={300}
       >
         
         <View style={styles.thumbnailWrapper}>
@@ -292,7 +419,18 @@ const ConvertedFilesScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        <View style={styles.actionsWrapper}>
+        {isSelectionMode ? (
+          <View style={styles.checkboxWrapper}>
+            {isSelected ? (
+              <View style={styles.checkedCircle}>
+                <CheckmarkIcon size={12} color="#FFFFFF" />
+              </View>
+            ) : (
+              <View style={styles.uncheckedCircle} />
+            )}
+          </View>
+        ) : (
+          <View style={styles.actionsWrapper}>
             <TouchableOpacity 
               style={styles.actionBtn} 
               onPress={() => handleToggleFavorite(item)}
@@ -321,6 +459,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
              <MoreVertIcon width={18} height={18} fill="#111827" />
            </TouchableOpacity>
         </View>
+        )}
 
       </TouchableOpacity>
     );
@@ -330,43 +469,88 @@ const ConvertedFilesScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
       
-      <View style={styles.header}>
-        {isSearchOpen ? (
-          <View style={styles.searchBarRow}>
-            <SearchIcon width={18} height={18} fill="#6B7280" />
-            <TextInput
-              style={styles.headerSearchInput}
-              placeholder="Search converted files..."
-              placeholderTextColor="#9CA3AF"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoFocus
-            />
-            <TouchableOpacity 
-              style={styles.closeSearchBtn} 
-              onPress={() => {
-                setIsSearchOpen(false);
-                setSearchQuery('');
-              }}
+      {isSelectionMode ? (
+        <View style={styles.selectionHeader}>
+          <View style={styles.selectionHeaderLeft}>
+            <TouchableOpacity
+              style={styles.closeSelectionBtn}
+              onPress={exitSelectionMode}
+              activeOpacity={0.7}
             >
-              <Text style={styles.closeSearchText}>✕</Text>
+              <Text style={styles.closeSelectionText}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.selectionCountText}>
+              {selectedFileKeys.size} Selected
+            </Text>
+          </View>
+          <View style={styles.selectionHeaderRight}>
+            <TouchableOpacity
+              style={styles.selectAllHeaderBtn}
+              onPress={handleSelectAllToggle}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.selectAllHeaderText}>
+                {selectedFileKeys.size === filteredFiles.length && filteredFiles.length > 0
+                  ? 'Deselect All'
+                  : 'Select All'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.deleteSelectedHeaderBtn,
+                selectedFileKeys.size === 0 && styles.deleteSelectedHeaderBtnDisabled,
+              ]}
+              onPress={handleDeleteSelectedPress}
+              activeOpacity={0.7}
+              disabled={selectedFileKeys.size === 0}
+            >
+              <DeleteIcon
+                width={20}
+                height={20}
+                fill={selectedFileKeys.size === 0 ? '#9CA3AF' : '#EF4444'}
+              />
             </TouchableOpacity>
           </View>
-        ) : (
-          <>
-            <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>Recent Converted</Text>
+        </View>
+      ) : (
+        <View style={styles.header}>
+          {isSearchOpen ? (
+            <View style={styles.searchBarRow}>
+              <SearchIcon width={18} height={18} fill="#6B7280" />
+              <TextInput
+                style={styles.headerSearchInput}
+                placeholder="Search converted files..."
+                placeholderTextColor="#9CA3AF"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+              />
+              <TouchableOpacity 
+                style={styles.closeSearchBtn} 
+                onPress={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery('');
+                }}
+              >
+                <Text style={styles.closeSearchText}>✕</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity 
-              style={styles.searchBtn} 
-              activeOpacity={0.7}
-              onPress={() => setIsSearchOpen(true)}
-            >
-              <SearchIcon width={20} height={20} fill="#111827" />
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
+          ) : (
+            <>
+              <View style={styles.headerLeft}>
+                <Text style={styles.headerTitle}>Recent Converted</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.searchBtn} 
+                activeOpacity={0.7}
+                onPress={() => setIsSearchOpen(true)}
+              >
+                <SearchIcon width={20} height={20} fill="#111827" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
 
       {isLoading ? (
         <View style={styles.loadingBox}>
@@ -618,6 +802,53 @@ const ConvertedFilesScreen = ({ navigation }) => {
         </View>
       </Modal>
 
+      {/* Multi-Delete Confirmation Modal */}
+      <Modal
+        visible={multiDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMultiDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalBackdropTap} 
+            activeOpacity={1} 
+            onPress={() => setMultiDeleteModalVisible(false)} 
+          />
+          
+          <View style={styles.deleteModalCard}>
+            <View style={styles.deleteIconCircle}>
+              <DeleteIcon width={24} height={24} fill="#EF4444" />
+            </View>
+
+            <Text style={styles.deleteModalTitle}>
+              Delete {selectedFileKeys.size} {selectedFileKeys.size === 1 ? 'File' : 'Files'}?
+            </Text>
+            <Text style={styles.deleteModalDesc}>
+              Are you sure you want to move {selectedFileKeys.size} selected {selectedFileKeys.size === 1 ? 'file' : 'files'} to Recycle Bin?
+            </Text>
+
+            <View style={styles.deleteActionsRow}>
+              <TouchableOpacity 
+                style={styles.deleteCancelBtn} 
+                onPress={() => setMultiDeleteModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.deleteCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.deleteConfirmBtn} 
+                onPress={handleConfirmMultiDelete}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.deleteConfirmBtnText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -634,6 +865,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
+  },
+  selectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  selectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  closeSelectionBtn: {
+    padding: 6,
+    marginRight: 10,
+  },
+  closeSelectionText: {
+    fontSize: 16,
+    color: '#4B5563',
+    fontFamily: 'Poppins-Medium',
+  },
+  selectionCountText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1E1E1E',
+  },
+  selectionHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectAllHeaderBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+  },
+  selectAllHeaderText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
+  },
+  deleteSelectedHeaderBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteSelectedHeaderBtnDisabled: {
+    opacity: 0.4,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -709,9 +999,34 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
+  fileItemSelected: {
+    backgroundColor: '#EFF6FF',
+  },
   fileItemBorder: {
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+  },
+  checkboxWrapper: {
+    paddingLeft: 8,
+    paddingRight: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkedCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uncheckedCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    backgroundColor: 'transparent',
   },
   thumbnailWrapper: {
     position: 'relative',

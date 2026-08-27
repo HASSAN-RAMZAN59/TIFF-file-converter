@@ -262,7 +262,7 @@ const PreviewScreen = ({ route, navigation }) => {
           if (route.params?.fromScreen === 'PickFilesScreen') {
             navigation.navigate('PickFilesScreen', { editedFile: result });
           } else {
-            Alert.alert('Saved', `Edited image saved successfully as ${result.name}`);
+            Alert.alert('Crop Applied', 'Cropped preview updated.');
           }
         } catch (err) {
           console.warn('Error saving cropped image:', err);

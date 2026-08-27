@@ -20,7 +20,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 import { checkOsStoragePermission, requestOsStoragePermissionDialog } from '../services/permissionService';
-import Svg, { Circle, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
 import ArrowForwardIcon from '../assets/arrow_forward.svg';
 import StorageBannerIllustration from '../assets/storage_banner.svg';
 import PieChartIcon from '../assets/pie_chart_icon.svg';
@@ -34,14 +34,28 @@ import HeartFilledIcon from '../assets/heart_filled.svg';
 import HeartOutlineIcon from '../assets/heart_outline.svg';
 import MoreVertIcon from '../assets/more_vert.svg';
 import SearchIcon from '../assets/search.svg';
+import DeleteIcon from '../assets/delete.svg';
 import StoragePermissionFolderIcon from '../assets/storage_permission_icon.svg';
 import { isTiffFile } from '../services/tiffScannerService';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import { moveToRecycleBin } from '../services/recycleBinService';
 import { getAutoResumeEnabled } from '../services/settingsService';
 import { getActiveBatchQueue, clearActiveBatchQueue } from '../services/batchQueueService';
 
 const { width } = Dimensions.get('window');
+
+const CheckmarkIcon = ({ size = 12, color = '#FFFFFF' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M20 6L9 17L4 12"
+      stroke={color}
+      strokeWidth="3.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
 
 const HomeScreen = ({ navigation }) => {
   // Storage State
@@ -61,6 +75,11 @@ const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
+
+  // Multi-Selection State for Recent Converted
+  const [recentSelectionMode, setRecentSelectionMode] = useState(false);
+  const [selectedRecentKeys, setSelectedRecentKeys] = useState(new Set());
+  const [multiDeleteRecentModalVisible, setMultiDeleteRecentModalVisible] = useState(false);
 
   const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 GB';
@@ -131,6 +150,75 @@ const HomeScreen = ({ navigation }) => {
       }
       return next;
     });
+  };
+
+  const handleRecentLongPress = (item) => {
+    const key = item.path || item.id || item.uri;
+    if (!recentSelectionMode) {
+      setRecentSelectionMode(true);
+      setSelectedRecentKeys(new Set([key]));
+    } else {
+      toggleRecentSelect(key);
+    }
+  };
+
+  const toggleRecentSelect = (key) => {
+    setSelectedRecentKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const handleRecentSelectAllToggle = () => {
+    if (selectedRecentKeys.size === filteredRecentFiles.length && filteredRecentFiles.length > 0) {
+      setSelectedRecentKeys(new Set());
+    } else {
+      const allKeys = filteredRecentFiles.map((f) => f.path || f.id || f.uri).filter(Boolean);
+      setSelectedRecentKeys(new Set(allKeys));
+    }
+  };
+
+  const exitRecentSelectionMode = () => {
+    setRecentSelectionMode(false);
+    setSelectedRecentKeys(new Set());
+  };
+
+  const handleRecentMultiDeletePress = () => {
+    if (selectedRecentKeys.size === 0) {
+      Alert.alert('Selection', 'Please select at least one file to delete.');
+      return;
+    }
+    setMultiDeleteRecentModalVisible(true);
+  };
+
+  const handleConfirmRecentMultiDelete = async () => {
+    setMultiDeleteRecentModalVisible(false);
+    const itemsToDelete = recentFiles.filter((f) =>
+      selectedRecentKeys.has(f.path || f.id || f.uri)
+    );
+    if (itemsToDelete.length === 0) {
+      exitRecentSelectionMode();
+      return;
+    }
+    try {
+      for (const file of itemsToDelete) {
+        await moveToRecycleBin(file);
+        if (favoritesSet.has(file.path) || favoritesSet.has(file.id) || favoritesSet.has(file.uri)) {
+          await toggleFavorite(file);
+        }
+      }
+      await loadAllData();
+    } catch (err) {
+      console.warn('Recent multi delete error:', err);
+      Alert.alert('Error', 'An error occurred while deleting files.');
+    } finally {
+      exitRecentSelectionMode();
+    }
   };
 
   const checkAndAutoResumeBatch = useCallback(async () => {
@@ -452,14 +540,59 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Recent Converted Files */}
         <View style={styles.recentSection}>
-          <View style={styles.recentHeader}>
-            <Text style={styles.recentTitle}>
-              {searchQuery.trim() ? `Search Results (${filteredRecentFiles.length})` : 'Recent Converted'}
-            </Text>
-            <TouchableOpacity onPress={handleConvertedOutputsPress}>
-              <Text style={styles.viewAll}>View All {'>'}</Text>
-            </TouchableOpacity>
-          </View>
+          {recentSelectionMode ? (
+            <View style={styles.recentSelectionHeader}>
+              <View style={styles.recentSelectionHeaderLeft}>
+                <TouchableOpacity
+                  style={styles.recentCloseSelectionBtn}
+                  onPress={exitRecentSelectionMode}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.recentCloseSelectionText}>✕</Text>
+                </TouchableOpacity>
+                <Text style={styles.recentSelectionCountText}>
+                  {selectedRecentKeys.size} Selected
+                </Text>
+              </View>
+              <View style={styles.recentSelectionHeaderRight}>
+                <TouchableOpacity
+                  style={styles.recentSelectAllBtn}
+                  onPress={handleRecentSelectAllToggle}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.recentSelectAllText}>
+                    {selectedRecentKeys.size === filteredRecentFiles.length && filteredRecentFiles.length > 0
+                      ? 'Deselect All'
+                      : 'Select All'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.recentDeleteBtn,
+                    selectedRecentKeys.size === 0 && styles.recentDeleteBtnDisabled,
+                  ]}
+                  onPress={handleRecentMultiDeletePress}
+                  activeOpacity={0.7}
+                  disabled={selectedRecentKeys.size === 0}
+                >
+                  <DeleteIcon
+                    width={18}
+                    height={18}
+                    fill={selectedRecentKeys.size === 0 ? '#9CA3AF' : '#EF4444'}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.recentHeader}>
+              <Text style={styles.recentTitle}>
+                {searchQuery.trim() ? `Search Results (${filteredRecentFiles.length})` : 'Recent Converted'}
+              </Text>
+              <TouchableOpacity onPress={handleConvertedOutputsPress}>
+                <Text style={styles.viewAll}>View All {'>'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {filteredRecentFiles.length === 0 ? (
             <Text style={styles.emptyRecentText}>
@@ -477,13 +610,27 @@ const HomeScreen = ({ navigation }) => {
               const isLast = index === filteredRecentFiles.length - 1;
               const timeString = new Date(item.mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const sizeMB = (item.size / 1024 / 1024).toFixed(1) + ' MB';
+              const fileKey = item.path || item.id || item.uri;
+              const isSelected = selectedRecentKeys.has(fileKey);
 
               return (
                 <TouchableOpacity
-                  key={item.id}
-                  style={[styles.recentItem, !isLast && styles.recentItemBorder]}
+                  key={item.id || item.path || index.toString()}
+                  style={[
+                    styles.recentItem,
+                    !isLast && styles.recentItemBorder,
+                    isSelected && styles.recentItemSelected,
+                  ]}
                   activeOpacity={0.7}
-                  onPress={() => handleFilePress(item)}
+                  onPress={() => {
+                    if (recentSelectionMode) {
+                      toggleRecentSelect(fileKey);
+                    } else {
+                      handleFilePress(item);
+                    }
+                  }}
+                  onLongPress={() => handleRecentLongPress(item)}
+                  delayLongPress={300}
                 >
                   {/* Thumbnail */}
                   <View style={styles.thumbnailWrapper}>
@@ -509,39 +656,99 @@ const HomeScreen = ({ navigation }) => {
                       {item.format} . {sizeMB} . {timeString}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    style={styles.recentActionBtn}
-                    onPress={() => handleToggleFavorite(item)}
-                    activeOpacity={0.6}
-                  >
-                    {favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri) ? (
-                      <HeartFilledIcon
-                        width={18}
-                        height={18}
-                        color="#2563EB"
-                        fill="#2563EB"
-                      />
-                    ) : (
-                      <HeartOutlineIcon
-                        width={18}
-                        height={18}
-                        color="#9CA3AF"
-                      />
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.recentActionBtn}
-                    onPress={handleConvertedOutputsPress}
-                    activeOpacity={0.6}
-                  >
-                    <MoreVertIcon width={20} height={20} fill="#111827" />
-                  </TouchableOpacity>
+                  
+                  {recentSelectionMode ? (
+                    <View style={styles.recentCheckboxWrapper}>
+                      {isSelected ? (
+                        <View style={styles.recentCheckedCircle}>
+                          <CheckmarkIcon size={12} color="#FFFFFF" />
+                        </View>
+                      ) : (
+                        <View style={styles.recentUncheckedCircle} />
+                      )}
+                    </View>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.recentActionBtn}
+                        onPress={() => handleToggleFavorite(item)}
+                        activeOpacity={0.6}
+                      >
+                        {favoritesSet.has(item.path) || favoritesSet.has(item.id) || favoritesSet.has(item.uri) ? (
+                          <HeartFilledIcon
+                            width={18}
+                            height={18}
+                            color="#2563EB"
+                            fill="#2563EB"
+                          />
+                        ) : (
+                          <HeartOutlineIcon
+                            width={18}
+                            height={18}
+                            color="#9CA3AF"
+                          />
+                        )}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.recentActionBtn}
+                        onPress={handleConvertedOutputsPress}
+                        activeOpacity={0.6}
+                      >
+                        <MoreVertIcon width={20} height={20} fill="#111827" />
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </TouchableOpacity>
               );
             })
           )}
         </View>
       </ScrollView>
+
+      {/* Recent Converted Multi-Delete Confirmation Modal */}
+      <Modal
+        visible={multiDeleteRecentModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMultiDeleteRecentModalVisible(false)}
+      >
+        <View style={styles.previewModalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdropTap}
+            activeOpacity={1}
+            onPress={() => setMultiDeleteRecentModalVisible(false)}
+          />
+          <View style={styles.recentDeleteModalCard}>
+            <View style={styles.recentDeleteIconCircle}>
+              <DeleteIcon width={24} height={24} fill="#EF4444" />
+            </View>
+
+            <Text style={styles.recentDeleteModalTitle}>
+              Delete {selectedRecentKeys.size} {selectedRecentKeys.size === 1 ? 'File' : 'Files'}?
+            </Text>
+            <Text style={styles.recentDeleteModalDesc}>
+              Are you sure you want to move {selectedRecentKeys.size} selected {selectedRecentKeys.size === 1 ? 'file' : 'files'} to the Recycle Bin?
+            </Text>
+
+            <View style={styles.recentDeleteActionsRow}>
+              <TouchableOpacity
+                style={styles.recentDeleteCancelBtn}
+                onPress={() => setMultiDeleteRecentModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.recentDeleteCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.recentDeleteConfirmBtn}
+                onPress={handleConfirmRecentMultiDelete}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.recentDeleteConfirmBtnText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Image Preview Modal */}
       <Modal
@@ -902,6 +1109,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  recentSelectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  recentSelectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recentCloseSelectionBtn: {
+    padding: 4,
+    marginRight: 6,
+  },
+  recentCloseSelectionText: {
+    fontSize: 15,
+    color: '#4B5563',
+    fontFamily: 'Poppins-Medium',
+  },
+  recentSelectionCountText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1E1E1E',
+  },
+  recentSelectionHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  recentSelectAllBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#EFF6FF',
+  },
+  recentSelectAllText: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
+  },
+  recentDeleteBtn: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recentDeleteBtnDisabled: {
+    opacity: 0.4,
+  },
   recentTitle: {
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
@@ -917,9 +1177,109 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
+  recentItemSelected: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+  },
   recentItemBorder: {
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+  },
+  recentCheckboxWrapper: {
+    paddingLeft: 8,
+    paddingRight: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recentCheckedCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recentUncheckedCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    backgroundColor: 'transparent',
+  },
+  recentDeleteModalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  recentDeleteIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recentDeleteModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Medium',
+    color: '#1E1E1E',
+    marginBottom: 8,
+  },
+  recentDeleteModalDesc: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  recentDeleteActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  recentDeleteCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recentDeleteCancelBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#4B5563',
+  },
+  recentDeleteConfirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  recentDeleteConfirmBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#FFFFFF',
   },
   recentItemBody: {
     flex: 1,
