@@ -5,7 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
   Image,
   ActivityIndicator,
@@ -150,7 +150,8 @@ const RecycleBinScreen = ({ navigation }) => {
     return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   };
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
+    const isLast = index === binFiles.length - 1;
     const isImage = item.format !== 'PDF' && (item.uri || item.binPath);
     const fmt = (item.format || 'TIFF').toUpperCase();
     const formatColor =
@@ -161,7 +162,7 @@ const RecycleBinScreen = ({ navigation }) => {
       fmt === 'TIFF' || fmt === 'TIF' ? '#EAB308' : '#0E8131';
 
     return (
-      <View style={styles.fileCard}>
+      <View style={[styles.fileCard, !isLast && styles.fileCardBorder]}>
         {/* Thumbnail */}
         <View style={styles.thumbnailWrapper}>
           {isImage ? (
@@ -250,13 +251,19 @@ const RecycleBinScreen = ({ navigation }) => {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={binFiles}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-        />
+        >
+          <View style={styles.cardContainer}>
+            {binFiles.map((item, index) => (
+              <React.Fragment key={item.id || index.toString()}>
+                {renderItem({ item, index })}
+              </React.Fragment>
+            ))}
+          </View>
+        </ScrollView>
       )}
 
       {/* Delete Permanently Modal */}
@@ -455,16 +462,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
-  listContent: {
-    padding: 16,
-    gap: 12,
+  scrollContainer: {
+    flex: 1,
   },
-  fileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  cardContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
@@ -472,6 +480,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 2,
+  },
+  fileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  fileCardBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   thumbnailWrapper: {
     position: 'relative',
