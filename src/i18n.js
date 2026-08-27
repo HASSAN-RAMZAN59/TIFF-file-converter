@@ -153,7 +153,10 @@ const en = {
   "View All": "View All",
   "Delete File?": "Delete File?",
   "Are you sure you want to permanently delete": "Are you sure you want to permanently delete",
-  "This action cannot be undone.": "This action cannot be undone."
+  "This action cannot be undone.": "This action cannot be undone.",
+  "Batch Conversion": "Batch Conversion",
+  "TIFF files selected": "TIFF files selected",
+  "Choose Output Format": "Choose Output Format"
 };
 
 // Hindi (hi)
@@ -299,7 +302,10 @@ const hi = {
   "View All": "सभी देखें",
   "Delete File?": "फ़ाइल हटाएं?",
   "Are you sure you want to permanently delete": "क्या आप वाकई स्थायी रूप से हटाना चाहते हैं",
-  "This action cannot be undone.": "इस कार्रवाई को पूर्ववत नहीं किया जा सकता।"
+  "This action cannot be undone.": "इस कार्रवाई को पूर्ववत नहीं किया जा सकता।",
+  "Batch Conversion": "बैच रूपांतरण",
+  "TIFF files selected": "TIFF फ़ाइलें चुनी गईं",
+  "Choose Output Format": "आउटपुट स्वरूप चुनें"
 };
 
 // French (fr)
@@ -445,7 +451,10 @@ const fr = {
   "View All": "Tout afficher",
   "Delete File?": "Supprimer le fichier?",
   "Are you sure you want to permanently delete": "Êtes-vous sûr de vouloir supprimer définitivement",
-  "This action cannot be undone.": "Cette action ne peut pas être annulée."
+  "This action cannot be undone.": "Cette action ne peut pas être annulée.",
+  "Batch Conversion": "Conversion par lots",
+  "TIFF files selected": "fichiers TIFF sélectionnés",
+  "Choose Output Format": "Choisissez le format de sortie"
 };
 
 // Arabic (ar)
@@ -591,7 +600,10 @@ const ar = {
   "View All": "عرض الكل",
   "Delete File?": "حذف الملف؟",
   "Are you sure you want to permanently delete": "هل أنت متأكد أنك تريد الحذف نهائيًا",
-  "This action cannot be undone.": "لا يمكن التراجع عن هذا الإجراء."
+  "This action cannot be undone.": "لا يمكن التراجع عن هذا الإجراء.",
+  "Batch Conversion": "تحويل دفعة",
+  "TIFF files selected": "ملفات TIFF المحددة",
+  "Choose Output Format": "اختر صيغة الإخراج"
 };
 
 // Italian (it)
@@ -737,7 +749,10 @@ const it = {
   "View All": "Vedi Tutti",
   "Delete File?": "Eliminare il file?",
   "Are you sure you want to permanently delete": "Sei sicuro di voler eliminare in modo permanente",
-  "This action cannot be undone.": "Questa azione non può essere annullata."
+  "This action cannot be undone.": "Questa azione non può essere annullata.",
+  "Batch Conversion": "Conversione in batch",
+  "TIFF files selected": "file TIFF selezionati",
+  "Choose Output Format": "Scegli il formato di output"
 };
 
 // Zulu (zu)
@@ -846,7 +861,10 @@ const zu = {
   "View All": "Buka Konke",
   "Delete File?": "Susa Ifayela?",
   "Are you sure you want to permanently delete": "Uqinisekile ukuthi ufuna ukususa unomphela",
-  "This action cannot be undone.": "Lesi senzo asikwazi ukuhlehliswa."
+  "This action cannot be undone.": "Lesi senzo asikwazi ukuhlehliswa.",
+  "Batch Conversion": "Ukuguqulwa Kweqoqo",
+  "TIFF files selected": "amafayela we-TIFF akhethiwe",
+  "Choose Output Format": "Khetha Ifomethi Yokukhipha"
 };
 
 // Kalaallisut (kl)
@@ -944,7 +962,10 @@ const kl = {
   "View All": "Tamarmik Takuuk",
   "Delete File?": "Fiili Piissava?",
   "Are you sure you want to permanently delete": "Qulakkeerpiuk ataavartumik piissagakku",
-  "This action cannot be undone.": "Iliuuseq utertinneqarsinnaanngilaq."
+  "This action cannot be undone.": "Iliuuseq utertinneqarsinnaanngilaq.",
+  "Batch Conversion": "Ataatsimoortillugit Allanngortinneri",
+  "TIFF files selected": "TIFF fiilit toqqakkat",
+  "Choose Output Format": "Output Format Toqqaruk"
 };
 
 // Dutch (nl)
@@ -1090,7 +1111,10 @@ const nl = {
   "View All": "Alles Bekijken",
   "Delete File?": "Bestand Verwijderen?",
   "Are you sure you want to permanently delete": "Weet u zeker dat u dit permanent wilt verwijderen",
-  "This action cannot be undone.": "Deze actie kan niet ongedaan worden gemaakt."
+  "This action cannot be undone.": "Deze actie kan niet ongedaan worden gemaakt.",
+  "Batch Conversion": "Batchconversie",
+  "TIFF files selected": "TIFF-bestanden geselecteerd",
+  "Choose Output Format": "Kies Uitvoerformaat"
 };
 
 // German (de)
@@ -1236,7 +1260,10 @@ const de = {
   "View All": "Alle ansehen",
   "Delete File?": "Datei löschen?",
   "Are you sure you want to permanently delete": "Möchten Sie diese Datei wirklich unwiderruflich löschen",
-  "This action cannot be undone.": "Diese Aktion kann nicht rückgängig gemacht werden."
+  "This action cannot be undone.": "Diese Aktion kann nicht rückgängig gemacht werden.",
+  "Batch Conversion": "Stapelkonvertierung",
+  "TIFF files selected": "TIFF-Dateien ausgewählt",
+  "Choose Output Format": "Ausgabeformat wählen"
 };
 
 const resources = {
