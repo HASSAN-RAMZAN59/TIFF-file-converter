@@ -142,18 +142,34 @@ const FavoritesScreen = ({ navigation }) => {
     const file = selectedFile;
     closeMenu();
     try {
-      const fileUri = file.uri && file.uri.startsWith('file://') ? file.uri : `file://${file.path}`;
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      let shareUrl = null;
+      if (file?.path) {
+        shareUrl = file.path.startsWith('file://') || file.path.startsWith('content://') 
+          ? file.path 
+          : `file://${file.path}`;
+      } else if (file?.uri) {
+        shareUrl = file.uri.startsWith('file://') || file.uri.startsWith('content://')
+          ? file.uri
+          : `file://${file.uri}`;
+      }
+
+      if (!shareUrl) {
+        Alert.alert(t('Error'), t('File does not exist or is inaccessible.'));
+        return;
+      }
+
+      const ext = (file.name?.split('.').pop() || 'jpg').toLowerCase();
       const mimeType = ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
 
       await Share.open({
-        url: fileUri,
+        url: shareUrl,
         type: mimeType,
         title: file.name,
         filename: file.name,
+        failOnCancel: false,
       });
     } catch (error) {
-      if (error && error.message && !error.message.includes('User did not share')) {
+      if (error && error.message && !error.message.includes('User did not share') && !error.message.includes('dismissed') && !error.message.includes('Canceled')) {
         console.warn('Share error:', error);
       }
     }
