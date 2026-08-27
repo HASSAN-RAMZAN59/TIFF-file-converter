@@ -223,9 +223,28 @@ export const deletePermanentlyFromRecycleBin = async (item) => {
       origPath = origPath.replace(/^file:\/\//, '');
       if (await RNFS.exists(origPath)) {
         try {
+          // Overwrite with empty string to corrupt it before delete
+          await RNFS.writeFile(origPath, '', 'utf8');
           await RNFS.unlink(origPath);
-        } catch (_) {}
+        } catch (_) {
+          try { await RNFS.unlink(origPath); } catch (_) {}
+        }
       }
+
+      // Try to find and delete any .trashed Android OS variants in the same folder
+      try {
+        const folder = origPath.substring(0, origPath.lastIndexOf('/'));
+        const fileName = origPath.substring(origPath.lastIndexOf('/') + 1);
+        const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+        if (folder && (await RNFS.exists(folder))) {
+          const files = await RNFS.readDir(folder);
+          for (const f of files) {
+            if (f.name.includes('.trashed') && f.name.includes(nameWithoutExt)) {
+              try { await RNFS.unlink(f.path); } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
     }
 
     const currentBin = await getRecycleBinFiles();
@@ -255,9 +274,28 @@ export const emptyRecycleBin = async () => {
         origPath = origPath.replace(/^file:\/\//, '');
         if (await RNFS.exists(origPath)) {
           try {
+            // Overwrite first to destroy content
+            await RNFS.writeFile(origPath, '', 'utf8');
             await RNFS.unlink(origPath);
-          } catch (_) {}
+          } catch (_) {
+            try { await RNFS.unlink(origPath); } catch (_) {}
+          }
         }
+
+        // Try to find and delete any .trashed Android OS variants in the same folder
+        try {
+          const folder = origPath.substring(0, origPath.lastIndexOf('/'));
+          const fileName = origPath.substring(origPath.lastIndexOf('/') + 1);
+          const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+          if (folder && (await RNFS.exists(folder))) {
+            const files = await RNFS.readDir(folder);
+            for (const f of files) {
+              if (f.name.includes('.trashed') && f.name.includes(nameWithoutExt)) {
+                try { await RNFS.unlink(f.path); } catch (_) {}
+              }
+            }
+          }
+        } catch (_) {}
       }
     }
     await saveRecycleBinMetadata([]);

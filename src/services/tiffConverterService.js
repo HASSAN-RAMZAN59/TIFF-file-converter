@@ -8,9 +8,8 @@ import { resolveToAbsolutePath } from './tiffDecoderService';
  * Converts .tif / .tiff files (from file:// or content:// URIs) to real JPG, PNG, WEBP, and PDF files.
  */
 
-// Target output directory in public Downloads
 export const getOutputDir = async () => {
-  const root = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
+  const root = RNFS.PicturesDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Pictures`;
   const outputDir = `${root}/TIFF_Converted`;
   const exists = await RNFS.exists(outputDir);
   if (!exists) {
@@ -456,6 +455,17 @@ export const getConvertedFilesList = async () => {
   return items
     .filter((item) => {
       if (!item.isFile() || (item.size || 0) <= 0) return false;
+      
+      // Filter out Android OS trash/pending files and hidden files
+      const lowerName = item.name.toLowerCase();
+      if (
+        lowerName.startsWith('.') || 
+        lowerName.includes('.trashed') || 
+        lowerName.includes('.pending')
+      ) {
+        return false;
+      }
+
       const cleanPath = item.path.replace(/^file:\/\//, '');
       if (binPaths.has(cleanPath) || binNames.has(item.name)) {
         return false;
