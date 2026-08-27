@@ -59,6 +59,13 @@ const ConvertedFilesScreen = ({ navigation }) => {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedFileKeys, setSelectedFileKeys] = useState(new Set());
   const [multiDeleteModalVisible, setMultiDeleteModalVisible] = useState(false);
+  const [deletingProgress, setDeletingProgress] = useState({
+    isDeleting: false,
+    current: 0,
+    total: 0,
+    percentage: 0,
+    fileName: '',
+  });
 
   // Menu State
   const [menuVisible, setMenuVisible] = useState(false);
@@ -335,8 +342,26 @@ const ConvertedFilesScreen = ({ navigation }) => {
       exitSelectionMode();
       return;
     }
+
+    setDeletingProgress({
+      isDeleting: true,
+      current: 0,
+      total: itemsToDelete.length,
+      percentage: 0,
+      fileName: itemsToDelete[0]?.name || '',
+    });
+
     try {
-      for (const file of itemsToDelete) {
+      for (let i = 0; i < itemsToDelete.length; i++) {
+        const file = itemsToDelete[i];
+        setDeletingProgress({
+          isDeleting: true,
+          current: i + 1,
+          total: itemsToDelete.length,
+          percentage: Math.round(((i + 1) / itemsToDelete.length) * 100),
+          fileName: file.name || '',
+        });
+
         await moveToRecycleBin(file);
         if (favoritesSet.has(file.path) || favoritesSet.has(file.id) || favoritesSet.has(file.uri)) {
           await toggleFavorite(file);
@@ -359,6 +384,13 @@ const ConvertedFilesScreen = ({ navigation }) => {
       console.warn('Multi delete error:', err);
       Alert.alert('Error', 'An error occurred while deleting files.');
     } finally {
+      setDeletingProgress({
+        isDeleting: false,
+        current: 0,
+        total: 0,
+        percentage: 0,
+        fileName: '',
+      });
       exitSelectionMode();
     }
   };
@@ -844,6 +876,46 @@ const ConvertedFilesScreen = ({ navigation }) => {
               >
                 <Text style={styles.deleteConfirmBtnText}>Delete</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Deleting Progress Indicator Modal */}
+      <Modal
+        visible={deletingProgress.isDeleting}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.deleteProgressOverlay}>
+          <View style={styles.deleteProgressCard}>
+            <View style={styles.deleteProgressIconCircle}>
+              <ActivityIndicator size="small" color="#2563EB" />
+            </View>
+
+            <Text style={styles.deleteProgressTitle}>Deleting Files...</Text>
+            
+            <Text style={styles.deleteProgressSub}>
+              Moving {deletingProgress.current} of {deletingProgress.total} {deletingProgress.total === 1 ? 'file' : 'files'} to Recycle Bin
+            </Text>
+
+            {/* Slider / Progress Bar */}
+            <View style={styles.deleteProgressBarBg}>
+              <View
+                style={[
+                  styles.deleteProgressBarFill,
+                  { width: `${deletingProgress.percentage}%` },
+                ]}
+              />
+            </View>
+
+            <View style={styles.deleteProgressFooter}>
+              <Text style={styles.deleteProgressFileName} numberOfLines={1}>
+                {deletingProgress.fileName}
+              </Text>
+              <Text style={styles.deleteProgressPercentText}>
+                {deletingProgress.percentage}%
+              </Text>
             </View>
           </View>
         </View>
@@ -1471,6 +1543,78 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
+  },
+  deleteProgressOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  deleteProgressCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  deleteProgressIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  deleteProgressTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1E1E1E',
+    marginBottom: 4,
+  },
+  deleteProgressSub: {
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Regular',
+    color: '#6B7280',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  deleteProgressBarBg: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  deleteProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#2563EB',
+    borderRadius: 4,
+  },
+  deleteProgressFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  deleteProgressFileName: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    color: '#9CA3AF',
+    marginRight: 8,
+  },
+  deleteProgressPercentText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
   },
 });
 

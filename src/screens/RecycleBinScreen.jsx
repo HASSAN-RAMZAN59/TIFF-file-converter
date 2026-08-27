@@ -13,6 +13,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import {
@@ -43,6 +44,15 @@ const RecycleBinScreen = ({ navigation }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [emptyModalVisible, setEmptyModalVisible] = useState(false);
+
+  // Emptying Progress Indicator State
+  const [emptyProgress, setEmptyProgress] = useState({
+    isProcessing: false,
+    current: 0,
+    total: 0,
+    percentage: 0,
+    fileName: '',
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -88,8 +98,42 @@ const RecycleBinScreen = ({ navigation }) => {
 
   const handleConfirmEmptyBin = async () => {
     setEmptyModalVisible(false);
-    await emptyRecycleBin();
-    setBinFiles([]);
+    const filesToEmpty = [...binFiles];
+    if (filesToEmpty.length === 0) return;
+
+    setEmptyProgress({
+      isProcessing: true,
+      current: 0,
+      total: filesToEmpty.length,
+      percentage: 0,
+      fileName: filesToEmpty[0]?.name || '',
+    });
+
+    try {
+      for (let i = 0; i < filesToEmpty.length; i++) {
+        const item = filesToEmpty[i];
+        setEmptyProgress({
+          isProcessing: true,
+          current: i + 1,
+          total: filesToEmpty.length,
+          percentage: Math.round(((i + 1) / filesToEmpty.length) * 100),
+          fileName: item.name || '',
+        });
+        await deletePermanentlyFromRecycleBin(item);
+      }
+      await emptyRecycleBin();
+      setBinFiles([]);
+    } catch (e) {
+      console.warn('Error emptying recycle bin:', e);
+    } finally {
+      setEmptyProgress({
+        isProcessing: false,
+        current: 0,
+        total: 0,
+        percentage: 0,
+        fileName: '',
+      });
+    }
   };
 
   const formatFileSize = (bytes) => {
@@ -194,9 +238,12 @@ const RecycleBinScreen = ({ navigation }) => {
         </View>
       ) : binFiles.length === 0 ? (
         <View style={styles.centerContainer}>
-          <View style={styles.emptyIconCircle}>
-            <DeleteIcon width={36} height={36} fill="#2780FB" />
-          </View>
+          <LottieView
+            source={require('../assets/no_files_found.json')}
+            autoPlay
+            loop
+            style={styles.emptyLottie}
+          />
           <Text style={styles.emptyTitle}>Recycle Bin is Empty</Text>
           <Text style={styles.emptySubtitle}>
             Deleted files will appear here and can be restored or deleted permanently.
@@ -298,6 +345,46 @@ const RecycleBinScreen = ({ navigation }) => {
               >
                 <Text style={styles.modalConfirmDeleteBtnText}>Empty All</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Emptying Progress Indicator Modal */}
+      <Modal
+        visible={emptyProgress.isProcessing}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.emptyProgressOverlay}>
+          <View style={styles.emptyProgressCard}>
+            <View style={styles.emptyProgressIconCircle}>
+              <ActivityIndicator size="small" color="#2563EB" />
+            </View>
+
+            <Text style={styles.emptyProgressTitle}>Emptying Recycle Bin...</Text>
+
+            <Text style={styles.emptyProgressSub}>
+              Permanently deleting {emptyProgress.current} of {emptyProgress.total} {emptyProgress.total === 1 ? 'file' : 'files'}
+            </Text>
+
+            {/* Slider / Progress Bar */}
+            <View style={styles.emptyProgressBarBg}>
+              <View
+                style={[
+                  styles.emptyProgressBarFill,
+                  { width: `${emptyProgress.percentage}%` },
+                ]}
+              />
+            </View>
+
+            <View style={styles.emptyProgressFooter}>
+              <Text style={styles.emptyProgressFileName} numberOfLines={1}>
+                {emptyProgress.fileName}
+              </Text>
+              <Text style={styles.emptyProgressPercentText}>
+                {emptyProgress.percentage}%
+              </Text>
             </View>
           </View>
         </View>
@@ -551,5 +638,82 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins-Medium',
     color: '#FFFFFF',
+  },
+  emptyLottie: {
+    width: 220,
+    height: 220,
+    marginBottom: 4,
+  },
+  emptyProgressOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyProgressCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  emptyProgressIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emptyProgressTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1E1E1E',
+    marginBottom: 4,
+  },
+  emptyProgressSub: {
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Regular',
+    color: '#6B7280',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  emptyProgressBarBg: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  emptyProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#2563EB',
+    borderRadius: 4,
+  },
+  emptyProgressFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  emptyProgressFileName: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    color: '#9CA3AF',
+    marginRight: 8,
+  },
+  emptyProgressPercentText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
   },
 });

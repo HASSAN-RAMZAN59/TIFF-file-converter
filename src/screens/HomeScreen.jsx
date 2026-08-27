@@ -15,6 +15,7 @@ import {
   Modal,
   Image,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
@@ -80,6 +81,13 @@ const HomeScreen = ({ navigation }) => {
   const [recentSelectionMode, setRecentSelectionMode] = useState(false);
   const [selectedRecentKeys, setSelectedRecentKeys] = useState(new Set());
   const [multiDeleteRecentModalVisible, setMultiDeleteRecentModalVisible] = useState(false);
+  const [recentDeletingProgress, setRecentDeletingProgress] = useState({
+    isDeleting: false,
+    current: 0,
+    total: 0,
+    percentage: 0,
+    fileName: '',
+  });
 
   const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 GB';
@@ -205,8 +213,26 @@ const HomeScreen = ({ navigation }) => {
       exitRecentSelectionMode();
       return;
     }
+
+    setRecentDeletingProgress({
+      isDeleting: true,
+      current: 0,
+      total: itemsToDelete.length,
+      percentage: 0,
+      fileName: itemsToDelete[0]?.name || '',
+    });
+
     try {
-      for (const file of itemsToDelete) {
+      for (let i = 0; i < itemsToDelete.length; i++) {
+        const file = itemsToDelete[i];
+        setRecentDeletingProgress({
+          isDeleting: true,
+          current: i + 1,
+          total: itemsToDelete.length,
+          percentage: Math.round(((i + 1) / itemsToDelete.length) * 100),
+          fileName: file.name || '',
+        });
+
         await moveToRecycleBin(file);
         if (favoritesSet.has(file.path) || favoritesSet.has(file.id) || favoritesSet.has(file.uri)) {
           await toggleFavorite(file);
@@ -217,6 +243,13 @@ const HomeScreen = ({ navigation }) => {
       console.warn('Recent multi delete error:', err);
       Alert.alert('Error', 'An error occurred while deleting files.');
     } finally {
+      setRecentDeletingProgress({
+        isDeleting: false,
+        current: 0,
+        total: 0,
+        percentage: 0,
+        fileName: '',
+      });
       exitRecentSelectionMode();
     }
   };
@@ -745,6 +778,46 @@ const HomeScreen = ({ navigation }) => {
               >
                 <Text style={styles.recentDeleteConfirmBtnText}>Delete</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Deleting Progress Indicator Modal */}
+      <Modal
+        visible={recentDeletingProgress.isDeleting}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.recentDeleteProgressOverlay}>
+          <View style={styles.recentDeleteProgressCard}>
+            <View style={styles.recentDeleteProgressIconCircle}>
+              <ActivityIndicator size="small" color="#2563EB" />
+            </View>
+
+            <Text style={styles.recentDeleteProgressTitle}>Deleting Files...</Text>
+
+            <Text style={styles.recentDeleteProgressSub}>
+              Moving {recentDeletingProgress.current} of {recentDeletingProgress.total} {recentDeletingProgress.total === 1 ? 'file' : 'files'} to Recycle Bin
+            </Text>
+
+            {/* Slider / Progress Bar */}
+            <View style={styles.recentDeleteProgressBarBg}>
+              <View
+                style={[
+                  styles.recentDeleteProgressBarFill,
+                  { width: `${recentDeletingProgress.percentage}%` },
+                ]}
+              />
+            </View>
+
+            <View style={styles.recentDeleteProgressFooter}>
+              <Text style={styles.recentDeleteProgressFileName} numberOfLines={1}>
+                {recentDeletingProgress.fileName}
+              </Text>
+              <Text style={styles.recentDeleteProgressPercentText}>
+                {recentDeletingProgress.percentage}%
+              </Text>
             </View>
           </View>
         </View>
@@ -1491,6 +1564,78 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
     fontWeight: '600',
+  },
+  recentDeleteProgressOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  recentDeleteProgressCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  recentDeleteProgressIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  recentDeleteProgressTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#1E1E1E',
+    marginBottom: 4,
+  },
+  recentDeleteProgressSub: {
+    fontSize: 12.5,
+    fontFamily: 'Poppins-Regular',
+    color: '#6B7280',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  recentDeleteProgressBarBg: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  recentDeleteProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#2563EB',
+    borderRadius: 4,
+  },
+  recentDeleteProgressFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  recentDeleteProgressFileName: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    color: '#9CA3AF',
+    marginRight: 8,
+  },
+  recentDeleteProgressPercentText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#2563EB',
   },
 });
 
