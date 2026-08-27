@@ -164,7 +164,10 @@ const en = {
   "of": "of",
   "files": "files",
   "into": "into",
-  "Files to": "Files to"
+  "Files to": "Files to",
+  "Rename": "Rename",
+  "About": "About",
+  "Rename File": "Rename File"
 };
 
 // Hindi (hi)
@@ -321,7 +324,10 @@ const hi = {
   "of": "में से",
   "files": "फ़ाइलें",
   "into": "में",
-  "Files to": "फ़ाइलों को"
+  "Files to": "फ़ाइलों को",
+  "Rename": "नाम बदलें",
+  "About": "के बारे में",
+  "Rename File": "फ़ाइल का नाम बदलें"
 };
 
 // French (fr)
@@ -478,7 +484,10 @@ const fr = {
   "of": "sur",
   "files": "fichiers",
   "into": "en",
-  "Files to": "Fichiers en"
+  "Files to": "Fichiers en",
+  "Rename": "Renommer",
+  "About": "À propos",
+  "Rename File": "Renommer le fichier"
 };
 
 // Arabic (ar)
@@ -635,7 +644,10 @@ const ar = {
   "of": "من",
   "files": "ملفات",
   "into": "إلى",
-  "Files to": "ملفات إلى"
+  "Files to": "ملفات إلى",
+  "Rename": "إعادة تسمية",
+  "About": "حول",
+  "Rename File": "إعادة تسمية الملف"
 };
 
 // Italian (it)
@@ -792,7 +804,10 @@ const it = {
   "of": "di",
   "files": "file",
   "into": "in",
-  "Files to": "File in"
+  "Files to": "File in",
+  "Rename": "Rinomina",
+  "About": "Informazioni",
+  "Rename File": "Rinomina file"
 };
 
 // Zulu (zu)
@@ -912,7 +927,10 @@ const zu = {
   "of": "kwa-",
   "files": "amafayela",
   "into": "kuba yi-",
-  "Files to": "Amafayela abe"
+  "Files to": "Amafayela abe",
+  "Rename": "Qamba kabusha",
+  "About": "Mayelana",
+  "Rename File": "Qamba kabusha ifayela"
 };
 
 // Kalaallisut (kl)
@@ -1021,7 +1039,10 @@ const kl = {
   "of": "-",
   "files": "fiilit",
   "into": "uunga",
-  "Files to": "Fiilit uunga"
+  "Files to": "Fiilit uunga",
+  "Rename": "Ateq allanngortiguk",
+  "About": "Pillugu",
+  "Rename File": "Fiilip atia allanngortiguk"
 };
 
 // Dutch (nl)
@@ -1178,7 +1199,10 @@ const nl = {
   "of": "van",
   "files": "bestanden",
   "into": "naar",
-  "Files to": "Bestanden naar"
+  "Files to": "Bestanden naar",
+  "Rename": "Hernoemen",
+  "About": "Over",
+  "Rename File": "Bestand hernoemen"
 };
 
 // German (de)
@@ -1335,7 +1359,10 @@ const de = {
   "of": "von",
   "files": "Dateien",
   "into": "in",
-  "Files to": "Dateien in"
+  "Files to": "Dateien in",
+  "Rename": "Umbenennen",
+  "About": "Über",
+  "Rename File": "Datei umbenennen"
 };
 
 const resources = {
