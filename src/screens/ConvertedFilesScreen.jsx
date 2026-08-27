@@ -180,22 +180,17 @@ const ConvertedFilesScreen = ({ navigation }) => {
     const file = selectedFile;
     closeMenu();
     try {
-      let shareUrl = null;
-      if (file?.path) {
-        shareUrl = file.path.startsWith('file://') || file.path.startsWith('content://') 
-          ? file.path 
-          : `file://${file.path}`;
-      } else if (file?.uri) {
-        shareUrl = file.uri.startsWith('file://') || file.uri.startsWith('content://')
-          ? file.uri
-          : `file://${file.uri}`;
-      }
-
-      if (!shareUrl) {
+      let sourcePath = file?.path || (file?.uri ? file.uri.replace('file://', '').replace('content://', '') : null);
+      if (!sourcePath || !(await RNFS.exists(sourcePath))) {
         Alert.alert(t('Error'), t('File does not exist or is inaccessible.'));
         return;
       }
 
+      // Copy to cache directory to avoid Android FileProvider paths.xml restrictions
+      const tempSharePath = `${RNFS.CachesDirectoryPath}/share_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      await RNFS.copyFile(sourcePath, tempSharePath);
+      
+      const shareUrl = `file://${tempSharePath}`;
       const ext = (file.name?.split('.').pop() || 'jpg').toLowerCase();
       const mimeType = ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
 
@@ -206,6 +201,12 @@ const ConvertedFilesScreen = ({ navigation }) => {
         filename: file.name,
         failOnCancel: false,
       });
+      
+      // Cleanup temp file after share dialog closes/fails
+      setTimeout(async () => {
+        try { await RNFS.unlink(tempSharePath); } catch (e) {}
+      }, 10000);
+
     } catch (error) {
       if (error && error.message && !error.message.includes('User did not share') && !error.message.includes('dismissed') && !error.message.includes('Canceled')) {
         console.warn('Share error:', error);
