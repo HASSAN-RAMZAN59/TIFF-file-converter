@@ -10,7 +10,7 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-
+import { useTranslation } from 'react-i18next';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { setOnboardingCompleted } from '../services/onboardingService';
 import HeroIllustration from '../assets/Hero Illustration Area.svg';
@@ -19,26 +19,7 @@ import ThirdIllustration from '../assets/Group 1000007279.svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const ONBOARDING_DATA = [
-  {
-    id: '1',
-    title: 'Convert TIFF Files Easily',
-    subtitle: 'Turn your TIFF images into JPG,\nPNG, PDF or WEBP in just a few\ntaps.',
-    type: 'svg',
-  },
-  {
-    id: '2',
-    title: 'Convert Multiple Files',
-    subtitle: 'Select multiple TIFF files and convert them together with our fast batch conversion.',
-    type: 'svg2',
-  },
-  {
-    id: '3',
-    title: <>Your Files, <Text style={{ color: '#2780FB', fontWeight: '700' }}>Organized</Text></>,
-    subtitle: 'Keep your converted files organized,\nAccess your outputs anytime and save\nimportant files to Favorites.',
-    type: 'svg3',
-  },
-];
+
 
 const SlideItem = React.memo(({ item, illustrationWidth, illustrationHeight }) => (
   <View style={styles.slide}>
@@ -66,8 +47,30 @@ const SlideItem = React.memo(({ item, illustrationWidth, illustrationHeight }) =
  * Matches Figma specs with W: 350, Padding: 0 32, Hero Illustration, Skip pill, and active dots.
  */
 const OnboardingScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef(null);
+
+  const ONBOARDING_DATA = [
+    {
+      id: '1',
+      title: t('Convert TIFF Files Easily'),
+      subtitle: t('Turn your TIFF images into JPG,\nPNG, PDF or WEBP in just a few\ntaps.'),
+      type: 'svg',
+    },
+    {
+      id: '2',
+      title: t('Convert Multiple Files'),
+      subtitle: t('Select multiple TIFF files and convert them together with our fast batch conversion.'),
+      type: 'svg2',
+    },
+    {
+      id: '3',
+      title: <>{t('Your Files,')} <Text style={{ color: '#2780FB', fontWeight: '700' }}>{t('Organized')}</Text></>,
+      subtitle: t('Keep your converted files organized,\nAccess your outputs anytime and save\nimportant files to Favorites.'),
+      type: 'svg3',
+    },
+  ];
 
   const handleNext = () => {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
@@ -106,7 +109,7 @@ const OnboardingScreen = ({ navigation }) => {
             activeOpacity={0.8}
             disabled={currentIndex === ONBOARDING_DATA.length - 1}
           >
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={styles.skipText}>{t('Skip')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -157,7 +160,7 @@ const OnboardingScreen = ({ navigation }) => {
               <Rect x="0" y="0" width="1" height="1" fill="url(#onboardBtnGrad)" />
             </Svg>
             <Text style={styles.buttonText}>
-              {currentIndex === ONBOARDING_DATA.length - 1 ? 'Get Started' : 'Next'}
+              {currentIndex === ONBOARDING_DATA.length - 1 ? t('Get Started') : t('Next')}
             </Text>
           </TouchableOpacity>
 

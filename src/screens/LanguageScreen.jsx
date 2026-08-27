@@ -14,6 +14,9 @@ import {
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import SearchIcon from '../assets/search.svg';
 import { getAppLanguage, setAppLanguage } from '../services/settingsService';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
+import { CommonActions } from '@react-navigation/native';
 
 // Flag SVGs
 import FlagFrance from '../assets/flags/FR - France.svg';
@@ -47,6 +50,7 @@ const RadioButton = ({ selected }) => {
 };
 
 const LanguageScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [selectedLanguage, setSelectedLanguage] = useState('fr');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -67,7 +71,17 @@ const LanguageScreen = ({ navigation }) => {
 
   const handleApply = async () => {
     await setAppLanguage(selectedLanguage);
-    navigation.goBack();
+    await i18next.changeLanguage(selectedLanguage);
+    
+    // Simulate App Restart by resetting to Splash screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          { name: 'Splash', params: { redirectTo: 'SettingsScreen' } }
+        ],
+      })
+    );
   };
 
   const filteredLanguages = searchQuery.trim()
@@ -104,12 +118,16 @@ const LanguageScreen = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Language</Text>
+        <Text style={styles.headerTitle}>{t('Language')}</Text>
       </View>
 
       {/* Language List - Fixed / Non-Scrollable */}
       <View style={styles.listContent}>
-        {LANGUAGES_DATA.map((item) => renderLanguageItem({ item }))}
+        {LANGUAGES_DATA.map((item) => (
+          <React.Fragment key={item.id}>
+            {renderLanguageItem({ item })}
+          </React.Fragment>
+        ))}
       </View>
 
       {/* Bottom Apply Button */}
@@ -128,7 +146,7 @@ const LanguageScreen = ({ navigation }) => {
             </Defs>
             <Rect x="0" y="0" width="1" height="1" fill="url(#langApplyBtnGrad)" />
           </Svg>
-          <Text style={styles.applyBtnText}>Apply</Text>
+          <Text style={styles.applyBtnText}>{t('Apply')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -14,6 +14,7 @@ import {
   Image,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { convertTiffBatch } from '../services/tiffConverterService';
 import { decodeTiffToBase64Uri, decodeTiffThumbnailFast } from '../services/tiffDecoderService';
 
@@ -64,6 +65,7 @@ const TiffThumbnail = ({ path, style }) => {
  * Converts multiple TIFF files to JPG, PNG, WEBP, or PDF in real-time.
  */
 const BatchConvertScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const initialFiles = route.params?.files || [];
   const resumeQueue = route.params?.resumeQueue || null;
   const [files, setFiles] = useState(initialFiles);
@@ -221,8 +223,8 @@ const BatchConvertScreen = ({ route, navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Batch Conversion</Text>
-        <Text style={styles.headerSubtitle}>{files.length} TIFF files selected</Text>
+        <Text style={styles.headerTitle}>{t('Batch Conversion')}</Text>
+        <Text style={styles.headerSubtitle}>{files.length} {t('TIFF files selected')}</Text>
       </View>
 
       {/* Scrollable Body */}
@@ -233,7 +235,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
       >
         {/* Global Output Format Selector */}
         <View style={styles.formatSelectorWrapper}>
-          <Text style={styles.cardLabel}>Choose Output Format</Text>
+          <Text style={styles.cardLabel}>{t('Choose Output Format')}</Text>
           <View style={styles.formatRow}>
             {FORMAT_OPTIONS.map((fmt) => {
               const isSelected = selectedFormat === fmt.value;
@@ -276,7 +278,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
             <View style={styles.progressRow}>
               <ActivityIndicator size="small" color="#2563EB" />
               <Text style={styles.progressTitle}>
-                Converting {batchProgress.currentIndex} of {batchProgress.totalFiles}...
+                {t('Converting')} {batchProgress.currentIndex} {t('of')} {batchProgress.totalFiles}...
               </Text>
             </View>
             <Text style={styles.currentFileText} numberOfLines={1}>
@@ -296,7 +298,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyText}>No TIFF files selected for batch conversion.</Text>
+            <Text style={styles.emptyText}>{t('No TIFF files selected for batch conversion.')}</Text>
           </View>
         )}
       </ScrollView>
@@ -321,8 +323,8 @@ const BatchConvertScreen = ({ route, navigation }) => {
           )}
           <Text style={styles.convertBtnText}>
             {isConverting
-              ? `Processing (${batchProgress.progress}%)...`
-              : `Convert ${files.length} Files to ${selectedFormat.toUpperCase()}`}
+              ? `${t('Processing')} (${batchProgress.progress}%)...`
+              : `${t('Convert')} ${files.length} ${t('Files to')} ${selectedFormat.toUpperCase()}`}
           </Text>
         </TouchableOpacity>
       </View>
@@ -364,7 +366,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
               {isLoadingPreview ? (
                 <View style={styles.modalLoadingBox}>
                   <ActivityIndicator size="large" color="#2563EB" />
-                  <Text style={styles.modalLoadingText}>Decoding TIFF image...</Text>
+                  <Text style={styles.modalLoadingText}>{t('Decoding TIFF image...')}</Text>
                 </View>
               ) : previewImageUri ? (
                 <Image
@@ -374,7 +376,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
                 />
               ) : (
                 <View style={styles.modalLoadingBox}>
-                  <Text style={styles.modalLoadingText}>Unable to preview TIFF file</Text>
+                  <Text style={styles.modalLoadingText}>{t('Unable to preview TIFF file')}</Text>
                 </View>
               )}
             </View>
@@ -401,9 +403,9 @@ const BatchConvertScreen = ({ route, navigation }) => {
               <Text style={styles.successCheckmark}>✓</Text>
             </View>
 
-            <Text style={styles.successModalTitle}>Conversion Complete</Text>
+            <Text style={styles.successModalTitle}>{t('Success!')}</Text>
             <Text style={styles.successModalSubtitle}>
-              Successfully converted <Text style={styles.highlightText}>{batchSuccessInfo.count} of {batchSuccessInfo.total} files</Text> into <Text style={styles.highlightText}>{batchSuccessInfo.format}</Text> format and saved to storage.
+              {t('Successfully converted')} <Text style={styles.highlightText}>{batchSuccessInfo.count} {t('of')} {batchSuccessInfo.total} {t('files')}</Text> {t('into')} <Text style={styles.highlightText}>{batchSuccessInfo.format}</Text> {t('format and saved to storage.')}
             </Text>
 
             <View style={styles.successActionsRow}>
@@ -418,7 +420,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.successCloseBtnText}>Done</Text>
+                <Text style={styles.successCloseBtnText}>{t('Done')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -444,7 +446,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
                   </Defs>
                   <Rect x="0" y="0" width="1" height="1" fill="url(#batchSuccessViewBtnGrad)" />
                 </Svg>
-                <Text style={styles.successViewBtnText}>View Files</Text>
+                <Text style={styles.successViewBtnText}>{t('View All')}</Text>
               </TouchableOpacity>
             </View>
           </View>

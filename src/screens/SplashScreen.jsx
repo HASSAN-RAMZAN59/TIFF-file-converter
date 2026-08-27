@@ -14,9 +14,15 @@ import SplashIcon from '../assets/Group 4.svg';
 
 const { width } = Dimensions.get('window');
 
-const SplashScreen = ({ navigation }) => {
+const SplashScreen = ({ navigation, route }) => {
   useEffect(() => {
     const timer = setTimeout(async () => {
+      const redirectTo = route.params?.redirectTo;
+      if (redirectTo) {
+        navigation.replace('MainApp', { screen: redirectTo });
+        return;
+      }
+
       const onboardingDone = await hasCompletedOnboarding();
       const permissionGranted = await checkOsStoragePermission();
 

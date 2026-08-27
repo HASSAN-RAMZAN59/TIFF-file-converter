@@ -22,6 +22,7 @@ import SettingDeleteIcon from '../assets/setting delete.svg';
 import SettingShareIcon from '../assets/setting share.svg';
 import SwitchActiveSvg from '../assets/Switch.svg';
 import { getAutoResumeEnabled, setAutoResumeEnabled } from '../services/settingsService';
+import { useTranslation } from 'react-i18next';
 
 // Custom toggle component using the Switch SVG
 const CustomSwitch = ({ value, onValueChange }) => {
@@ -110,6 +111,7 @@ const SettingItem = ({
 };
 
 const SettingsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [autoResume, setAutoResume] = useState(true);
 
   useEffect(() => {
@@ -133,7 +135,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handlePrivacyPolicyPress = () => {
-    Alert.alert('Privacy Policy', 'Your privacy is important to us. No personal data is stored externally.');
+    Alert.alert(t('Privacy Policy'), t('Read our terms and policies'));
   };
 
   const handleShareWithFriendsPress = async () => {
@@ -147,11 +149,11 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleRateUsPress = () => {
-    Alert.alert('Rate Us', 'Thank you for rating our app!');
+    Alert.alert(t('Rate Us'), t('Review our app on the Play Store'));
   };
 
   const handleAboutPress = () => {
-    Alert.alert('About', 'TIFF File Converter & Viewer\nVersion 1.0.0');
+    Alert.alert(t('About') || 'About', 'TIFF File Converter & Viewer\nVersion 1.0.0');
   };
 
   return (
@@ -163,7 +165,7 @@ const SettingsScreen = ({ navigation }) => {
       >
         {/* Screen Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Setting</Text>
+          <Text style={styles.headerTitle}>{t('Settings')}</Text>
         </View>
 
         {/* Settings Card */}
@@ -171,7 +173,7 @@ const SettingsScreen = ({ navigation }) => {
           {/* Auto Resume */}
           <SettingItem
             icon={FileSaveIcon}
-            title="Auto Resume"
+            title={t("Auto Resume Process")}
             showChevron={false}
             rightElement={
               <CustomSwitch
@@ -184,42 +186,42 @@ const SettingsScreen = ({ navigation }) => {
           {/* Recycle Bin */}
           <SettingItem
             icon={SettingDeleteIcon}
-            title="Recycle Bin"
+            title={t("Recycle Bin")}
             onPress={handleRecycleBinPress}
           />
 
           {/* Language */}
           <SettingItem
             icon={GlobeAsiaIcon}
-            title="Language"
+            title={t("Language")}
             onPress={handleLanguagePress}
           />
 
           {/* Privacy Policy */}
           <SettingItem
             icon={SecurityIcon}
-            title="Privacy Policy"
+            title={t("Privacy Policy")}
             onPress={handlePrivacyPolicyPress}
           />
 
           {/* Share with Friends */}
           <SettingItem
             icon={SettingShareIcon}
-            title="Share with Friends"
+            title={t("Share with Friends") || "Share with Friends"}
             onPress={handleShareWithFriendsPress}
           />
 
           {/* Rate Us */}
           <SettingItem
             icon={FamilyStarIcon}
-            title="Rate Us"
+            title={t("Rate Us")}
             onPress={handleRateUsPress}
           />
 
           {/* About */}
           <SettingItem
             icon={InfoIcon}
-            title="About"
+            title={t("About") || "About"}
             isLast={true}
             onPress={handleAboutPress}
           />

@@ -23,8 +23,10 @@ import PreviewInfoIcon from '../assets/preview_info.svg';
 import PreviewShareIcon from '../assets/preview_share.svg';
 import CropIcon from '../assets/crop.svg';
 import CropRotateIcon from '../assets/crop_rotate.svg';
+import { useTranslation } from 'react-i18next';
 
 const PreviewScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const { file } = route.params || {};
   const [imageUri, setImageUri] = useState(file?.uri || null);
   const [loading, setLoading] = useState(!file?.uri);
@@ -262,7 +264,7 @@ const PreviewScreen = ({ route, navigation }) => {
           if (route.params?.fromScreen === 'PickFilesScreen') {
             navigation.navigate('PickFilesScreen', { editedFile: result });
           } else {
-            Alert.alert('Crop Applied', 'Cropped preview updated.');
+            Alert.alert(t('Crop Applied'), t('Cropped preview updated.'));
           }
         } catch (err) {
           console.warn('Error saving cropped image:', err);
@@ -328,21 +330,21 @@ const PreviewScreen = ({ route, navigation }) => {
       }
 
       if (!shareUrl) {
-        Alert.alert('Error', 'Image preview is still loading, please wait.');
+        Alert.alert(t('Error'), t('Image preview is still loading, please wait.'));
         return;
       }
 
       await Share.open({
         url: shareUrl,
         type: mimeType,
-        title: file?.name || 'Share Image',
+        title: file?.name || t('Share Image'),
         filename: file?.name || 'image',
         failOnCancel: false,
       });
     } catch (error) {
       if (error && error.message && !error.message.includes('User did not share') && !error.message.includes('dismissed') && !error.message.includes('Canceled')) {
         console.warn('Share error:', error);
-        Alert.alert('Share', 'Could not open share dialog.');
+        Alert.alert(t('Share'), t('Could not open share dialog.'));
       }
     }
   };
@@ -386,7 +388,7 @@ const PreviewScreen = ({ route, navigation }) => {
               <Text style={styles.backBtnText}>←</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle} numberOfLines={1}>
-              {isEditMode ? 'Edit Photo' : file?.name || 'Image Preview'}
+              {isEditMode ? t('Edit Photo') : file?.name || t('Image Preview')}
             </Text>
             {isEditMode ? (
               <TouchableOpacity style={styles.checkBtn} onPress={handleDoneOrClose} activeOpacity={0.7}>
@@ -399,7 +401,7 @@ const PreviewScreen = ({ route, navigation }) => {
         ) : (
           <>
             <Text style={styles.headerTitle} numberOfLines={1}>
-              {file?.name || 'Image Preview'}
+              {file?.name || t('Image Preview')}
             </Text>
             <TouchableOpacity
               style={styles.closeCrossBtn}
@@ -417,7 +419,7 @@ const PreviewScreen = ({ route, navigation }) => {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#2563EB" />
-            <Text style={styles.loadingText}>Loading image preview...</Text>
+            <Text style={styles.loadingText}>{t('Loading image preview...')}</Text>
           </View>
         ) : imageUri ? (
           <View style={styles.imageInnerWrapper} onLayout={onContainerLayout}>
@@ -469,7 +471,7 @@ const PreviewScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Unable to load image preview</Text>
+            <Text style={styles.loadingText}>{t('Unable to load image preview')}</Text>
           </View>
         )}
       </View>
@@ -543,7 +545,7 @@ const PreviewScreen = ({ route, navigation }) => {
                     activeEditTool === 'crop' && styles.activeEditTabText,
                   ]}
                 >
-                  Crop
+                  {t('Crop')}
                 </Text>
               </TouchableOpacity>
 
@@ -565,7 +567,7 @@ const PreviewScreen = ({ route, navigation }) => {
                     activeEditTool === 'rotate' && styles.activeEditTabText,
                   ]}
                 >
-                  Rotate
+                  {t('Rotate')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -577,28 +579,28 @@ const PreviewScreen = ({ route, navigation }) => {
               <View style={styles.iconSvgWrapper}>
                 <EditDocumentIcon width={22} height={22} />
               </View>
-              <Text style={styles.bottomTabText}>Edit</Text>
+              <Text style={styles.bottomTabText}>{t('Edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleDeletePress}>
               <View style={styles.iconSvgWrapper}>
                 <PreviewDeleteIcon width={22} height={22} />
               </View>
-              <Text style={styles.bottomTabText}>Delete</Text>
+              <Text style={styles.bottomTabText}>{t('Delete')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleInfoPress}>
               <View style={styles.iconSvgWrapper}>
                 <PreviewInfoIcon width={22} height={22} />
               </View>
-              <Text style={styles.bottomTabText}>Info</Text>
+              <Text style={styles.bottomTabText}>{t('Info')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleShare}>
               <View style={styles.iconSvgWrapper}>
                 <PreviewShareIcon width={22} height={22} />
               </View>
-              <Text style={styles.bottomTabText}>Share</Text>
+              <Text style={styles.bottomTabText}>{t('Share')}</Text>
             </TouchableOpacity>
           </View>
         )
@@ -623,29 +625,29 @@ const PreviewScreen = ({ route, navigation }) => {
               <View style={styles.infoIconCircle}>
                 <PreviewInfoIcon width={22} height={22} />
               </View>
-              <Text style={styles.infoModalTitle}>File Information</Text>
+              <Text style={styles.infoModalTitle}>{t('File Information')}</Text>
             </View>
 
             <View style={styles.infoDetailsBox}>
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>File Name:</Text>
+                <Text style={styles.infoLabel}>{t('File Name:')}</Text>
                 <Text style={styles.infoValue} numberOfLines={2}>{file?.name || 'Unknown'}</Text>
               </View>
 
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Format:</Text>
+                <Text style={styles.infoLabel}>{t('Format:')}</Text>
                 <View style={styles.infoFormatBadge}>
                   <Text style={styles.infoFormatText}>{(file?.name?.split('.').pop() || 'TIFF').toUpperCase()}</Text>
                 </View>
               </View>
 
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>File Size:</Text>
+                <Text style={styles.infoLabel}>{t('File Size:')}</Text>
                 <Text style={styles.infoValue}>{formatFileSize(file?.size)}</Text>
               </View>
 
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Location:</Text>
+                <Text style={styles.infoLabel}>{t('Location:')}</Text>
                 <Text style={styles.infoPathValue}>{formatDisplayPath(file?.path || file?.uri)}</Text>
               </View>
             </View>
@@ -664,7 +666,7 @@ const PreviewScreen = ({ route, navigation }) => {
                 </Defs>
                 <Rect x="0" y="0" width="1" height="1" fill="url(#infoOkBtnGrad)" />
               </Svg>
-              <Text style={styles.infoOkBtnText}>Done</Text>
+              <Text style={styles.infoOkBtnText}>{t('Done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -689,9 +691,9 @@ const PreviewScreen = ({ route, navigation }) => {
               <PreviewDeleteIcon width={24} height={24} />
             </View>
 
-            <Text style={styles.deleteModalTitle}>Delete File?</Text>
+            <Text style={styles.deleteModalTitle}>{t('Delete File?')}</Text>
             <Text style={styles.deleteModalDesc}>
-              Are you sure you want to delete <Text style={styles.deleteFileNameHighlight}>{file?.name}</Text>? This action cannot be undone.
+              {t('Are you sure you want to permanently delete')} <Text style={styles.deleteFileNameHighlight}>{file?.name}</Text>? {t('This action cannot be undone.')}
             </Text>
 
             <View style={styles.deleteActionsRow}>
@@ -700,7 +702,7 @@ const PreviewScreen = ({ route, navigation }) => {
                 onPress={() => setDeleteModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.deleteCancelBtnText}>Cancel</Text>
+                <Text style={styles.deleteCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -708,7 +710,7 @@ const PreviewScreen = ({ route, navigation }) => {
                 onPress={handleConfirmDelete}
                 activeOpacity={0.8}
               >
-                <Text style={styles.deleteConfirmBtnText}>Delete</Text>
+                <Text style={styles.deleteConfirmBtnText}>{t('Delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -19,10 +19,10 @@ import {
   BackHandler,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
-import LottieView from 'lottie-react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { getConvertedFilesList } from '../services/tiffConverterService';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import { moveToRecycleBin } from '../services/recycleBinService';
@@ -48,6 +48,7 @@ const CheckmarkIcon = ({ size = 12, color = '#FFFFFF' }) => (
 );
 
 const ConvertedFilesScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [favoritesSet, setFavoritesSet] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -253,20 +254,20 @@ const ConvertedFilesScreen = ({ navigation }) => {
   };
 
   const formatDisplayPath = (pathString) => {
-    if (!pathString) return 'Storage';
+    if (!pathString) return t('Storage');
     let p = pathString;
     if (p.startsWith('content://')) {
-      if (p.includes('downloads') || p.includes('Download')) return 'Storage / Download';
-      if (p.includes('media') || p.includes('image')) return 'Storage / Pictures';
-      return 'Storage / Documents';
+      if (p.includes('downloads') || p.includes('Download')) return `${t('Storage')} / ${t('Download')}`;
+      if (p.includes('media') || p.includes('image')) return `${t('Storage')} / ${t('Pictures')}`;
+      return `${t('Storage')} / ${t('Documents')}`;
     }
     p = p.replace('file://', '');
     p = p.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
     if (p.startsWith('/')) p = p.substring(1);
     const lastSlash = p.lastIndexOf('/');
     let folderPart = lastSlash !== -1 ? p.substring(0, lastSlash) : p;
-    if (!folderPart) return 'Storage';
-    return `Storage / ${folderPart}`;
+    if (!folderPart) return t('Storage');
+    return `${t('Storage')} / ${t(folderPart)}`;
   };
 
   const formatFileSize = (bytes) => {
@@ -428,9 +429,9 @@ const ConvertedFilesScreen = ({ navigation }) => {
       >
         
         <View style={styles.thumbnailWrapper}>
-          {item.format !== 'PDF' && (item.uri || item.path) ? (
+          {item.thumbUri ? (
             <Image
-              source={{ uri: item.uri || `file://${item.path}` }}
+              source={{ uri: item.thumbUri }}
               style={styles.thumbnailImage}
               resizeMode="cover"
             />
@@ -512,7 +513,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
               <Text style={styles.closeSelectionText}>✕</Text>
             </TouchableOpacity>
             <Text style={styles.selectionCountText}>
-              {selectedFileKeys.size} Selected
+              {selectedFileKeys.size} {t('Selected')}
             </Text>
           </View>
           <View style={styles.selectionHeaderRight}>
@@ -523,8 +524,8 @@ const ConvertedFilesScreen = ({ navigation }) => {
             >
               <Text style={styles.selectAllHeaderText}>
                 {selectedFileKeys.size === filteredFiles.length && filteredFiles.length > 0
-                  ? 'Deselect All'
-                  : 'Select All'}
+                  ? t('Deselect All')
+                  : t('Select All')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -551,7 +552,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
               <SearchIcon width={18} height={18} fill="#6B7280" />
               <TextInput
                 style={styles.headerSearchInput}
-                placeholder="Search converted files..."
+                placeholder={t('Search converted files...')}
                 placeholderTextColor="#9CA3AF"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -570,7 +571,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
           ) : (
             <>
               <View style={styles.headerLeft}>
-                <Text style={styles.headerTitle}>Recent Converted</Text>
+                <Text style={styles.headerTitle}>{t('Converted Files')}</Text>
               </View>
               <TouchableOpacity 
                 style={styles.searchBtn} 
@@ -612,7 +613,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 style={styles.emptyLottie}
               />
               <Text style={styles.emptyText}>
-                {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No converted files yet.'}
+                {searchQuery.trim() ? `${t('No files matching')} "${searchQuery}"` : t('No recent converted files.')}
               </Text>
             </View>
           )}
@@ -627,28 +628,28 @@ const ConvertedFilesScreen = ({ navigation }) => {
               <View style={styles.menuSvgWrapper}>
                 <DeleteIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>Delete</Text>
+              <Text style={styles.menuText}>{t('Delete')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.menuItem} onPress={handleShare}>
               <View style={styles.menuSvgWrapper}>
                 <ShareIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>Share</Text>
+              <Text style={styles.menuText}>{t('Share')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleRenamePress}>
               <View style={styles.menuSvgWrapper}>
                 <RenameIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>Rename</Text>
+              <Text style={styles.menuText}>{t('Rename')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleAbout}>
               <View style={styles.menuSvgWrapper}>
                 <ChatInfoIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>About</Text>
+              <Text style={styles.menuText}>{t('About')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -658,7 +659,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
       <Modal visible={renameVisible} transparent={true} animationType="fade" onRequestClose={() => setRenameVisible(false)}>
         <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.renameCard}>
-            <Text style={styles.renameTitle}>Rename File</Text>
+            <Text style={styles.renameTitle}>{t('Rename File')}</Text>
             <TextInput
               style={styles.renameInput}
               value={renameText}
@@ -668,10 +669,10 @@ const ConvertedFilesScreen = ({ navigation }) => {
             />
             <View style={styles.renameActions}>
               <TouchableOpacity style={styles.renameBtn} onPress={() => setRenameVisible(false)}>
-                <Text style={styles.renameBtnText}>Cancel</Text>
+                <Text style={styles.renameBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.renameBtn, { backgroundColor: '#3B82F6', borderWidth: 0 }]} onPress={handleRenameSubmit}>
-                <Text style={[styles.renameBtnText, { color: '#FFFFFF' }]}>Rename</Text>
+                <Text style={[styles.renameBtnText, { color: '#FFFFFF' }]}>{t('Rename')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -696,7 +697,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
             <View style={styles.previewModalHeader}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.previewModalFileName} numberOfLines={1}>
-                  {previewFile?.name || 'Image Preview'}
+                  {previewFile?.name || t('Image Preview')}
                 </Text>
                 <Text style={styles.previewModalFileSize}>
                   {previewFile?.format} . {formatFileSize(previewFile?.size || 0)}
@@ -712,15 +713,15 @@ const ConvertedFilesScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.previewModalImageContainer}>
-              {previewFile?.uri ? (
+              {previewFile?.thumbUri ? (
                 <Image 
-                  source={{ uri: previewFile.uri }} 
+                  source={{ uri: previewFile.thumbUri }} 
                   style={styles.previewModalImage} 
                   resizeMode="contain" 
                 />
               ) : (
                 <View style={styles.previewModalLoadingBox}>
-                  <Text style={styles.previewModalLoadingText}>No image preview available</Text>
+                  <Text style={styles.previewModalLoadingText}>{t('No image preview available')}</Text>
                 </View>
               )}
             </View>
@@ -747,24 +748,24 @@ const ConvertedFilesScreen = ({ navigation }) => {
               <View style={styles.aboutIconCircle}>
                 <ChatInfoIcon width={22} height={22} />
               </View>
-              <Text style={styles.aboutModalTitle}>File Information</Text>
+              <Text style={styles.aboutModalTitle}>{t('File Information')}</Text>
             </View>
 
             <View style={styles.aboutDetailsBox}>
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>File Name:</Text>
+                <Text style={styles.aboutLabel}>{t('File Name:')}</Text>
                 <Text style={styles.aboutValue} numberOfLines={2}>{selectedFile?.name}</Text>
               </View>
 
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>Format:</Text>
+                <Text style={styles.aboutLabel}>{t('Format:')}</Text>
                 <View style={[styles.aboutFormatBadge, { backgroundColor: selectedFile?.format === 'PDF' ? '#EF4444' : selectedFile?.format === 'PNG' ? '#3B82F6' : '#10B981' }]}>
                   <Text style={styles.aboutFormatText}>{selectedFile?.format}</Text>
                 </View>
               </View>
 
               <View style={styles.aboutItem}>
-                <Text style={styles.aboutLabel}>File Size:</Text>
+                <Text style={styles.aboutLabel}>{t('File Size:')}</Text>
                 <Text style={styles.aboutValue}>{formatFileSize(selectedFile?.size || 0)}</Text>
               </View>
             </View>
@@ -783,7 +784,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 </Defs>
                 <Rect x="0" y="0" width="1" height="1" fill="url(#aboutOkBtnGrad)" />
               </Svg>
-              <Text style={styles.aboutOkBtnText}>Done</Text>
+              <Text style={styles.aboutOkBtnText}>{t('Done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -808,9 +809,9 @@ const ConvertedFilesScreen = ({ navigation }) => {
               <DeleteIcon width={24} height={24} />
             </View>
 
-            <Text style={styles.deleteModalTitle}>Delete File?</Text>
+            <Text style={styles.deleteModalTitle}>{t('Delete Permanently?')}</Text>
             <Text style={styles.deleteModalDesc}>
-              Are you sure you want to delete <Text style={styles.deleteFileNameHighlight}>{selectedFile?.name}</Text>? This action cannot be undone.
+              {t('Are you sure you want to permanently delete')} <Text style={styles.deleteFileNameHighlight}>{selectedFile?.name}</Text>? {t('This action cannot be undone.')}
             </Text>
 
             <View style={styles.deleteActionsRow}>
@@ -819,7 +820,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 onPress={() => setDeleteModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.deleteCancelBtnText}>Cancel</Text>
+                <Text style={styles.deleteCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -827,7 +828,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 onPress={handleConfirmDelete}
                 activeOpacity={0.8}
               >
-                <Text style={styles.deleteConfirmBtnText}>Delete</Text>
+                <Text style={styles.deleteConfirmBtnText}>{t('Delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -854,10 +855,10 @@ const ConvertedFilesScreen = ({ navigation }) => {
             </View>
 
             <Text style={styles.deleteModalTitle}>
-              Delete {selectedFileKeys.size} {selectedFileKeys.size === 1 ? 'File' : 'Files'}?
+              {t('Delete')} {selectedFileKeys.size} {selectedFileKeys.size === 1 ? 'File' : 'Files'}?
             </Text>
             <Text style={styles.deleteModalDesc}>
-              Are you sure you want to move {selectedFileKeys.size} selected {selectedFileKeys.size === 1 ? 'file' : 'files'} to Recycle Bin?
+              {t('Are you sure you want to permanently delete')} {selectedFileKeys.size} {selectedFileKeys.size === 1 ? 'file' : 'files'}?
             </Text>
 
             <View style={styles.deleteActionsRow}>
@@ -866,7 +867,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 onPress={() => setMultiDeleteModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.deleteCancelBtnText}>Cancel</Text>
+                <Text style={styles.deleteCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -874,7 +875,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                 onPress={handleConfirmMultiDelete}
                 activeOpacity={0.8}
               >
-                <Text style={styles.deleteConfirmBtnText}>Delete</Text>
+                <Text style={styles.deleteConfirmBtnText}>{t('Delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>

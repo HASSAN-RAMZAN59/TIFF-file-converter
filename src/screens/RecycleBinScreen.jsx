@@ -23,6 +23,7 @@ import {
   emptyRecycleBin,
 } from '../services/recycleBinService';
 import DeleteIcon from '../assets/delete.svg';
+import { useTranslation } from 'react-i18next';
 
 const ChevronLeftIcon = ({ size = 22, color = '#1E1E1E' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -49,6 +50,7 @@ const CheckCircleIcon = ({ size = 24, color = '#10B981' }) => (
 );
 
 const RecycleBinScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [binFiles, setBinFiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -216,7 +218,7 @@ const RecycleBinScreen = ({ navigation }) => {
             activeOpacity={0.7}
             onPress={() => handleRestore(item)}
           >
-            <Text style={styles.restoreBtnText}>Restore</Text>
+            <Text style={styles.restoreBtnText}>{t('Restore')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -237,7 +239,7 @@ const RecycleBinScreen = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Recycle Bin</Text>
+        <Text style={styles.headerTitle}>{t('Recycle Bin')}</Text>
 
         {binFiles.length > 0 && (
           <TouchableOpacity
@@ -245,7 +247,7 @@ const RecycleBinScreen = ({ navigation }) => {
             activeOpacity={0.7}
             onPress={() => setEmptyModalVisible(true)}
           >
-            <Text style={styles.emptyAllText}>Empty</Text>
+            <Text style={styles.emptyAllText}>{t('Empty')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -263,9 +265,9 @@ const RecycleBinScreen = ({ navigation }) => {
             loop
             style={styles.emptyLottie}
           />
-          <Text style={styles.emptyTitle}>Recycle Bin is Empty</Text>
+          <Text style={styles.emptyTitle}>{t('Recycle Bin is Empty')}</Text>
           <Text style={styles.emptySubtitle}>
-            Deleted files will appear here and can be restored or deleted permanently.
+            {t('Deleted files will appear here and can be restored or deleted permanently.')}
           </Text>
         </View>
       ) : (
@@ -303,10 +305,10 @@ const RecycleBinScreen = ({ navigation }) => {
               <DeleteIcon width={24} height={24} fill="#2780FB" />
             </View>
 
-            <Text style={styles.modalTitle}>Delete Permanently?</Text>
+            <Text style={styles.modalTitle}>{t('Delete Permanently?')}</Text>
             <Text style={styles.modalDesc}>
-              Are you sure you want to permanently delete{' '}
-              <Text style={styles.modalHighlight}>{selectedItem?.name}</Text>? This action cannot be undone.
+              {t('Are you sure you want to permanently delete')}{' '}
+              <Text style={styles.modalHighlight}>{selectedItem?.name}</Text>? {t('This action cannot be undone.')}
             </Text>
 
             <View style={styles.modalActionsRow}>
@@ -315,7 +317,7 @@ const RecycleBinScreen = ({ navigation }) => {
                 onPress={() => setDeleteModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                <Text style={styles.modalCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -323,7 +325,7 @@ const RecycleBinScreen = ({ navigation }) => {
                 onPress={handleConfirmDeletePermanently}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalConfirmDeleteBtnText}>Delete</Text>
+                <Text style={styles.modalConfirmDeleteBtnText}>{t('Delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -349,9 +351,9 @@ const RecycleBinScreen = ({ navigation }) => {
               <DeleteIcon width={24} height={24} fill="#2780FB" />
             </View>
 
-            <Text style={styles.modalTitle}>Empty Recycle Bin?</Text>
+            <Text style={styles.modalTitle}>{t('Empty Recycle Bin?')}</Text>
             <Text style={styles.modalDesc}>
-              All {binFiles.length} files in the Recycle Bin will be permanently deleted.
+              {t('Are you sure you want to permanently delete')} {binFiles.length} {t('files')}? {t('This action cannot be undone.')}
             </Text>
 
             <View style={styles.modalActionsRow}>
@@ -360,7 +362,7 @@ const RecycleBinScreen = ({ navigation }) => {
                 onPress={() => setEmptyModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                <Text style={styles.modalCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -368,7 +370,7 @@ const RecycleBinScreen = ({ navigation }) => {
                 onPress={handleConfirmEmptyBin}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalConfirmDeleteBtnText}>Empty All</Text>
+                <Text style={styles.modalConfirmDeleteBtnText}>{t('Empty All')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -387,10 +389,10 @@ const RecycleBinScreen = ({ navigation }) => {
               <ActivityIndicator size="small" color="#2563EB" />
             </View>
 
-            <Text style={styles.emptyProgressTitle}>Emptying Recycle Bin...</Text>
+            <Text style={styles.emptyProgressTitle}>{t('Emptying Recycle Bin...')}</Text>
 
             <Text style={styles.emptyProgressSub}>
-              Permanently deleting {emptyProgress.current} of {emptyProgress.total} {emptyProgress.total === 1 ? 'file' : 'files'}
+              {emptyProgress.current} / {emptyProgress.total}
             </Text>
 
             {/* Slider / Progress Bar */}
@@ -427,9 +429,9 @@ const RecycleBinScreen = ({ navigation }) => {
               <CheckCircleIcon size={28} color="#10B981" />
             </View>
 
-            <Text style={styles.modalTitle}>File Restored</Text>
+            <Text style={styles.modalTitle}>{t('File Restored')}</Text>
             <Text style={[styles.modalDesc, { marginBottom: 4 }]}>
-              <Text style={styles.modalHighlight}>{restoredFileName}</Text> has been restored successfully.
+              <Text style={styles.modalHighlight}>{restoredFileName}</Text> {t('has been restored successfully.')}
             </Text>
           </View>
         </View>

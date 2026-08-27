@@ -18,6 +18,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 import { checkOsStoragePermission, requestOsStoragePermissionDialog } from '../services/permissionService';
@@ -59,6 +60,7 @@ const CheckmarkIcon = ({ size = 12, color = '#FFFFFF' }) => (
 );
 
 const HomeScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   // Storage State
   const [storageInfo, setStorageInfo] = useState({
     totalBytes: 0,
@@ -429,7 +431,7 @@ const HomeScreen = ({ navigation }) => {
             <SearchIcon width={18} height={18} fill="#6B7280" />
             <TextInput
               style={styles.headerSearchInput}
-              placeholder="Search converted files..."
+              placeholder={t('Search converted files...')}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -448,8 +450,8 @@ const HomeScreen = ({ navigation }) => {
         ) : (
           <>
             <View>
-              <Text style={styles.headerTitle}>TIFF Converter</Text>
-              <Text style={styles.headerSubtitle}>Convert TIFF to JPG, PNG, PDF, WEBP</Text>
+              <Text style={styles.headerTitle}>{t('TIFF Converter')}</Text>
+              <Text style={styles.headerSubtitle}>{t('Convert TIFF to JPG, PNG, PDF, WEBP')}</Text>
             </View>
             <TouchableOpacity
               style={styles.headerSearchBtn}
@@ -507,12 +509,12 @@ const HomeScreen = ({ navigation }) => {
               </Svg>
               <View style={styles.storageCircleTextOverlay}>
                 <Text style={styles.storageCirclePercent}>{storageInfo.usedPercentage}%</Text>
-                <Text style={styles.storageCircleLabel}>Used</Text>
+                <Text style={styles.storageCircleLabel}>{t('Used')}</Text>
               </View>
             </View>
 
             <View style={styles.storageInfo}>
-              <Text style={styles.storageInfoTitle}>Device Storage</Text>
+              <Text style={styles.storageInfoTitle}>{t('Device Storage')}</Text>
               <Text style={styles.storageInfoData}>{storageInfo.formattedUsed} / {storageInfo.formattedTotal}</Text>
               <View style={styles.progressBarBg}>
                 <View style={[styles.progressBarFill, { width: `${storageInfo.usedPercentage}%` }]} />
@@ -521,7 +523,7 @@ const HomeScreen = ({ navigation }) => {
                 <View style={styles.availableIconWrapper}>
                   <PieChartIcon width={12} height={12} />
                 </View>
-                <Text style={styles.availableText}>{storageInfo.formattedFree} Available</Text>
+                <Text style={styles.availableText}>{storageInfo.formattedFree} {t('Available')}</Text>
               </View>
             </View>
 
@@ -534,38 +536,38 @@ const HomeScreen = ({ navigation }) => {
         {/* Action Grid */}
         <View style={styles.grid}>
           <ActionCard
-            title="Auto Scan All TIFF"
-            desc="Find all TIFF files on your device"
+            title={t("Auto Scan All TIFF")}
+            desc={t("Find all TIFF files on your device")}
             Icon={AutoScanIcon}
             onPress={handleAutoScanPress}
           />
           <ActionCard
-            title="Pick & Convert"
-            desc="Choose one TIFF file to convert"
+            title={t("Pick & Convert")}
+            desc={t("Choose one TIFF file to convert")}
             Icon={PickConvertIcon}
             onPress={handlePickSingleFilePress}
           />
           <ActionCard
-            title="Batch Conversion"
-            desc="Convert Multiple TIFF files together"
+            title={t("Batch Conversion")}
+            desc={t("Convert Multiple TIFF files together")}
             Icon={BatchConvertIcon}
             onPress={handleBatchConversionPress}
           />
           <ActionCard
-            title="Converted Outputs"
-            desc="View all your converted files"
+            title={t("Converted Outputs")}
+            desc={t("View all your converted files")}
             Icon={ConvertedOutputsIcon}
             onPress={handleConvertedOutputsPress}
           />
           <ActionCard
-            title="Favorites"
-            desc="Quick access to saved files"
+            title={t("Favorites")}
+            desc={t("Quick access to saved files")}
             Icon={FavoritesIcon}
             onPress={handleFavoritesPress}
           />
           <ActionCard
-            title="Settings"
-            desc="Manage app preferences"
+            title={t("Settings")}
+            desc={t("Manage app preferences")}
             Icon={SettingsIcon}
             onPress={handleSettingsPress}
           />
@@ -584,7 +586,7 @@ const HomeScreen = ({ navigation }) => {
                   <Text style={styles.recentCloseSelectionText}>✕</Text>
                 </TouchableOpacity>
                 <Text style={styles.recentSelectionCountText}>
-                  {selectedRecentKeys.size} Selected
+                  {selectedRecentKeys.size} {t('Selected')}
                 </Text>
               </View>
               <View style={styles.recentSelectionHeaderRight}>
@@ -595,8 +597,8 @@ const HomeScreen = ({ navigation }) => {
                 >
                   <Text style={styles.recentSelectAllText}>
                     {selectedRecentKeys.size === filteredRecentFiles.length && filteredRecentFiles.length > 0
-                      ? 'Deselect All'
-                      : 'Select All'}
+                      ? t('Deselect All')
+                      : t('Select All')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -619,17 +621,17 @@ const HomeScreen = ({ navigation }) => {
           ) : (
             <View style={styles.recentHeader}>
               <Text style={styles.recentTitle}>
-                {searchQuery.trim() ? `Search Results (${filteredRecentFiles.length})` : 'Recent Converted'}
+                {searchQuery.trim() ? `${t('Search')} (${filteredRecentFiles.length})` : t('Recent Converted')}
               </Text>
               <TouchableOpacity onPress={handleConvertedOutputsPress}>
-                <Text style={styles.viewAll}>View All {'>'}</Text>
+                <Text style={styles.viewAll}>{t('View All')} {'>'}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {filteredRecentFiles.length === 0 ? (
             <Text style={styles.emptyRecentText}>
-              {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No recent converted files.'}
+              {searchQuery.trim() ? `${t('No files matching')} "${searchQuery}"` : t('No recent converted files.')}
             </Text>
           ) : (
             filteredRecentFiles.map((item, index) => {
@@ -667,9 +669,9 @@ const HomeScreen = ({ navigation }) => {
                 >
                   {/* Thumbnail */}
                   <View style={styles.thumbnailWrapper}>
-                    {item.format !== 'PDF' && (item.uri || item.path) ? (
+                    {item.thumbUri ? (
                       <Image
-                        source={{ uri: item.uri || `file://${item.path}` }}
+                        source={{ uri: item.thumbUri }}
                         style={styles.thumbnailImage}
                         resizeMode="cover"
                       />
@@ -769,14 +771,14 @@ const HomeScreen = ({ navigation }) => {
                 onPress={() => setMultiDeleteRecentModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.recentDeleteCancelBtnText}>Cancel</Text>
+                <Text style={styles.recentDeleteCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.recentDeleteConfirmBtn}
                 onPress={handleConfirmRecentMultiDelete}
                 activeOpacity={0.8}
               >
-                <Text style={styles.recentDeleteConfirmBtnText}>Delete</Text>
+                <Text style={styles.recentDeleteConfirmBtnText}>{t('Delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>

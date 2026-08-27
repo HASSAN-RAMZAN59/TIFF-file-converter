@@ -19,9 +19,9 @@ import {
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import { useTranslation } from 'react-i18next';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import { moveToRecycleBin } from '../services/recycleBinService';
 import SearchIcon from '../assets/search.svg';
@@ -34,6 +34,7 @@ import RenameIcon from '../assets/drive_file_rename.svg';
 import ChatInfoIcon from '../assets/chat_info.svg';
 
 const FavoritesScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [favoriteFiles, setFavoriteFiles] = useState([]);
   const [favoritesSet, setFavoritesSet] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -332,7 +333,7 @@ const FavoritesScreen = ({ navigation }) => {
             <SearchIcon width={18} height={18} fill="#6B7280" />
             <TextInput
               style={styles.headerSearchInput}
-              placeholder="Search favorites..."
+              placeholder={t('Search favorites...')}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -351,7 +352,7 @@ const FavoritesScreen = ({ navigation }) => {
         ) : (
           <>
             <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>Favorite Files</Text>
+              <Text style={styles.headerTitle}>{t('Favorite Files')}</Text>
             </View>
             <TouchableOpacity
               style={styles.searchBtn}
@@ -392,7 +393,7 @@ const FavoritesScreen = ({ navigation }) => {
                 style={styles.emptyLottie}
               />
               <Text style={styles.emptyText}>
-                {searchQuery.trim() ? `No files matching "${searchQuery}"` : 'No favorite files yet.'}
+                {searchQuery.trim() ? `${t('No files matching')} "${searchQuery}"` : t('No favorite files yet.')}
               </Text>
             </View>
           )}
@@ -407,7 +408,7 @@ const FavoritesScreen = ({ navigation }) => {
               <View style={styles.menuSvgWrapper}>
                 <DeleteIcon width={20} height={20} />
               </View>
-              <Text style={styles.menuText}>Delete</Text>
+              <Text style={styles.menuText}>{t('Delete')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handleShare}>
@@ -438,7 +439,7 @@ const FavoritesScreen = ({ navigation }) => {
       <Modal visible={renameVisible} transparent={true} animationType="fade" onRequestClose={() => setRenameVisible(false)}>
         <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.renameCard}>
-            <Text style={styles.renameTitle}>Rename File</Text>
+            <Text style={styles.renameTitle}>{t('Rename File')}</Text>
             <TextInput
               style={styles.renameInput}
               value={renameText}
@@ -500,7 +501,7 @@ const FavoritesScreen = ({ navigation }) => {
                 />
               ) : (
                 <View style={styles.previewModalLoadingBox}>
-                  <Text style={styles.previewModalLoadingText}>No image preview available</Text>
+                  <Text style={styles.previewModalLoadingText}>{t('No image preview available')}</Text>
                 </View>
               )}
             </View>
@@ -527,7 +528,7 @@ const FavoritesScreen = ({ navigation }) => {
               <View style={styles.aboutIconCircle}>
                 <ChatInfoIcon width={22} height={22} />
               </View>
-              <Text style={styles.aboutModalTitle}>File Information</Text>
+              <Text style={styles.aboutModalTitle}>{t('File Information')}</Text>
             </View>
 
             <View style={styles.aboutDetailsBox}>
@@ -593,9 +594,9 @@ const FavoritesScreen = ({ navigation }) => {
               <DeleteIcon width={24} height={24} />
             </View>
 
-            <Text style={styles.deleteModalTitle}>Delete File?</Text>
+            <Text style={styles.deleteModalTitle}>{t('Delete Permanently?')}</Text>
             <Text style={styles.deleteModalDesc}>
-              Are you sure you want to delete <Text style={styles.deleteFileNameHighlight}>{selectedFile?.name}</Text>? This action cannot be undone.
+              {t('Are you sure you want to permanently delete')} <Text style={styles.deleteFileNameHighlight}>{selectedFile?.name}</Text>? {t('This action cannot be undone.')}
             </Text>
 
             <View style={styles.deleteActionsRow}>
@@ -604,7 +605,7 @@ const FavoritesScreen = ({ navigation }) => {
                 onPress={() => setDeleteModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.deleteCancelBtnText}>Cancel</Text>
+                <Text style={styles.deleteCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -612,7 +613,7 @@ const FavoritesScreen = ({ navigation }) => {
                 onPress={handleConfirmDelete}
                 activeOpacity={0.8}
               >
-                <Text style={styles.deleteConfirmBtnText}>Delete</Text>
+                <Text style={styles.deleteConfirmBtnText}>{t('Delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>

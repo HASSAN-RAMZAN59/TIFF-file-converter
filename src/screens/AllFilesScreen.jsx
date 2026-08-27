@@ -22,6 +22,7 @@ import RescanBadgeIcon from '../assets/rescan_badge.svg';
 import LottieView from 'lottie-react-native';
 import searchingFilesAnimation from '../assets/searching_files.json';
 import noFilesFoundAnimation from '../assets/no_files_found.json';
+import { useTranslation } from 'react-i18next';
 
 /**
  * AllFilesScreen Component
@@ -66,6 +67,7 @@ const TiffThumbnail = ({ path, style }) => {
 };
 
 const AllFilesScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const isBatchPickerMode = route.params?.isBatchPicker || false;
   const [tiffFiles, setTiffFiles] = useState([]);
   const [isScanning, setIsScanning] = useState(true);
@@ -163,13 +165,13 @@ const AllFilesScreen = ({ route, navigation }) => {
   };
 
   const formatDisplayPath = (fullPath) => {
-    if (!fullPath) return 'Storage';
+    if (!fullPath) return t('Storage');
     let p = fullPath.replace('/storage/emulated/0/', '').replace('/storage/emulated/0', '');
     if (p.startsWith('/')) p = p.substring(1);
     const lastSlash = p.lastIndexOf('/');
     let folderPart = lastSlash !== -1 ? p.substring(0, lastSlash) : p;
-    if (!folderPart) return 'Storage';
-    return `Storage / ${folderPart}`;
+    if (!folderPart) return t('Storage');
+    return `${t('Storage')} / ${t(folderPart)}`;
   };
 
   const renderFileItem = ({ item, index, total }) => {
@@ -193,7 +195,7 @@ const AllFilesScreen = ({ route, navigation }) => {
           <Text style={styles.filePathText} numberOfLines={1}>
             {formatDisplayPath(item.path)}
           </Text>
-          <Text style={styles.fileSizeText}>Size: {formatFileSize(item.size)}</Text>
+          <Text style={styles.fileSizeText}>{t('Size:')} {formatFileSize(item.size)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -203,7 +205,7 @@ const AllFilesScreen = ({ route, navigation }) => {
     return (
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
-          <Text style={styles.scanTitle}>Scanning Files</Text>
+          <Text style={styles.scanTitle}>{t('Scanning Files')}</Text>
         </View>
 
         <View style={styles.scanCenterContent}>
@@ -216,8 +218,8 @@ const AllFilesScreen = ({ route, navigation }) => {
             />
           </View>
 
-          <Text style={styles.scanMainText}>Scanning Storage for TIFF Files...</Text>
-          <Text style={styles.scanSubText}>Please wait while we search your device storage</Text>
+          <Text style={styles.scanMainText}>{t('Scanning Storage for TIFF Files...')}</Text>
+          <Text style={styles.scanSubText}>{t('Please wait while we search your device storage')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -227,7 +229,7 @@ const AllFilesScreen = ({ route, navigation }) => {
     return (
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
-          <Text style={styles.scanTitle}>Scan Results</Text>
+          <Text style={styles.scanTitle}>{t('Scan Results')}</Text>
         </View>
 
         <View style={styles.scanCenterContent}>
@@ -240,8 +242,8 @@ const AllFilesScreen = ({ route, navigation }) => {
             />
           </View>
 
-          <Text style={styles.scanMainText}>No valid .TIF or .TIFF files found</Text>
-          <Text style={styles.scanSubText}>Make sure your TIFF files have a .TIF or .TIFF extension and are saved in your internal storage or download folder</Text>
+          <Text style={styles.scanMainText}>{t('No valid .TIF or .TIFF files found')}</Text>
+          <Text style={styles.scanSubText}>{t('Make sure your TIFF files have a .TIF or .TIFF extension and are saved in your internal storage or download folder')}</Text>
         </View>
 
         <View style={styles.bottomButtonContainer}>
@@ -256,7 +258,7 @@ const AllFilesScreen = ({ route, navigation }) => {
             }}
           >
             <View style={styles.buttonIconPlaceholder} />
-            <Text style={styles.rescanBlueButtonText}>Rescan Storage Files</Text>
+            <Text style={styles.rescanBlueButtonText}>{t('Rescan Storage Files')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -270,9 +272,9 @@ const AllFilesScreen = ({ route, navigation }) => {
       {/* Header */}
       <View style={styles.listHeaderTop}>
         <View>
-          <Text style={styles.listHeaderTitle}>Scan Complete</Text>
+          <Text style={styles.listHeaderTitle}>{t('Scan Complete')}</Text>
           <Text style={styles.listHeaderSubtitle}>
-            {String(tiffFiles.length).padStart(2, '0')} valid TIFF files Found
+            {String(tiffFiles.length).padStart(2, '0')} {t('valid TIFF files Found')}
           </Text>
         </View>
         <View style={styles.headerSearchIconWrapper}>
@@ -290,10 +292,10 @@ const AllFilesScreen = ({ route, navigation }) => {
         {!hasPermission && (
           <View style={styles.permissionBanner}>
             <Text style={styles.permissionText}>
-              Storage access permission is required to scan device files.
+              {t('Storage access permission is required to scan device files.')}
             </Text>
             <TouchableOpacity style={styles.grantButton} onPress={handleGrantPermission}>
-              <Text style={styles.grantButtonText}>Grant Storage Access</Text>
+              <Text style={styles.grantButtonText}>{t('Grant Storage Access')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -314,7 +316,7 @@ const AllFilesScreen = ({ route, navigation }) => {
             activeOpacity={0.8}
             onPress={() => startTiffScan()}
           >
-            <RescanBadgeIcon width={110} height={20} />
+            <Text style={styles.floatingRescanBtnText}>{t('Rescan')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -595,6 +597,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 6,
+  },
+  floatingRescanBtnText: {
+    color: '#FFFFFF',
+    fontFamily: 'Poppins-Medium',
+    fontSize: 14,
   },
 });
 

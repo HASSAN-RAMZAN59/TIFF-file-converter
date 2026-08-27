@@ -98,6 +98,11 @@ export const convertTiffFile = async (sourcePath, targetFormat = 'jpg', onProgre
         outputFilePath = `${outputDir}/${cleanName}_${timestamp}.pdf`;
         await RNFS.writeFile(outputFilePath, pdfBuffer.toString('base64'), 'base64');
         outputSize = pdfBuffer.length;
+
+        // Generate and save thumbnail for PDF
+        const thumbBuffer = createBmpBuffer(rgba, width, height);
+        const thumbPath = `${RNFS.CachesDirectoryPath}/${cleanName}_${timestamp}_thumb.jpg`;
+        await RNFS.writeFile(thumbPath, thumbBuffer.toString('base64'), 'base64');
       } else {
         const imageBuffer = createBmpBuffer(rgba, width, height);
         const ext = fmt === 'jpeg' ? 'jpg' : fmt;
@@ -135,6 +140,11 @@ export const convertTiffFile = async (sourcePath, targetFormat = 'jpg', onProgre
         outputFilePath = `${outputDir}/${cleanName}_${timestamp}.pdf`;
         await RNFS.writeFile(outputFilePath, pdfBuffer.toString('base64'), 'base64');
         outputSize = pdfBuffer.length;
+
+        // Generate and save thumbnail for PDF
+        const thumbBuffer = createBmpBuffer(pagesData[0].rgba, pagesData[0].width, pagesData[0].height);
+        const thumbPath = `${RNFS.CachesDirectoryPath}/${cleanName}_${timestamp}_thumb.jpg`;
+        await RNFS.writeFile(thumbPath, thumbBuffer.toString('base64'), 'base64');
       } else {
         // Decode primary page 0 for image format export (jpg, png, webp, bmp)
         const ifd = ifds[0];
@@ -474,11 +484,17 @@ export const getConvertedFilesList = async () => {
     })
     .map((item) => {
       const ext = item.name.split('.').pop().toLowerCase();
+      let thumbUri = 'file://' + item.path;
+      if (ext === 'pdf') {
+        const baseName = item.name.replace('.pdf', '');
+        thumbUri = `file://${RNFS.CachesDirectoryPath}/${baseName}_thumb.jpg`;
+      }
       return {
         id: item.path,
         name: item.name,
         path: item.path,
         uri: 'file://' + item.path,
+        thumbUri: thumbUri,
         size: item.size || 0,
         format: ext.toUpperCase(),
         mtime: item.mtime ? new Date(item.mtime).toISOString() : new Date().toISOString(),

@@ -14,6 +14,7 @@ import {
   Modal,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 import { convertTiffFile } from '../services/tiffConverterService';
 
@@ -27,6 +28,7 @@ const FORMAT_OPTIONS = [
 ];
 
 const PickFilesScreen = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const initialFile = route.params?.file || null;
   const [currentFile, setCurrentFile] = useState(initialFile);
   const [decodedUri, setDecodedUri] = useState(null);
@@ -141,7 +143,7 @@ const PickFilesScreen = ({ route, navigation }) => {
   if (!currentFile) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.emptyText}>No TIFF file selected.</Text>
+        <Text style={styles.emptyText}>{t('No TIFF file selected.')}</Text>
       </SafeAreaView>
     );
   }
@@ -152,7 +154,7 @@ const PickFilesScreen = ({ route, navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>TIFF File Viewer & Converter</Text>
+        <Text style={styles.headerTitle}>{t('TIFF File Viewer & Converter')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -178,7 +180,7 @@ const PickFilesScreen = ({ route, navigation }) => {
             <Image source={{ uri: decodedUri }} style={styles.mainImage} resizeMode="contain" />
           ) : (
             <View style={styles.placeholderBox}>
-              <Text style={styles.placeholderText}>Image Preview</Text>
+              <Text style={styles.placeholderText}>{t('Image Preview')}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -214,27 +216,27 @@ const PickFilesScreen = ({ route, navigation }) => {
 
         {/* File Information Card */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoCardTitle}>File Information</Text>
+          <Text style={styles.infoCardTitle}>{t('File Information')}</Text>
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>File Name:</Text>
+            <Text style={styles.infoLabel}>{t('File Name:')}</Text>
             <Text style={styles.infoValue}>{currentFile?.name || currentFile?.fileName || 'Unknown'}</Text>
           </View>
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>File Size:</Text>
+            <Text style={styles.infoLabel}>{t('File Size:')}</Text>
             <Text style={styles.infoValue}>{formatFileSize(currentFile?.size)}</Text>
           </View>
 
           <View style={styles.infoItemExtra}>
             <Text style={styles.infoTextAfterConvert}>
-              After Converting this file in <Text style={styles.boldText}>{selectedFormat.toUpperCase()}</Text> size will be
+              {t('After Converting this file in')} <Text style={styles.boldText}>{selectedFormat.toUpperCase()}</Text> {t('size will be')}
             </Text>
             <Text style={styles.infoValueSmall}>{estimateConvertedSize(currentFile?.size, selectedFormat)}</Text>
           </View>
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>File Path:</Text>
+            <Text style={styles.infoLabel}>{t('File Path:')}</Text>
             <Text style={styles.infoValueLight}>{getReadablePath(currentFile?.path || currentFile?.uri)}</Text>
           </View>
         </View>
@@ -257,9 +259,9 @@ const PickFilesScreen = ({ route, navigation }) => {
             </Svg>
           )}
           {isConverting ? (
-            <Text style={styles.convertBtnTextPrimary}>Converting... {conversionProgress}%</Text>
+            <Text style={styles.convertBtnTextPrimary}>{t('Converting')}... {conversionProgress}%</Text>
           ) : (
-            <Text style={styles.convertBtnTextPrimary}>Convert to {selectedFormat.toUpperCase()}</Text>
+            <Text style={styles.convertBtnTextPrimary}>{t('Convert')} {t('to')} {selectedFormat.toUpperCase()}</Text>
           )}
         </TouchableOpacity>
 
@@ -284,9 +286,9 @@ const PickFilesScreen = ({ route, navigation }) => {
               <Text style={styles.successCheckmark}>✓</Text>
             </View>
 
-            <Text style={styles.successModalTitle}>Conversion Complete</Text>
+            <Text style={styles.successModalTitle}>{t('Success!')}</Text>
             <Text style={styles.successModalSubtitle}>
-              Your file <Text style={styles.highlightText}>{convertedResult?.outputFileName || currentFile?.name || 'file'}</Text> has been converted into <Text style={styles.highlightText}>{(convertedResult?.format || selectedFormat).toUpperCase()}</Text> format and saved to storage.
+              {t('Your file')} <Text style={styles.highlightText}>{convertedResult?.outputFileName || currentFile?.name || 'file'}</Text> {t('has been converted into')} <Text style={styles.highlightText}>{(convertedResult?.format || selectedFormat).toUpperCase()}</Text> {t('format and saved to storage.')}
             </Text>
 
             <View style={styles.successActionsRow}>
@@ -301,7 +303,7 @@ const PickFilesScreen = ({ route, navigation }) => {
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.successCloseBtnText}>Done</Text>
+                <Text style={styles.successCloseBtnText}>{t('Done')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -327,7 +329,7 @@ const PickFilesScreen = ({ route, navigation }) => {
                   </Defs>
                   <Rect x="0" y="0" width="1" height="1" fill="url(#successViewBtnGrad)" />
                 </Svg>
-                <Text style={styles.successViewBtnText}>View Files</Text>
+                <Text style={styles.successViewBtnText}>{t('View All')}</Text>
               </TouchableOpacity>
             </View>
           </View>
