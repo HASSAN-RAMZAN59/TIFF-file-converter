@@ -156,7 +156,15 @@ const en = {
   "This action cannot be undone.": "This action cannot be undone.",
   "Batch Conversion": "Batch Conversion",
   "TIFF files selected": "TIFF files selected",
-  "Choose Output Format": "Choose Output Format"
+  "Choose Output Format": "Choose Output Format",
+  "Processing": "Processing",
+  "Processing...": "Processing...",
+  "Convert": "Convert",
+  "Converting": "Converting",
+  "of": "of",
+  "files": "files",
+  "into": "into",
+  "Files to": "Files to"
 };
 
 // Hindi (hi)
@@ -305,7 +313,15 @@ const hi = {
   "This action cannot be undone.": "इस कार्रवाई को पूर्ववत नहीं किया जा सकता।",
   "Batch Conversion": "बैच रूपांतरण",
   "TIFF files selected": "TIFF फ़ाइलें चुनी गईं",
-  "Choose Output Format": "आउटपुट स्वरूप चुनें"
+  "Choose Output Format": "आउटपुट स्वरूप चुनें",
+  "Processing": "प्रक्रिया हो रही है",
+  "Processing...": "प्रक्रिया हो रही है...",
+  "Convert": "बदलें",
+  "Converting": "बदल रहा है",
+  "of": "में से",
+  "files": "फ़ाइलें",
+  "into": "में",
+  "Files to": "फ़ाइलों को"
 };
 
 // French (fr)
@@ -454,7 +470,15 @@ const fr = {
   "This action cannot be undone.": "Cette action ne peut pas être annulée.",
   "Batch Conversion": "Conversion par lots",
   "TIFF files selected": "fichiers TIFF sélectionnés",
-  "Choose Output Format": "Choisissez le format de sortie"
+  "Choose Output Format": "Choisissez le format de sortie",
+  "Processing": "Traitement",
+  "Processing...": "Traitement...",
+  "Convert": "Convertir",
+  "Converting": "Conversion en cours",
+  "of": "sur",
+  "files": "fichiers",
+  "into": "en",
+  "Files to": "Fichiers en"
 };
 
 // Arabic (ar)
@@ -603,7 +627,15 @@ const ar = {
   "This action cannot be undone.": "لا يمكن التراجع عن هذا الإجراء.",
   "Batch Conversion": "تحويل دفعة",
   "TIFF files selected": "ملفات TIFF المحددة",
-  "Choose Output Format": "اختر صيغة الإخراج"
+  "Choose Output Format": "اختر صيغة الإخراج",
+  "Processing": "جاري المعالجة",
+  "Processing...": "جاري المعالجة...",
+  "Convert": "تحويل",
+  "Converting": "جاري التحويل",
+  "of": "من",
+  "files": "ملفات",
+  "into": "إلى",
+  "Files to": "ملفات إلى"
 };
 
 // Italian (it)
@@ -752,7 +784,15 @@ const it = {
   "This action cannot be undone.": "Questa azione non può essere annullata.",
   "Batch Conversion": "Conversione in batch",
   "TIFF files selected": "file TIFF selezionati",
-  "Choose Output Format": "Scegli il formato di output"
+  "Choose Output Format": "Scegli il formato di output",
+  "Processing": "Elaborazione",
+  "Processing...": "Elaborazione...",
+  "Convert": "Converti",
+  "Converting": "Conversione in corso",
+  "of": "di",
+  "files": "file",
+  "into": "in",
+  "Files to": "File in"
 };
 
 // Zulu (zu)
@@ -864,7 +904,15 @@ const zu = {
   "This action cannot be undone.": "Lesi senzo asikwazi ukuhlehliswa.",
   "Batch Conversion": "Ukuguqulwa Kweqoqo",
   "TIFF files selected": "amafayela we-TIFF akhethiwe",
-  "Choose Output Format": "Khetha Ifomethi Yokukhipha"
+  "Choose Output Format": "Khetha Ifomethi Yokukhipha",
+  "Processing": "Icutshungulwa",
+  "Processing...": "Icutshungulwa...",
+  "Convert": "Guqula",
+  "Converting": "Iyaguqulwa",
+  "of": "kwa-",
+  "files": "amafayela",
+  "into": "kuba yi-",
+  "Files to": "Amafayela abe"
 };
 
 // Kalaallisut (kl)
@@ -965,7 +1013,15 @@ const kl = {
   "This action cannot be undone.": "Iliuuseq utertinneqarsinnaanngilaq.",
   "Batch Conversion": "Ataatsimoortillugit Allanngortinneri",
   "TIFF files selected": "TIFF fiilit toqqakkat",
-  "Choose Output Format": "Output Format Toqqaruk"
+  "Choose Output Format": "Output Format Toqqaruk",
+  "Processing": "Suliarineqarpoq",
+  "Processing...": "Suliarineqarpoq...",
+  "Convert": "Allanngortiguk",
+  "Converting": "Allanngortinneqarpoq",
+  "of": "-",
+  "files": "fiilit",
+  "into": "uunga",
+  "Files to": "Fiilit uunga"
 };
 
 // Dutch (nl)
@@ -1114,7 +1170,15 @@ const nl = {
   "This action cannot be undone.": "Deze actie kan niet ongedaan worden gemaakt.",
   "Batch Conversion": "Batchconversie",
   "TIFF files selected": "TIFF-bestanden geselecteerd",
-  "Choose Output Format": "Kies Uitvoerformaat"
+  "Choose Output Format": "Kies Uitvoerformaat",
+  "Processing": "Verwerken",
+  "Processing...": "Verwerken...",
+  "Convert": "Converteren",
+  "Converting": "Bezig met converteren",
+  "of": "van",
+  "files": "bestanden",
+  "into": "naar",
+  "Files to": "Bestanden naar"
 };
 
 // German (de)
@@ -1263,7 +1327,15 @@ const de = {
   "This action cannot be undone.": "Diese Aktion kann nicht rückgängig gemacht werden.",
   "Batch Conversion": "Stapelkonvertierung",
   "TIFF files selected": "TIFF-Dateien ausgewählt",
-  "Choose Output Format": "Ausgabeformat wählen"
+  "Choose Output Format": "Ausgabeformat wählen",
+  "Processing": "Verarbeitung",
+  "Processing...": "Verarbeitung...",
+  "Convert": "Konvertieren",
+  "Converting": "Konvertiere",
+  "of": "von",
+  "files": "Dateien",
+  "into": "in",
+  "Files to": "Dateien in"
 };
 
 const resources = {
