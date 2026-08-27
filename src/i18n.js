@@ -142,7 +142,18 @@ const en = {
   "Storage access permission is required to scan device files.": "Storage access permission is required to scan device files.",
   "Grant Storage Access": "Grant Storage Access",
   "Rescan": "Rescan",
-  "Size:": "Size:"
+  "Size:": "Size:",
+  "Share": "Share",
+  "Delete": "Delete",
+  "Cancel": "Cancel",
+  "Done": "Done",
+  "Share Image": "Share Image",
+  "Error": "Error",
+  "Success!": "Success!",
+  "View All": "View All",
+  "Delete File?": "Delete File?",
+  "Are you sure you want to permanently delete": "Are you sure you want to permanently delete",
+  "This action cannot be undone.": "This action cannot be undone."
 };
 
 // Hindi (hi)
@@ -277,7 +288,18 @@ const hi = {
   "Storage access permission is required to scan device files.": "डिवाइस फ़ाइलों को स्कैन करने के लिए स्टोरेज एक्सेस की अनुमति आवश्यक है।",
   "Grant Storage Access": "स्टोरेज एक्सेस दें",
   "Rescan": "पुनः स्कैन करें",
-  "Size:": "आकार:"
+  "Size:": "आकार:",
+  "Share": "शेयर करें",
+  "Delete": "हटाएं",
+  "Cancel": "रद्द करें",
+  "Done": "हो गया",
+  "Share Image": "छवि शेयर करें",
+  "Error": "त्रुटि",
+  "Success!": "सफलता!",
+  "View All": "सभी देखें",
+  "Delete File?": "फ़ाइल हटाएं?",
+  "Are you sure you want to permanently delete": "क्या आप वाकई स्थायी रूप से हटाना चाहते हैं",
+  "This action cannot be undone.": "इस कार्रवाई को पूर्ववत नहीं किया जा सकता।"
 };
 
 // French (fr)
@@ -412,7 +434,18 @@ const fr = {
   "Storage access permission is required to scan device files.": "L'autorisation d'accès au stockage est requise pour analyser les fichiers.",
   "Grant Storage Access": "Accorder l'accès au stockage",
   "Rescan": "Réanalyser",
-  "Size:": "Taille :"
+  "Size:": "Taille :",
+  "Share": "Partager",
+  "Delete": "Supprimer",
+  "Cancel": "Annuler",
+  "Done": "Terminé",
+  "Share Image": "Partager l'image",
+  "Error": "Erreur",
+  "Success!": "Succès!",
+  "View All": "Tout afficher",
+  "Delete File?": "Supprimer le fichier?",
+  "Are you sure you want to permanently delete": "Êtes-vous sûr de vouloir supprimer définitivement",
+  "This action cannot be undone.": "Cette action ne peut pas être annulée."
 };
 
 // Arabic (ar)
@@ -547,7 +580,18 @@ const ar = {
   "Storage access permission is required to scan device files.": "يلزم إذن الوصول إلى التخزين لمسح ملفات الجهاز.",
   "Grant Storage Access": "منح الوصول إلى التخزين",
   "Rescan": "إعادة المسح",
-  "Size:": "الحجم:"
+  "Size:": "الحجم:",
+  "Share": "مشاركة",
+  "Delete": "حذف",
+  "Cancel": "إلغاء",
+  "Done": "تم",
+  "Share Image": "مشاركة الصورة",
+  "Error": "خطأ",
+  "Success!": "نجاح!",
+  "View All": "عرض الكل",
+  "Delete File?": "حذف الملف؟",
+  "Are you sure you want to permanently delete": "هل أنت متأكد أنك تريد الحذف نهائيًا",
+  "This action cannot be undone.": "لا يمكن التراجع عن هذا الإجراء."
 };
 
 // Italian (it)
@@ -682,7 +726,18 @@ const it = {
   "Storage access permission is required to scan device files.": "L'autorizzazione di accesso all'archivio è necessaria per scansionare i file.",
   "Grant Storage Access": "Concedi Accesso Archivio",
   "Rescan": "Ripeti Scansione",
-  "Size:": "Dimensione:"
+  "Size:": "Dimensione:",
+  "Share": "Condividi",
+  "Delete": "Elimina",
+  "Cancel": "Annulla",
+  "Done": "Fatto",
+  "Share Image": "Condividi Immagine",
+  "Error": "Errore",
+  "Success!": "Successo!",
+  "View All": "Vedi Tutti",
+  "Delete File?": "Eliminare il file?",
+  "Are you sure you want to permanently delete": "Sei sicuro di voler eliminare in modo permanente",
+  "This action cannot be undone.": "Questa azione non può essere annullata."
 };
 
 // Zulu (zu)
@@ -780,7 +835,18 @@ const zu = {
   "Storage access permission is required to scan device files.": "Imvume yokufinyelela kwisitoreji iyadingeka ukuskena amafayela edivayisi.",
   "Grant Storage Access": "Vumela Ukufinyelela Kwesitoreji",
   "Rescan": "Skena Futhi",
-  "Size:": "Usayizi:"
+  "Size:": "Usayizi:",
+  "Share": "Yabelana",
+  "Delete": "Susa",
+  "Cancel": "Khansela",
+  "Done": "Kwenziwe",
+  "Share Image": "Yabelana Ngesithombe",
+  "Error": "Iphutha",
+  "Success!": "Kuyimpumelelo!",
+  "View All": "Buka Konke",
+  "Delete File?": "Susa Ifayela?",
+  "Are you sure you want to permanently delete": "Uqinisekile ukuthi ufuna ukususa unomphela",
+  "This action cannot be undone.": "Lesi senzo asikwazi ukuhlehliswa."
 };
 
 // Kalaallisut (kl)
@@ -867,7 +933,18 @@ const kl = {
   "Storage access permission is required to scan device files.": "Fiilit misissuiffigineqassappata toqqorsivimmut isersinnaanermut akuersissut piumasaqaataavoq.",
   "Grant Storage Access": "Toqqorsivimmut Isersinnaaneq Akueriuk",
   "Rescan": "Misissuiffigeqqikkit",
-  "Size:": "Angissusia:"
+  "Size:": "Angissusia:",
+  "Share": "Siammaaguk",
+  "Delete": "Piiguk",
+  "Cancel": "Unitsiguk",
+  "Done": "Naammassivoq",
+  "Share Image": "Asseq Siammaaguk",
+  "Error": "Kukkuneq",
+  "Success!": "Iluatsippoq!",
+  "View All": "Tamarmik Takuuk",
+  "Delete File?": "Fiili Piissava?",
+  "Are you sure you want to permanently delete": "Qulakkeerpiuk ataavartumik piissagakku",
+  "This action cannot be undone.": "Iliuuseq utertinneqarsinnaanngilaq."
 };
 
 // Dutch (nl)
@@ -1002,7 +1079,18 @@ const nl = {
   "Storage access permission is required to scan device files.": "Toestemming voor opslagtoegang is vereist om apparaatbestanden te scannen.",
   "Grant Storage Access": "Opslagtoegang Verlenen",
   "Rescan": "Opnieuw Scannen",
-  "Size:": "Grootte:"
+  "Size:": "Grootte:",
+  "Share": "Delen",
+  "Delete": "Verwijderen",
+  "Cancel": "Annuleren",
+  "Done": "Klaar",
+  "Share Image": "Afbeelding Delen",
+  "Error": "Fout",
+  "Success!": "Succes!",
+  "View All": "Alles Bekijken",
+  "Delete File?": "Bestand Verwijderen?",
+  "Are you sure you want to permanently delete": "Weet u zeker dat u dit permanent wilt verwijderen",
+  "This action cannot be undone.": "Deze actie kan niet ongedaan worden gemaakt."
 };
 
 // German (de)
@@ -1137,7 +1225,18 @@ const de = {
   "Storage access permission is required to scan device files.": "Für den Scan von Gerätedateien ist eine Speicherzugriffsberechtigung erforderlich.",
   "Grant Storage Access": "Speicherzugriff gewähren",
   "Rescan": "Erneut scannen",
-  "Size:": "Größe:"
+  "Size:": "Größe:",
+  "Share": "Teilen",
+  "Delete": "Löschen",
+  "Cancel": "Abbrechen",
+  "Done": "Fertig",
+  "Share Image": "Bild teilen",
+  "Error": "Fehler",
+  "Success!": "Erfolg!",
+  "View All": "Alle ansehen",
+  "Delete File?": "Datei löschen?",
+  "Are you sure you want to permanently delete": "Möchten Sie diese Datei wirklich unwiderruflich löschen",
+  "This action cannot be undone.": "Diese Aktion kann nicht rückgängig gemacht werden."
 };
 
 const resources = {
