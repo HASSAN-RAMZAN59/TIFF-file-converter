@@ -208,7 +208,7 @@ const AllFilesScreen = ({ route, navigation }) => {
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <BackIcon width={24} height={24} />
+            <BackIcon width={20} height={20} />
           </TouchableOpacity>
           <Text style={styles.scanTitle}>{t('Scanning Files')}</Text>
         </View>
@@ -235,7 +235,7 @@ const AllFilesScreen = ({ route, navigation }) => {
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <BackIcon width={24} height={24} />
+            <BackIcon width={20} height={20} />
           </TouchableOpacity>
           <Text style={styles.scanTitle}>{t('Scan Results')}</Text>
         </View>
@@ -281,7 +281,7 @@ const AllFilesScreen = ({ route, navigation }) => {
       <View style={styles.listHeaderTop}>
         <View style={styles.listHeaderLeft}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <BackIcon width={24} height={24} />
+            <BackIcon width={20} height={20} />
           </TouchableOpacity>
           <View>
             <Text style={styles.listHeaderTitle}>{t('Scan Complete')}</Text>

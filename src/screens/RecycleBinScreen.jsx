@@ -242,7 +242,7 @@ const RecycleBinScreen = ({ navigation }) => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <BackIcon width={24} height={24} />
+            <BackIcon width={20} height={20} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('Recycle Bin')}</Text>
         </View>

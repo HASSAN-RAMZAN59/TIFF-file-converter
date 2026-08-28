@@ -167,7 +167,7 @@ const SettingsScreen = ({ navigation }) => {
         {/* Screen Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <BackIcon width={24} height={24} />
+            <BackIcon width={20} height={20} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('Settings')}</Text>
         </View>

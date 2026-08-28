@@ -158,7 +158,7 @@ const PickFilesScreen = ({ route, navigation }) => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <BackIcon width={20} height={20} />
+            <BackIcon width={18} height={18} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('Single File Converter')}</Text>
         </View>
