@@ -23,6 +23,7 @@ import {
   emptyRecycleBin,
 } from '../services/recycleBinService';
 import DeleteIcon from '../assets/delete.svg';
+import BackIcon from '../assets/Back Press.svg';
 import { useTranslation } from 'react-i18next';
 
 const ChevronLeftIcon = ({ size = 22, color = '#1E1E1E' }) => (
@@ -239,7 +240,12 @@ const RecycleBinScreen = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('Recycle Bin')}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('Recycle Bin')}</Text>
+        </View>
 
         {binFiles.length > 0 && (
           <TouchableOpacity
@@ -454,6 +460,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 20,

@@ -23,6 +23,7 @@ import SourceNotesIcon from '../assets/source_notes.svg';
 import LottieView from 'lottie-react-native';
 import searchingFilesAnimation from '../assets/searching_files.json';
 import noFilesFoundAnimation from '../assets/no_files_found.json';
+import BackIcon from '../assets/Back Press.svg';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -206,6 +207,9 @@ const AllFilesScreen = ({ route, navigation }) => {
     return (
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
           <Text style={styles.scanTitle}>{t('Scanning Files')}</Text>
         </View>
 
@@ -230,6 +234,9 @@ const AllFilesScreen = ({ route, navigation }) => {
     return (
       <SafeAreaView style={styles.scanContainer}>
         <View style={styles.scanHeaderTop}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
           <Text style={styles.scanTitle}>{t('Scan Results')}</Text>
         </View>
 
@@ -272,11 +279,16 @@ const AllFilesScreen = ({ route, navigation }) => {
 
       {/* Header */}
       <View style={styles.listHeaderTop}>
-        <View>
-          <Text style={styles.listHeaderTitle}>{t('Scan Complete')}</Text>
-          <Text style={styles.listHeaderSubtitle}>
-            {String(tiffFiles.length).padStart(2, '0')} {t('valid TIFF files Found')}
-          </Text>
+        <View style={styles.listHeaderLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.listHeaderTitle}>{t('Scan Complete')}</Text>
+            <Text style={styles.listHeaderSubtitle}>
+              {String(tiffFiles.length).padStart(2, '0')} {t('valid TIFF files Found')}
+            </Text>
+          </View>
         </View>
         <View style={styles.headerSearchIconWrapper}>
           <SearchIcon width={20} height={20} fill="#111827" />
@@ -332,9 +344,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F9FC',
   },
   scanHeaderTop: {
+    flexDirection: 'row',
     paddingTop: 16,
     paddingBottom: 16,
     alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  backButton: {
+    marginRight: 12,
   },
   scanTitle: {
     fontSize: 16,
@@ -423,6 +440,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  listHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   listHeaderTitle: {
     fontSize: 18,

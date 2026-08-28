@@ -36,6 +36,7 @@ import DeleteIcon from '../assets/delete.svg';
 import ShareIcon from '../assets/share.svg';
 import RenameIcon from '../assets/drive_file_rename.svg';
 import ChatInfoIcon from '../assets/chat_info.svg';
+import BackIcon from '../assets/Back Press.svg';
 
 const CheckmarkIcon = ({ size = 12, color = '#FFFFFF' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -597,6 +598,9 @@ const ConvertedFilesScreen = ({ navigation }) => {
           ) : (
             <>
               <View style={styles.headerLeft}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                  <BackIcon width={24} height={24} />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>{t('Converted Files')}</Text>
               </View>
               <TouchableOpacity 
@@ -1031,6 +1035,9 @@ const styles = StyleSheet.create({
   backBtnText: {
     fontSize: 22,
     color: '#1E1E1E',
+  },
+  backButton: {
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 17,

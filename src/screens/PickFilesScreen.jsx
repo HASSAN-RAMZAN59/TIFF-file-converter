@@ -12,11 +12,13 @@ import {
   Dimensions,
   StatusBar,
   Modal,
+  BackHandler,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
 import { convertTiffFile } from '../services/tiffConverterService';
+import BackIcon from '../assets/Back Press.svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -154,7 +156,12 @@ const PickFilesScreen = ({ route, navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('TIFF File Viewer & Converter')}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('Single File Converter')}</Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -363,6 +370,13 @@ const styles = StyleSheet.create({
   backBtnText: {
     fontSize: 22,
     color: '#1E1E1E',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 16,

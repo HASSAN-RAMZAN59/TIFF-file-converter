@@ -34,6 +34,7 @@ import DeleteIcon from '../assets/delete.svg';
 import ShareIcon from '../assets/share.svg';
 import RenameIcon from '../assets/drive_file_rename.svg';
 import ChatInfoIcon from '../assets/chat_info.svg';
+import BackIcon from '../assets/Back Press.svg';
 
 const FavoritesScreen = ({ navigation }) => {
   const { t } = useTranslation();
@@ -378,6 +379,9 @@ const FavoritesScreen = ({ navigation }) => {
         ) : (
           <>
             <View style={styles.headerLeft}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <BackIcon width={24} height={24} />
+              </TouchableOpacity>
               <Text style={styles.headerTitle}>{t('Favorite Files')}</Text>
             </View>
             <TouchableOpacity
@@ -666,6 +670,9 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 17,

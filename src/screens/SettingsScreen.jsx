@@ -19,7 +19,8 @@ import GlobeAsiaIcon from '../assets/globe_asia.svg';
 import InfoIcon from '../assets/info.svg';
 import SecurityIcon from '../assets/security.svg';
 import SettingDeleteIcon from '../assets/setting delete.svg';
-import SettingShareIcon from '../assets/setting share.svg';
+import SettingShareIcon from '../assets/setting_share.svg';
+import BackIcon from '../assets/Back Press.svg';
 import SwitchActiveSvg from '../assets/Switch.svg';
 import { getAutoResumeEnabled, setAutoResumeEnabled } from '../services/settingsService';
 import { useTranslation } from 'react-i18next';
@@ -165,6 +166,9 @@ const SettingsScreen = ({ navigation }) => {
       >
         {/* Screen Header */}
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('Settings')}</Text>
         </View>
 
@@ -245,7 +249,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  backButton: {
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 20,

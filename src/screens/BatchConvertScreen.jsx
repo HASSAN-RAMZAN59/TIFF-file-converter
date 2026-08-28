@@ -17,6 +17,7 @@ import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { convertTiffBatch } from '../services/tiffConverterService';
 import { decodeTiffToBase64Uri, decodeTiffThumbnailFast } from '../services/tiffDecoderService';
+import BackIcon from '../assets/Back Press.svg';
 
 const FORMAT_OPTIONS = [
   { label: 'JPG', value: 'jpg', color: '#1976D2' },
@@ -223,8 +224,15 @@ const BatchConvertScreen = ({ route, navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('Batch Conversion')}</Text>
-        <Text style={styles.headerSubtitle}>{files.length} {t('TIFF files selected')}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>{t('Batch Conversion')}</Text>
+            <Text style={styles.headerSubtitle}>{files.length} {t('TIFF files selected')}</Text>
+          </View>
+        </View>
       </View>
 
       {/* Scrollable Body */}
@@ -464,7 +472,15 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingTop: 16,
     paddingBottom: 12,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 18,

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import SearchIcon from '../assets/search.svg';
+import BackIcon from '../assets/Back Press.svg';
 import { getAppLanguage, setAppLanguage } from '../services/settingsService';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
@@ -118,7 +119,12 @@ const LanguageScreen = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('Language')}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <BackIcon width={24} height={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('Language')}</Text>
+        </View>
       </View>
 
       {/* Language List - Fixed / Non-Scrollable */}
@@ -175,6 +181,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: 'Poppins-Bold',
     color: '#1E1E1E',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   searchIconBtn: {
     padding: 6,
