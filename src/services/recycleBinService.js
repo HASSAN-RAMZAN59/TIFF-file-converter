@@ -172,12 +172,43 @@ export const restoreFromRecycleBin = async (item) => {
         } catch (_) {}
       }
 
+      let restoreSuccess = false;
+
       try {
         await RNFS.copyFile(binPath, targetPath);
+        restoreSuccess = true;
       } catch (cpErr) {
-        // Fallback: binary base64 stream
-        const base64Data = await RNFS.readFile(binPath, 'base64');
-        await RNFS.writeFile(targetPath, base64Data, 'base64');
+        try {
+          // Fallback: binary base64 stream
+          const base64Data = await RNFS.readFile(binPath, 'base64');
+          await RNFS.writeFile(targetPath, base64Data, 'base64');
+          restoreSuccess = true;
+        } catch (writeErr) {
+          // Fallback 2: The original path might have permission issues (e.g. PDF in Pictures).
+          // Try restoring to the safe outputDir instead.
+          const fallbackTargetPath = `${outputDir}/${item.name}`;
+          if (targetPath !== fallbackTargetPath) {
+            targetPath = fallbackTargetPath;
+            try {
+              await RNFS.copyFile(binPath, targetPath);
+              restoreSuccess = true;
+            } catch (fallbackCpErr) {
+              try {
+                const base64Data = await RNFS.readFile(binPath, 'base64');
+                await RNFS.writeFile(targetPath, base64Data, 'base64');
+                restoreSuccess = true;
+              } catch (fallbackWriteErr) {
+                restoreSuccess = false;
+              }
+            }
+          } else {
+             restoreSuccess = false;
+          }
+        }
+      }
+
+      if (!restoreSuccess) {
+        return false;
       }
 
       // Notify Media Scanner so it shows in gallery & file lists immediately
