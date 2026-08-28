@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   FlatList,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import SearchIcon from '../assets/search.svg';
 import BackIcon from '../assets/Back Press.svg';
@@ -52,6 +52,7 @@ const RadioButton = ({ selected }) => {
 
 const LanguageScreen = ({ navigation }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [selectedLanguage, setSelectedLanguage] = useState('fr');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -114,7 +115,7 @@ const LanguageScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
 
       {/* Header */}
@@ -137,7 +138,7 @@ const LanguageScreen = ({ navigation }) => {
       </View>
 
       {/* Bottom Apply Button */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: (Platform.OS === 'ios' ? 24 : 20) + Math.max(insets.bottom, 10) }]}>
         <TouchableOpacity
           style={styles.applyBtn}
           activeOpacity={0.85}

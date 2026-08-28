@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { hasCompletedOnboarding } from '../services/onboardingService';
 import { checkOsStoragePermission } from '../services/permissionService';
 import SplashIcon from '../assets/Group 4.svg';

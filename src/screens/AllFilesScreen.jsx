@@ -3,14 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
   ActivityIndicator,
   StatusBar,
   Image,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanDeviceForTiffs } from '../services/tiffScannerService';
 import { decodeTiffThumbnailFast, preloadThumbnail } from '../services/tiffDecoderService';
 import {
@@ -70,6 +67,7 @@ const TiffThumbnail = ({ path, style }) => {
 
 const AllFilesScreen = ({ route, navigation }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const isBatchPickerMode = route.params?.isBatchPicker || false;
   const [tiffFiles, setTiffFiles] = useState([]);
   const [isScanning, setIsScanning] = useState(true);
@@ -323,7 +321,7 @@ const AllFilesScreen = ({ route, navigation }) => {
         </View>
 
         {/* Rescan Button below card */}
-        <View style={styles.rescanBottomWrapper}>
+        <View style={[styles.rescanBottomWrapper, { marginBottom: Math.max(10, insets.bottom) }]}>
           <TouchableOpacity 
             style={styles.floatingRescanBtn} 
             activeOpacity={0.8}

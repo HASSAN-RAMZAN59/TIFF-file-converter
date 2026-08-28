@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   StatusBar,
@@ -12,6 +11,7 @@ import {
   Modal,
   PanResponder,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { decodeTiffToBase64Uri, decodeTiffThumbnailFast, cropAndRotateImage } from '../services/tiffDecoderService';
 import { moveToRecycleBin } from '../services/recycleBinService';

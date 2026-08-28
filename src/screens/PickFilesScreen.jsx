@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   ScrollView,
@@ -14,6 +13,7 @@ import {
   Modal,
   BackHandler,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { decodeTiffToBase64Uri } from '../services/tiffDecoderService';
@@ -31,6 +31,7 @@ const FORMAT_OPTIONS = [
 
 const PickFilesScreen = ({ route, navigation }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const initialFile = route.params?.file || null;
   const [currentFile, setCurrentFile] = useState(initialFile);
   const [decodedUri, setDecodedUri] = useState(null);
@@ -151,7 +152,7 @@ const PickFilesScreen = ({ route, navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
 
       {/* Header */}
@@ -164,7 +165,7 @@ const PickFilesScreen = ({ route, navigation }) => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 24 + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* Image Placeholder / Preview with Tap to Preview / Edit */}
         <TouchableOpacity

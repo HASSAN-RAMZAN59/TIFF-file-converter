@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   FlatList,
   ScrollView,
@@ -13,6 +12,7 @@ import {
   Modal,
   Image,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { convertTiffBatch } from '../services/tiffConverterService';
@@ -67,6 +67,7 @@ const TiffThumbnail = ({ path, style }) => {
  */
 const BatchConvertScreen = ({ route, navigation }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const initialFiles = route.params?.files || [];
   const resumeQueue = route.params?.resumeQueue || null;
   const [files, setFiles] = useState(initialFiles);
@@ -312,7 +313,7 @@ const BatchConvertScreen = ({ route, navigation }) => {
       </ScrollView>
 
       {/* Start Batch Trigger Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: 24 + insets.bottom }]}>
         <TouchableOpacity
           style={[styles.convertButton, (isConverting || files.length === 0) && styles.disabledButton]}
           onPress={() => handleStartBatchConversion(0, selectedFormat)}
