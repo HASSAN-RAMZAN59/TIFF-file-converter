@@ -19,7 +19,7 @@ import GlobeAsiaIcon from '../assets/globe_asia.svg';
 import InfoIcon from '../assets/info.svg';
 import SecurityIcon from '../assets/security.svg';
 import SettingDeleteIcon from '../assets/setting delete.svg';
-import SettingShareIcon from '../assets/setting_share.svg';
+import SettingShareIcon from '../assets/setting share.svg';
 import BackIcon from '../assets/Back Press.svg';
 import SwitchActiveSvg from '../assets/Switch.svg';
 import { getAutoResumeEnabled, setAutoResumeEnabled } from '../services/settingsService';
