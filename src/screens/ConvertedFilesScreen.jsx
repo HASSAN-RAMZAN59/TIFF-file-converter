@@ -22,6 +22,7 @@ import {
 import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { getConvertedFilesList } from '../services/tiffConverterService';
