@@ -38,7 +38,7 @@ const TiffThumbnail = ({ path, style }) => {
 
   useEffect(() => {
     let isActive = true;
-    
+
     // Fast step-downsampled decode (10x faster)
     decodeTiffThumbnailFast(path, 120)
       .then((result) => {
@@ -46,7 +46,7 @@ const TiffThumbnail = ({ path, style }) => {
           setImageUri(result.uri);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       isActive = false;
@@ -55,10 +55,10 @@ const TiffThumbnail = ({ path, style }) => {
 
   if (imageUri) {
     return (
-      <Image 
-        source={{ uri: imageUri }} 
-        style={[style, { borderWidth: 0 }]} 
-        resizeMode="cover" 
+      <Image
+        source={{ uri: imageUri }}
+        style={[style, { borderWidth: 0 }]}
+        resizeMode="cover"
       />
     );
   }
@@ -327,8 +327,8 @@ const AllFilesScreen = ({ route, navigation }) => {
 
         {/* Rescan Button below card */}
         <View style={[styles.rescanBottomWrapper, { marginBottom: Math.max(10, insets.bottom) }]}>
-          <TouchableOpacity 
-            style={styles.floatingRescanBtn} 
+          <TouchableOpacity
+            style={styles.floatingRescanBtn}
             activeOpacity={0.8}
             onPress={() => startTiffScan()}
           >

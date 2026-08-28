@@ -397,19 +397,19 @@ export const cropAndRotateImage = async ({
   // Save in the SAME directory as the original file
   const lastSlashIndex = realPath.lastIndexOf('/');
   let originalDir = lastSlashIndex !== -1 ? realPath.substring(0, lastSlashIndex) : RNFS.CachesDirectoryPath;
-  
+
   // If the directory is the cache directory (content:// fallback), save it in Downloads instead
   if (originalDir.includes(RNFS.CachesDirectoryPath) || originalDir.includes('/cache')) {
     const root = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
     originalDir = `${root}/TIFF`;
-    
+
     if (!(await RNFS.exists(originalDir))) {
       await RNFS.mkdir(originalDir);
     }
   }
 
   let baseFileName = (originalFileName || realPath.split('/').pop() || 'image').replace(/\.[^/.]+$/, '');
-  
+
   // Clean up "_X" if it already exists to avoid _1_1
   baseFileName = baseFileName.replace(/_\d+$/, '');
 
@@ -417,7 +417,7 @@ export const cropAndRotateImage = async ({
   let counter = 1;
   let outFileName = `${baseFileName}_${counter}.tiff`;
   let outPath = `${originalDir}/${outFileName}`;
-  
+
   while (await RNFS.exists(outPath)) {
     counter++;
     outFileName = `${baseFileName}_${counter}.tiff`;
@@ -425,7 +425,7 @@ export const cropAndRotateImage = async ({
   }
 
   await RNFS.writeFile(outPath, tiffBuffer.toString('base64'), 'base64');
-  
+
   // Generate a preview BMP for immediate UI display
   const previewBmpBuf = createBmpBuffer(croppedRgba, cropW, cropH);
 
