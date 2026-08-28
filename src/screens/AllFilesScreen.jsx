@@ -19,6 +19,7 @@ import {
 } from '../services/permissionService';
 import SearchIcon from '../assets/search.svg';
 import RescanBadgeIcon from '../assets/rescan_badge.svg';
+import SourceNotesIcon from '../assets/source_notes.svg';
 import LottieView from 'lottie-react-native';
 import searchingFilesAnimation from '../assets/searching_files.json';
 import noFilesFoundAnimation from '../assets/no_files_found.json';
@@ -257,7 +258,7 @@ const AllFilesScreen = ({ route, navigation }) => {
               }
             }}
           >
-            <View style={styles.buttonIconPlaceholder} />
+            <SourceNotesIcon width={20} height={20} fill="#FFFFFF" style={{ marginRight: 8 }} />
             <Text style={styles.rescanBlueButtonText}>{t('Rescan Storage Files')}</Text>
           </TouchableOpacity>
         </View>
@@ -316,7 +317,8 @@ const AllFilesScreen = ({ route, navigation }) => {
             activeOpacity={0.8}
             onPress={() => startTiffScan()}
           >
-            <Text style={styles.floatingRescanBtnText}>{t('Rescan')}</Text>
+            <SourceNotesIcon width={18} height={18} fill="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.floatingRescanBtnText}>{t('Rescan Storage Files')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -361,7 +363,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
     color: '#1E1E1E',
-    marginBottom: 8,
+    marginBottom: 2,
     textAlign: 'center',
   },
   scanSubText: {
@@ -426,11 +428,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins-Medium',
     color: '#1E1E1E',
+    marginBottom: -4,
   },
   listHeaderSubtitle: {
     fontSize: 12,
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: -2,
     fontFamily: 'Poppins-Regular',
   },
   headerSearchIconWrapper: {
@@ -488,7 +491,8 @@ const styles = StyleSheet.create({
   fileCardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   fileCardBorder: {
     borderBottomWidth: 1,
@@ -558,13 +562,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins-Medium',
     color: '#1E1E1E',
-    marginBottom: 2,
+    marginBottom: -2,
   },
   filePathText: {
     fontSize: 11,
     color: '#9CA3AF',
     fontFamily: 'Poppins-Regular',
-    marginBottom: 4,
+    marginBottom: -2,
   },
   fileSizeText: {
     fontSize: 11,
