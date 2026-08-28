@@ -9,7 +9,7 @@ import { resolveToAbsolutePath } from './tiffDecoderService';
  */
 
 export const getOutputDir = async () => {
-  const root = RNFS.PicturesDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Pictures`;
+  const root = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
   const outputDir = `${root}/TIFF_Converted`;
   const exists = await RNFS.exists(outputDir);
   if (!exists) {
@@ -455,13 +455,27 @@ const getRecycleBinSet = async () => {
 };
 
 export const getConvertedFilesList = async () => {
-  const outputDir = await getOutputDir();
-  const exists = await RNFS.exists(outputDir);
-  if (!exists) return [];
+  const rootDownloads = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
+  const rootPictures = RNFS.PicturesDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Pictures`;
+  const dirDownloads = `${rootDownloads}/TIFF_Converted`;
+  const dirPictures = `${rootPictures}/TIFF_Converted`;
 
   const { paths: binPaths, names: binNames } = await getRecycleBinSet();
 
-  const items = await RNFS.readDir(outputDir);
+  let items = [];
+  try {
+    if (await RNFS.exists(dirDownloads)) {
+      const itemsDownloads = await RNFS.readDir(dirDownloads);
+      items = items.concat(itemsDownloads);
+    }
+    if (await RNFS.exists(dirPictures)) {
+      const itemsPictures = await RNFS.readDir(dirPictures);
+      items = items.concat(itemsPictures);
+    }
+  } catch (err) {
+    console.warn('Error reading converted directories', err);
+  }
+
   return items
     .filter((item) => {
       if (!item.isFile() || (item.size || 0) <= 0) return false;
