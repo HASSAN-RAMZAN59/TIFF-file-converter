@@ -259,6 +259,7 @@ export const cropAndRotateImage = async ({
   cropRect, // { x, y, width, height } in container coords
   containerSize, // { width, height }
   rotationDegree = 0, // 0, 90, 180, 270
+  originalFileName = null,
 }) => {
   const realPath = await resolveToAbsolutePath(filePath);
   const base64Data = await RNFS.readFile(realPath, 'base64');
@@ -389,28 +390,54 @@ export const cropAndRotateImage = async ({
     }
   }
 
-  // Encode as BMP buffer
-  const bmpBuf = createBmpBuffer(croppedRgba, cropW, cropH);
+  // Encode as TIFF buffer using UTIF
+  const tiffArrayBuffer = UTIF.encodeImage(croppedRgba, cropW, cropH);
+  const tiffBuffer = Buffer.from(tiffArrayBuffer);
 
-  // Save to temporary cache folder (NOT TIFF_Converted) so it doesn't show in Recent Converted before user converts it
-  const cacheDir = `${RNFS.CachesDirectoryPath}/crop_cache`;
-  if (!(await RNFS.exists(cacheDir))) {
-    await RNFS.mkdir(cacheDir);
+  // Save in the SAME directory as the original file
+  const lastSlashIndex = realPath.lastIndexOf('/');
+  let originalDir = lastSlashIndex !== -1 ? realPath.substring(0, lastSlashIndex) : RNFS.CachesDirectoryPath;
+  
+  // If the directory is the cache directory (content:// fallback), save it in Downloads instead
+  if (originalDir.includes(RNFS.CachesDirectoryPath) || originalDir.includes('/cache')) {
+    const root = RNFS.DownloadDirectoryPath || `${RNFS.ExternalStorageDirectoryPath}/Download`;
+    originalDir = `${root}/TIFF`;
+    
+    if (!(await RNFS.exists(originalDir))) {
+      await RNFS.mkdir(originalDir);
+    }
   }
 
-  const baseFileName = (realPath.split('/').pop() || 'image').replace(/\.[^/.]+$/, '');
-  const outFileName = `Edited_${baseFileName}_${Date.now().toString().slice(-4)}.bmp`;
-  const outPath = `${cacheDir}/${outFileName}`;
+  let baseFileName = (originalFileName || realPath.split('/').pop() || 'image').replace(/\.[^/.]+$/, '');
+  
+  // Clean up "_X" if it already exists to avoid _1_1
+  baseFileName = baseFileName.replace(/_\d+$/, '');
 
-  await RNFS.writeFile(outPath, bmpBuf.toString('base64'), 'base64');
+  // Determine the next available sequence number (1, 2, 3...)
+  let counter = 1;
+  let outFileName = `${baseFileName}_${counter}.tiff`;
+  let outPath = `${originalDir}/${outFileName}`;
+  
+  while (await RNFS.exists(outPath)) {
+    counter++;
+    outFileName = `${baseFileName}_${counter}.tiff`;
+    outPath = `${originalDir}/${outFileName}`;
+  }
+
+  await RNFS.writeFile(outPath, tiffBuffer.toString('base64'), 'base64');
+  
+  // Generate a preview BMP for immediate UI display
+  const previewBmpBuf = createBmpBuffer(croppedRgba, cropW, cropH);
 
   return {
     path: outPath,
     uri: `file://${outPath}`,
     name: outFileName,
-    previewUri: `data:image/bmp;base64,${bmpBuf.toString('base64')}`,
+    previewUri: `data:image/bmp;base64,${previewBmpBuf.toString('base64')}`,
     width: cropW,
     height: cropH,
+    size: tiffBuffer.length,
+    format: 'TIFF'
   };
 };
 

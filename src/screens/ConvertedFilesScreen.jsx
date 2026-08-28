@@ -742,7 +742,18 @@ const ConvertedFilesScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.previewModalImageContainer}>
+            <TouchableOpacity 
+              style={styles.previewModalImageContainer}
+              activeOpacity={0.9}
+              onPress={() => {
+                const currentFile = previewFile;
+                setPreviewFile(null);
+                navigation.navigate('PreviewScreen', { 
+                  file: currentFile, 
+                  fromScreen: 'ConvertedFilesScreen' 
+                });
+              }}
+            >
               {previewFile?.thumbUri ? (
                 <Image 
                   source={{ uri: previewFile.thumbUri }} 
@@ -754,7 +765,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
                   <Text style={styles.previewModalLoadingText}>{t('No image preview available')}</Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

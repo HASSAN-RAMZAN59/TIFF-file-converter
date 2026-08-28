@@ -6,6 +6,11 @@ import {
   ActivityIndicator,
   StatusBar,
   Image,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanDeviceForTiffs } from '../services/tiffScannerService';

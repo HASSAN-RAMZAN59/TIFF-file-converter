@@ -47,6 +47,7 @@ const PreviewScreen = ({ route, navigation }) => {
   const cropBoxRef = useRef({ x: 30, y: 40, width: 260, height: 350 });
   const containerSizeRef = useRef({ width: 320, height: 450 });
   const layoutInitializedRef = useRef(false);
+  const hasBeenEditedRef = useRef(false);
 
   // Sync ref with state always
   useEffect(() => {
@@ -149,6 +150,7 @@ const PreviewScreen = ({ route, navigation }) => {
         };
         cropBoxRef.current = safeBox;
         setCropBox(safeBox);
+        hasBeenEditedRef.current = true;
       },
       onPanResponderTerminationRequest: () => false,
       onShouldBlockNativeResponder: () => true,
@@ -182,6 +184,7 @@ const PreviewScreen = ({ route, navigation }) => {
         if (nextDeg < -180) nextDeg += 360;
         if (nextDeg > 180) nextDeg -= 360;
         setRotationDegree(nextDeg);
+        hasBeenEditedRef.current = true;
       },
       onPanResponderTerminationRequest: () => false,
       onShouldBlockNativeResponder: () => true,
@@ -232,6 +235,7 @@ const PreviewScreen = ({ route, navigation }) => {
   const handleEdit = () => {
     setIsEditMode(true);
     setActiveEditTool('crop');
+    hasBeenEditedRef.current = false;
   };
 
   const handleRotatePress = () => {
@@ -244,6 +248,11 @@ const PreviewScreen = ({ route, navigation }) => {
 
   const handleDoneOrClose = async () => {
     if (isEditMode) {
+      if (!hasBeenEditedRef.current) {
+        setIsEditMode(false);
+        return;
+      }
+
       const targetPath = file?.path || file?.uri;
       if (targetPath) {
         setLoading(true);
@@ -253,6 +262,7 @@ const PreviewScreen = ({ route, navigation }) => {
             cropRect: cropBoxRef.current,
             containerSize: containerSizeRef.current,
             rotationDegree: rotationDegree,
+            originalFileName: file?.name,
           });
 
           if (result && result.previewUri) {
@@ -263,6 +273,8 @@ const PreviewScreen = ({ route, navigation }) => {
           
           if (route.params?.fromScreen === 'PickFilesScreen') {
             navigation.navigate('PickFilesScreen', { editedFile: result });
+          } else if (route.params?.fromScreen === 'ConvertedFilesScreen') {
+            Alert.alert(t('Crop Applied'), t('Edited image has been saved to your storage.'));
           } else {
             Alert.alert(t('Crop Applied'), t('Cropped preview updated.'));
           }
@@ -476,8 +488,8 @@ const PreviewScreen = ({ route, navigation }) => {
         )}
       </View>
 
-      {/* Bottom Bar: Rendered when opened from Pick & Convert screen */}
-      {route.params?.fromScreen === 'PickFilesScreen' && (
+      {/* Bottom Bar: Rendered when opened from Pick & Convert or Converted Files screen */}
+      {(route.params?.fromScreen === 'PickFilesScreen' || route.params?.fromScreen === 'ConvertedFilesScreen') && (
         isEditMode ? (
           <View style={styles.editBottomContainer}>
             {/* Full 360° Rotation Ruler Dial Slider */}
@@ -506,7 +518,10 @@ const PreviewScreen = ({ route, navigation }) => {
                 <View style={styles.degreeControlsRow}>
                   <TouchableOpacity
                     style={styles.quickRotateBtn}
-                    onPress={() => setRotationDegree((prev) => ((prev - 90) % 360))}
+                    onPress={() => {
+                      setRotationDegree((prev) => ((prev - 90) % 360));
+                      hasBeenEditedRef.current = true;
+                    }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.quickRotateBtnText}>↺ -90°</Text>
@@ -516,7 +531,10 @@ const PreviewScreen = ({ route, navigation }) => {
 
                   <TouchableOpacity
                     style={styles.quickRotateBtn}
-                    onPress={() => setRotationDegree((prev) => ((prev + 90) % 360))}
+                    onPress={() => {
+                      setRotationDegree((prev) => ((prev + 90) % 360));
+                      hasBeenEditedRef.current = true;
+                    }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.quickRotateBtnText}>↻ +90°</Text>
@@ -575,12 +593,14 @@ const PreviewScreen = ({ route, navigation }) => {
         ) : (
           /* 4 Actions: Edit, Delete, Info, Share */
           <View style={styles.bottomBar}>
-            <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleEdit}>
-              <View style={styles.iconSvgWrapper}>
-                <EditDocumentIcon width={22} height={22} />
-              </View>
-              <Text style={styles.bottomTabText}>{t('Edit')}</Text>
-            </TouchableOpacity>
+            {(route.params?.fromScreen === 'PickFilesScreen' || file?.format === 'TIFF' || (file?.name && (file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff')))) && (
+              <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleEdit}>
+                <View style={styles.iconSvgWrapper}>
+                  <EditDocumentIcon width={22} height={22} />
+                </View>
+                <Text style={styles.bottomTabText}>{t('Edit')}</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity style={styles.bottomTabItem} activeOpacity={0.7} onPress={handleDeletePress}>
               <View style={styles.iconSvgWrapper}>

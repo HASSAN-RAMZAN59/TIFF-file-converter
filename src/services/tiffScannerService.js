@@ -17,6 +17,12 @@ const IGNORED_FOLDERS = [
   '.apps',
   '.system',
   '.temp',
+  'Music',
+  'Movies',
+  'Podcasts',
+  'Ringtones',
+  'Alarms',
+  'Notifications',
 ];
 
 /**
@@ -49,7 +55,14 @@ export const scanDirectoryForTiffs = async (
 
     const items = await RNFS.readDir(dirPath);
 
+    let loopCounter = 0;
     for (const item of items) {
+      loopCounter++;
+      // Yield JS thread every 50 items to prevent ANR (Application Not Responding) crash
+      if (loopCounter % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 1));
+      }
+
       if (isCancelled && isCancelled()) return foundFilesMap;
 
       if (item.isDirectory()) {
@@ -129,8 +142,7 @@ export const scanDeviceForTiffs = async (onProgress = null, isCancelled = null) 
     `${rootPath}/tiff`,
     `${rootPath}/Bluetooth`,
     `${rootPath}/Telegram`,
-    `${rootPath}/Android/media`,
-    rootPath,
+    `${rootPath}/Android/media`
   ];
 
   const uniquePaths = Array.from(new Set(targetPaths)).filter(Boolean);
