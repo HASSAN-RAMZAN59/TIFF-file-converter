@@ -17,6 +17,7 @@ import {
   Image,
   ScrollView,
   BackHandler,
+  Dimensions,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
@@ -71,6 +72,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
   // Menu State
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
 
   // Rename State
   const [renameVisible, setRenameVisible] = useState(false);
@@ -142,7 +144,13 @@ const ConvertedFilesScreen = ({ navigation }) => {
     });
   };
 
-  const openMenu = (item) => {
+  const openMenu = (item, event) => {
+    if (event && event.nativeEvent) {
+      setMenuPos({
+        x: event.nativeEvent.pageX,
+        y: event.nativeEvent.pageY,
+      });
+    }
     setSelectedFile(item);
     setMenuVisible(true);
   };
@@ -503,7 +511,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
             </TouchableOpacity>
            <TouchableOpacity 
              style={styles.actionBtn} 
-             onPress={() => openMenu(item)}
+             onPress={(e) => openMenu(item, e)}
              activeOpacity={0.6}
            >
              <MoreVertIcon width={18} height={18} fill="#111827" />
@@ -640,7 +648,7 @@ const ConvertedFilesScreen = ({ navigation }) => {
       {/* Options Menu Modal */}
       <Modal visible={menuVisible} transparent={true} animationType="fade" onRequestClose={closeMenu}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMenu}>
-          <View style={styles.menuCard}>
+          <View style={[styles.menuCard, { position: 'absolute', top: Math.min(menuPos.y, Dimensions.get('window').height - 230), right: 30 }]}>
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
               <View style={styles.menuSvgWrapper}>
                 <DeleteIcon width={20} height={20} />
