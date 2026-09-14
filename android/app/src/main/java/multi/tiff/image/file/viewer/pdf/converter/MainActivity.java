@@ -1,4 +1,4 @@
-package com.tiffviewerconverter;
+package multi.tiff.image.file.viewer.pdf.converter;
 
 import android.os.Bundle;
 import com.facebook.react.ReactActivity;
@@ -26,4 +26,3 @@ public class MainActivity extends ReactActivity {
         DefaultNewArchitectureEntryPoint.getFabricEnabled());
   }
 }
-

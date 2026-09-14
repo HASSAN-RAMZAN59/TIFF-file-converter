@@ -1,4 +1,4 @@
-package com.tiffviewerconverter;
+package multi.tiff.image.file.viewer.pdf.converter;
 
 import android.app.Application;
 import com.facebook.react.PackageList;
