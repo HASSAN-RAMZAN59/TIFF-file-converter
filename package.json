@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "install:android": "cd android && gradlew installDebug && cd .. && adb reverse tcp:8081 tcp:8081",
-    "build:apk": "cd android && gradlew assembleRelease",
-    "build:aab": "cd android && gradlew bundleRelease",
+    "install:android": "cd android && .\\gradlew installDebug && cd .. && adb reverse tcp:8081 tcp:8081",
+    "build:apk": "cd android && .\\gradlew assembleRelease",
+    "build:aab": "cd android && .\\gradlew bundleRelease",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
