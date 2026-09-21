@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import BackIcon from '../assets/left 1.svg'; // Reusing back icon
+import BackIcon from '../assets/Back Press.svg'; // Reusing back icon
 
 const PrivacyPolicyScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);

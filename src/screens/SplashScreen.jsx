@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { hasCompletedOnboarding } from '../services/onboardingService';
 import { checkOsStoragePermission } from '../services/permissionService';
-import SplashIcon from '../assets/Group 1000007057.svg';
+import SplashIcon from '../assets/splashhh.svg';
 
 const { width } = Dimensions.get('window');
 
