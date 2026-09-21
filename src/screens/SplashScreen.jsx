@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { hasCompletedOnboarding } from '../services/onboardingService';
 import { checkOsStoragePermission } from '../services/permissionService';
-import SplashIcon from '../assets/Group 4.svg';
+import SplashIcon from '../assets/Group 1000007057.svg';
 
 const { width } = Dimensions.get('window');
 
@@ -44,7 +44,7 @@ const SplashScreen = ({ navigation, route }) => {
         <View style={styles.centerContent}>
           {/* Splash Document Illustration Icon */}
           <View style={styles.iconWrapper}>
-            <SplashIcon width={170} height={205} />
+            <SplashIcon width={220} height={231} />
           </View>
 
           {/* Title & Subtitle */}
