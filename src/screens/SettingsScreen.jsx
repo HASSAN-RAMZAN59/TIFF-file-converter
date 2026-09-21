@@ -137,7 +137,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handlePrivacyPolicyPress = () => {
-    Alert.alert(t('Privacy Policy'), t('Read our terms and policies'));
+    navigation.navigate('PrivacyPolicyScreen');
   };
 
   const handleShareWithFriendsPress = async () => {

@@ -14,7 +14,7 @@ import PreviewScreen from '../screens/PreviewScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import RecycleBinScreen from '../screens/RecycleBinScreen';
 import LanguageScreen from '../screens/LanguageScreen';
-
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -39,6 +39,7 @@ const AppNavigator = () => {
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       <Stack.Screen name="RecycleBinScreen" component={RecycleBinScreen} />
       <Stack.Screen name="LanguageScreen" component={LanguageScreen} />
+      <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
     </Stack.Navigator>
   );
 };
