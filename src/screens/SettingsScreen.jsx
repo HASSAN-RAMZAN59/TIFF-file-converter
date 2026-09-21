@@ -10,6 +10,7 @@ import {
   Alert,
   Share,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
@@ -143,7 +144,7 @@ const SettingsScreen = ({ navigation }) => {
   const handleShareWithFriendsPress = async () => {
     try {
       await Share.share({
-        message: 'Check out this awesome TIFF File Converter App!',
+        message: 'Check out this awesome TIFF File Converter App! https://play.google.com/store/apps/details?id=multi.tiff.image.file.viewer.pdf.converter',
       });
     } catch (error) {
       console.warn('Error sharing app:', error);
@@ -151,7 +152,14 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleRateUsPress = () => {
-    Alert.alert(t('Rate Us'), t('Review our app on the Play Store'));
+    const url = 'market://details?id=multi.tiff.image.file.viewer.pdf.converter';
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Linking.openURL('https://play.google.com/store/apps/details?id=multi.tiff.image.file.viewer.pdf.converter');
+      }
+    });
   };
 
   const handleAboutPress = () => {
