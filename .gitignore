@@ -19,3 +19,6 @@ ios/build/
 
 # Metro cache
 .metro-health-check*
+
+# Ignore Gradle zip distribution
+android/gradle/wrapper/*.zip
