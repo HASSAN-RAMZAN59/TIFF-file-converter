@@ -4,6 +4,9 @@ apply plugin: "com.facebook.react"
 def enableProguardInReleaseBuilds = true
 
 android {
+    buildFeatures {
+        buildConfig = true
+    }
     ndkVersion rootProject.ext.ndkVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
